@@ -1,0 +1,30 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: "jdbc:mariadb://database-1.cboi6c8y6f1c.ap-northeast-2.rds.amazonaws.com:3306/project3"
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+logging:
+  config: classpath:logback-spring.xml
+  level:
+    org:
+      hibernate:
+        SQL: DEBUG
+
+
+##aws
+#cloud:
+#  aws:
+#    credentials:
+#      secret-key: ${CLOUD_AWS_CREDENTIALS_SECRET_KEY}
+#      access-key: ${CLOUD_AWS_CREDENTIALS_ACCESS_KEY}
+#    region:
+#      static: ap-northeast-2
+#    s3:
+#      bucket: myawsbucketteam
+
+
+
+#jwt:
+#  secret-key-source: ${JWT_SECRET_KEY}
