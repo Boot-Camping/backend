@@ -35,7 +35,7 @@ public class UserEntity {
     private String email;
 
     @Column(name = "tel")
-    private Integer tel;
+    private String tel;
 
     @Column(name = "addr", nullable = false)
     private String addr;
@@ -43,7 +43,7 @@ public class UserEntity {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "logid_id", nullable = false)
+    @Column(name = "login_id", nullable = false)
     private String loginId;
 
     @Enumerated(EnumType.STRING)
