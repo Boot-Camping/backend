@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -14,4 +16,6 @@ public class UserProfileResponse {
     private String password;
     private String email;
     private String tel;
+    private List<String> images;
+    private Integer balance;
 }
