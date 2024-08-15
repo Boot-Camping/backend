@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class SignupDTO {
+public class SignupRequest {
 
     @NotBlank(message = "이메일을 입력하세요")
     @Email(message = "이메일을 올바르게 입력하세요")
