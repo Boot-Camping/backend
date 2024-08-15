@@ -55,6 +55,12 @@ public class UserEntity {
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReviewEntity> reviews;
 
+    @OneToMany(mappedBy = "userId", fetch = FetchType.LAZY)
+    private List<UserImageEntity> images;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private List<CashEntity> cash;
+
     @PrePersist
     protected void onCreate() {
         if (this.role == null) {
