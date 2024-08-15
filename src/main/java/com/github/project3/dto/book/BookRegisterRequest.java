@@ -19,15 +19,4 @@ public class BookRegisterRequest {
     private LocalDateTime checkOut;
     private String bookRequest;
     private Integer bookNum;
-
-    // 스태틱 팩토리 메소드
-    public static BookRegisterRequest of(Integer totalPrice, LocalDateTime checkIn, LocalDateTime checkOut, String bookRequest, Integer bookNum) {
-        return BookRegisterRequest.builder()
-                .totalPrice(totalPrice)
-                .checkIn(checkIn)
-                .checkOut(checkOut)
-                .bookRequest(bookRequest)
-                .bookNum(bookNum)
-                .build();
-    }
 }
