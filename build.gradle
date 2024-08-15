@@ -45,7 +45,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
 
     // Spring Security
-//    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
@@ -64,6 +64,10 @@ dependencies {
     implementation 'org.mariadb.jdbc:mariadb-java-client'
     // OpenAPI documentation
     implementation 'org.springdoc:springdoc-openapi-ui:1.6.14'
+
+
+    // valid 유효성 검증
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
 
 
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
