@@ -1,11 +1,11 @@
 package com.github.project3.entity.user;
 
+import com.github.project3.entity.book.BookEntity;
+import com.github.project3.entity.book.enums.Status;
+import com.github.project3.entity.camp.CampEntity;
 import com.github.project3.entity.user.enums.TransactionType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Table(name ="Cash")
 public class CashEntity {
 
@@ -44,5 +45,15 @@ public class CashEntity {
         if (this.transactionDate == null) {
             this.transactionDate = LocalDateTime.now();
         }
+    }
+
+    // 스태틱 팩토리 메소드
+    public static CashEntity of(UserEntity user, Integer amount, TransactionType transactionType, Integer balanceAfterTransaction) {
+        return CashEntity.builder()
+                .user(user)
+                .amount(amount)
+                .transactionType(transactionType)
+                .balanceAfterTransaction(balanceAfterTransaction)
+                .build();
     }
 }

@@ -4,10 +4,7 @@ import com.github.project3.entity.camp.CampEntity;
 import com.github.project3.entity.user.UserEntity;
 import com.github.project3.entity.book.enums.Status;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -16,6 +13,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Table(name ="Book")
 public class BookEntity {
 
@@ -52,6 +50,20 @@ public class BookEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private Status status;
+
+    // 스태틱 팩토리 메소드
+    public static BookEntity of(UserEntity user, CampEntity camp, Integer totalPrice, LocalDateTime startDate, LocalDateTime endDate, String request, Integer num, Status status) {
+        return BookEntity.builder()
+                .user(user)
+                .camp(camp)
+                .totalPrice(totalPrice)
+                .startDate(startDate)
+                .endDate(endDate)
+                .request(request)
+                .num(num)
+                .status(status)
+                .build();
+    }
 
     @PrePersist
     protected void onCreate() {

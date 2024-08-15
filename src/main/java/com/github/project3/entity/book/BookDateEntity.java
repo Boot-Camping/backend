@@ -1,6 +1,5 @@
 package com.github.project3.entity.book;
 
-import com.github.project3.entity.user.UserEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,7 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name ="Bookdate")
-public class Bookdate {
+public class BookDateEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
