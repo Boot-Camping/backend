@@ -4,10 +4,7 @@ import com.github.project3.entity.review.ReviewEntity;
 import com.github.project3.entity.user.enums.Role;
 import com.github.project3.entity.user.enums.Status;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -18,6 +15,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Table(name ="User")
 public class UserEntity {
 
