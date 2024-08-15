@@ -1,6 +1,6 @@
 package com.github.project3.service.user;
 
-import com.github.project3.dto.user.SignupDTO;
+
 import com.github.project3.dto.user.SignupRequest;
 import com.github.project3.dto.user.response.SignupResponse;
 import com.github.project3.entity.user.UserEntity;
@@ -18,7 +18,7 @@ public class UserService {
 
     public SignupResponse signup(SignupRequest signupRequest) {
 
-        UserEntity user = userRepository.findByEmail(signupRequest.getEmail())
+        UserEntity user = userRepository.findByLoginId(signupRequest.getLoginId())
                 .orElseGet(() -> userRepository.save(UserEntity.builder()
                         .email(signupRequest.getEmail())
                         .password(passwordEncoder.encode(signupRequest.getPassword()))

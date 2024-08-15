@@ -1,6 +1,7 @@
 package com.github.project3.controller.user;
 
-import com.github.project3.dto.user.SignupDTO;
+
+import com.github.project3.dto.user.SignupRequest;
 import com.github.project3.dto.user.response.SignupResponse;
 import com.github.project3.service.user.UserService;
 import jakarta.validation.Valid;
@@ -21,8 +22,8 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/signup")
-    public ResponseEntity<SignupResponse> signup(@Valid @RequestBody SignupDTO signupDTO) {
-        SignupResponse response = userService.signup(signupDTO);
+    public ResponseEntity<SignupResponse> signup(@Valid @RequestBody SignupRequest signupRequest) {
+        SignupResponse response = userService.signup(signupRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }
