@@ -42,7 +42,6 @@ public class BookService {
     public void registerBook(Integer campId, Integer userId, BookRegisterRequest bookRegisterRequest) {
         UserEntity user = userRepository.findById(userId).orElseThrow(()-> new NotFoundException("해당 ID의 사용자가 존재하지 않습니다."));
 
-        // TODO: camp 찾기
         CampEntity camp = campRepository.findById(campId).orElseThrow(()-> new NotFoundException("해당하는 캠핑지가 존재하지 않습니다."));
 
         // 찾은 user 의 현재 잔액
@@ -89,13 +88,12 @@ public class BookService {
 
         while (!requestCheckIn.isAfter(requestCheckOut)) {
             BookDateEntity bookDate = new BookDateEntity();
-            bookDate.setBook(savedBook);  // savedBook의 ID 사용S
+            bookDate.setBook(savedBook);  // savedBook ID 사용
             bookDate.setDate(requestCheckIn);
             bookDates.add(bookDate);
 
             requestCheckIn = requestCheckIn.plusDays(1);
         }
         bookDateRepository.saveAll(bookDates);
-
     }
 }
