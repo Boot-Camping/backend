@@ -1,4 +1,4 @@
-package com.github.project3.service.mypage;
+package com.github.project3.service;
 
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.PutObjectRequest;
