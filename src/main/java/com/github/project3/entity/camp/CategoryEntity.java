@@ -1,16 +1,16 @@
 package com.github.project3.entity.camp;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+
+import java.util.List;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Table(name = "Category")
 public class CategoryEntity {
 
@@ -18,6 +18,9 @@ public class CategoryEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "name", nullable = false)
     private String name;
+
+    @ManyToMany(mappedBy = "categories")
+    private List<CampEntity> camps;
+
 }
