@@ -9,6 +9,8 @@ import com.github.project3.entity.user.UserImageEntity;
 import com.github.project3.repository.mypage.UserProfileImageRepository;
 import com.github.project3.repository.mypage.UserProfileRepository;
 import com.github.project3.service.S3Service;
+import com.github.project3.service.exceptions.NotAcceptException;
+import com.github.project3.service.exceptions.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,7 +49,7 @@ public class UserProfileService {
 
     @Transactional
     public UserProfileUpdateResponse getUpdateUser(Integer id, String tel, String addr){
-        UserEntity user = userProfileRepository.findById(id).orElseThrow(() -> new RuntimeException("사용자를 찾을수 없습니다."));
+        UserEntity user = userProfileRepository.findById(id).orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
 
         if (tel != null){
             user.setTel(tel);
@@ -58,25 +60,28 @@ public class UserProfileService {
 
         userProfileRepository.save(user);
 
-        // return new UserProfileUpdateResponse(user.getId(), user.getTel(), user.getAddr());
         return UserProfileUpdateResponse.from(user);
     }
 
     @Transactional
     public UserProfileUpdateImageResponse getUpdateImage(Integer id, MultipartFile images){
-        UserImageEntity user = userProfileImageRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을수 없습니다."));
+        UserEntity user = userProfileRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
+
+        UserImageEntity userImage = userProfileImageRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("이미지를 찾을 수 없습니다."));
 
         try {
             // 프로필 이미지 업로드
             String profileImageUrl = s3Service.uploadFile(images);
 
             // 프로필 이미지 URL 업데이트
-            user.setImageUrl(profileImageUrl);
-            userProfileImageRepository.save(user);
-        }catch (IOException e){
-            throw new RuntimeException("이미지 업로드에 오류가 생겼습니다", e);
+            userImage.setImageUrl(profileImageUrl);
+            userProfileImageRepository.save(userImage);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("알수없는 오류가 발생했습니다.");
         }
-        return UserProfileUpdateImageResponse.from(user);
+        return UserProfileUpdateImageResponse.from(userImage);
     }
 }

@@ -8,5 +8,4 @@ import java.util.Optional;
 
 @Repository
 public interface UserProfileImageRepository extends JpaRepository<UserImageEntity, Integer> {
-    Optional<UserImageEntity> findById(Integer id);
 }
