@@ -1,55 +1,69 @@
 package com.github.project3.entity.camp;
 
-import com.github.project3.entity.review.ReviewEntity;
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-import java.time.LocalDateTime;
+import jakarta.persistence.*;
+import lombok.*;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Getter
-@Setter
+@Table(name = "Camp")
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "Camp")
 public class CampEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "price", nullable = false)
+    @Column(name = "price")
     private Integer price;
 
-    @Column(name = "addr", nullable = false)
+    @Column(name = "addr")
     private String addr;
 
-    @Column(name = "max_num", nullable = false)
+    @Column(name = "max_num")
     private Integer maxNum;
 
-    @Column(name = "standard_num", nullable = false)
+    @Column(name = "standard_num")
     private Integer standardNum;
 
-    @Column(name = "over_charge", nullable = false)
+    @Column(name = "over_charge")
     private Integer overCharge;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    @OneToOne(mappedBy = "camp", cascade = CascadeType.ALL, orphanRemoval = true)
+    private CampDescriptionEntity description;
 
-    @OneToMany(mappedBy = "camp", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ReviewEntity> reviews;
+    @Builder.Default
+    @OneToMany(mappedBy = "camp", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CampImageEntity> images = new ArrayList<>();
 
-    @PrePersist
-    protected void onCreate() {
-        if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now();
-        }
+    @Builder.Default
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(
+        name = "CampCategory",
+        joinColumns = @JoinColumn(name = "camp_id"),
+        inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
+    private List<CategoryEntity> categories = new ArrayList<>();
+
+
+
+    public void addImages(List<CampImageEntity> images) {
+        this.images.addAll(images);
+        images.forEach(image -> image.setCamp(this));
+    }
+
+    public void setDescription(CampDescriptionEntity description) {
+        this.description = description;
+        description.setCamp(this);
+    }
+
+    public void addCategories(List<CategoryEntity> categories) {
+        this.categories.addAll(categories);
     }
 }
