@@ -12,6 +12,4 @@ import java.util.Optional;
 @Repository
 public interface BookRepository extends JpaRepository<BookEntity, Integer> {
     boolean existsByUserAndCampAndStatus(UserEntity user, CampEntity camp, Status status);
-
-    Optional<Object> findByIdAndUserId(Integer bookId, Integer userId);
 }
