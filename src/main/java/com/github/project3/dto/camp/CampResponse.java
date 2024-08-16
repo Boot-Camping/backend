@@ -2,7 +2,6 @@ package com.github.project3.dto.camp;
 
 import com.github.project3.entity.camp.CampEntity;
 import com.github.project3.entity.camp.CampImageEntity;
-import com.github.project3.entity.camp.CategoryEntity;
 import lombok.Builder;
 import lombok.Data;
 
@@ -38,11 +37,11 @@ public class CampResponse {
 				.overCharge(campEntity.getOverCharge())
 				.imageUrls(campEntity.getImages().stream()
 						.map(CampImageEntity::getImageUrl)
-						.toList()) // Collectors.toList() 대신 toList() 사용
-				.description(campEntity.getDescription().getDescription())
-				.categories(campEntity.getCategories().stream()
-						.map(CategoryEntity::getName)
-						.toList()) // Collectors.toList() 대신 toList() 사용
+						.collect(Collectors.toList()))
+				.description(campEntity.getDescription() != null ? campEntity.getDescription().getDescription() : "")
+				.categories(campEntity.getCampCategories().stream()
+						.map(campCategory -> campCategory.getCategory().getName())
+						.collect(Collectors.toList()))
 				.build();
 	}
 }
