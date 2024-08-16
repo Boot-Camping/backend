@@ -9,7 +9,6 @@ import java.util.Optional;
 
 @Repository
 public interface UserProfileRepository extends JpaRepository<UserEntity, Integer> {
-    @Override
-    Optional<UserEntity> findById(Integer id);
 
+    Optional<UserEntity> findById(Integer id);
 }

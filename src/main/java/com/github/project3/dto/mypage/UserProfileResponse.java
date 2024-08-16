@@ -18,4 +18,6 @@ public class UserProfileResponse {
     private String tel;
     private List<String> images;
     private Integer balance;
+    private String addr;
 }
+
