@@ -20,7 +20,7 @@ public class CategoryEntity {
 
     private String name;
 
-    @ManyToMany(mappedBy = "categories")
-    private List<CampEntity> camps;
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
+    private List<CampCategoryEntity> campCategories;
 
 }
