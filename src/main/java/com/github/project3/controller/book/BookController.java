@@ -25,9 +25,9 @@ public class BookController {
         return ResponseEntity.ok("예약이 완료되었습니다.");
     }
 
-    @PutMapping("/{campId}/{userId}")
-    public ResponseEntity<BookCancelResponse> cancelBook(@PathVariable Integer campId, @PathVariable Integer userId){
-        BookCancelResponse response = bookService.cancelBook(campId, userId);
+    @PutMapping("/{bookId}/{userId}")
+    public ResponseEntity<BookCancelResponse> cancelBook(@PathVariable Integer bookId, @PathVariable Integer userId){
+        BookCancelResponse response = bookService.cancelBook(bookId, userId);
         return ResponseEntity.ok(response);
     }
 }
