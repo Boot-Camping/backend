@@ -4,8 +4,6 @@ spring:
     url: "jdbc:mariadb://database-1.cboi6c8y6f1c.ap-northeast-2.rds.amazonaws.com:3306/project3"
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
-  jpa:
-    open-in-view: false
 
 
 logging:
