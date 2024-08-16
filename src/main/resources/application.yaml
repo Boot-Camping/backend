@@ -26,5 +26,5 @@ logging:
 
 
 
-#jwt:
-#  secret-key-source: ${JWT_SECRET_KEY}
+jwt:
+ secret-key-source: ${JWT_SECRET_KEY}
