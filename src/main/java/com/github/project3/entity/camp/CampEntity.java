@@ -3,6 +3,8 @@ package com.github.project3.entity.camp;
 
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,6 +37,13 @@ public class CampEntity {
     @Column(name = "over_charge")
     private Integer overCharge;
 
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+
     @OneToOne(mappedBy = "camp", cascade = CascadeType.ALL, orphanRemoval = true)
     private CampDescriptionEntity description;
 
@@ -43,19 +52,35 @@ public class CampEntity {
     private List<CampImageEntity> images = new ArrayList<>();
 
     @Builder.Default
-    @ManyToMany(cascade = CascadeType.ALL)
-    @JoinTable(
-        name = "CampCategory",
-        joinColumns = @JoinColumn(name = "camp_id"),
-        inverseJoinColumns = @JoinColumn(name = "category_id")
-    )
-    private List<CategoryEntity> categories = new ArrayList<>();
+    @OneToMany(mappedBy = "camp", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CampCategoryEntity> campCategories = new ArrayList<>();
 
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
 
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 
     public void addImages(List<CampImageEntity> images) {
         this.images.addAll(images);
         images.forEach(image -> image.setCamp(this));
+    }
+
+    // 이미지 업데이트 메서드
+    public void updateImages(List<CampImageEntity> newImages) {
+        // 기존 이미지 제거
+        this.images.clear();
+
+        // 새로운 이미지 추가
+        newImages.forEach(image -> {
+            image.setCamp(this); // 이미지의 캠핑지 설정
+            this.images.add(image);
+        });
     }
 
     public void setDescription(CampDescriptionEntity description) {
@@ -64,6 +89,15 @@ public class CampEntity {
     }
 
     public void addCategories(List<CategoryEntity> categories) {
-        this.categories.addAll(categories);
+        // 기존 카테고리 연결 제거
+        this.campCategories.clear();
+
+        // 새로운 카테고리 연결 추가
+        categories.forEach(category -> {
+            CampCategoryEntity campCategory = new CampCategoryEntity();
+            campCategory.setCamp(this);
+            campCategory.setCategory(category);
+            this.campCategories.add(campCategory);
+        });
     }
 }

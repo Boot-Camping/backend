@@ -1,8 +1,8 @@
 package com.github.project3.dto.camp;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.github.project3.entity.camp.CampEntity;
 import com.github.project3.entity.camp.CampImageEntity;
-import com.github.project3.entity.camp.CategoryEntity;
 import lombok.Builder;
 import lombok.Data;
 
@@ -21,7 +21,12 @@ public class CampResponse {
 	private Integer maxNum;
 	private Integer standardNum;
 	private Integer overCharge;
+
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime createdAt;
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+	private LocalDateTime updatedAt; // 추가된 필드
+
 	private List<String> imageUrls;
 	private String description;
 	private List<String> categories;
@@ -36,13 +41,15 @@ public class CampResponse {
 				.maxNum(campEntity.getMaxNum())
 				.standardNum(campEntity.getStandardNum())
 				.overCharge(campEntity.getOverCharge())
+				.createdAt(campEntity.getCreatedAt())
+				.updatedAt(campEntity.getUpdatedAt()) // 추가된 필드
 				.imageUrls(campEntity.getImages().stream()
 						.map(CampImageEntity::getImageUrl)
-						.toList()) // Collectors.toList() 대신 toList() 사용
-				.description(campEntity.getDescription().getDescription())
-				.categories(campEntity.getCategories().stream()
-						.map(CategoryEntity::getName)
-						.toList()) // Collectors.toList() 대신 toList() 사용
+						.collect(Collectors.toList()))
+				.description(campEntity.getDescription() != null ? campEntity.getDescription().getDescription() : "")
+				.categories(campEntity.getCampCategories().stream()
+						.map(campCategory -> campCategory.getCategory().getName())
+						.collect(Collectors.toList()))
 				.build();
 	}
 }
