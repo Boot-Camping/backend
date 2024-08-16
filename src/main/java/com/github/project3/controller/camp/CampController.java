@@ -58,4 +58,11 @@ public class CampController {
 		CampResponse response = campService.updateCamp(updateRequest);
 		return ResponseEntity.ok(response);
 	}
+
+	@DeleteMapping("/{campId}")
+	@Operation(summary = "캠핑지 삭제", description = "등록된 캠핑지를 삭제합니다.")
+	public ResponseEntity<String> deleteCamp(@PathVariable Integer campId) {
+		campService.deleteCamp(campId);
+		return ResponseEntity.ok("캠핑지가 성공적으로 삭제되었습니다.");
+	}
 }

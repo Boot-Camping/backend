@@ -104,4 +104,18 @@ public class CampService {
 
 		return CampResponse.fromEntity(updatedCampEntity);
 	}
+
+	/**
+	 * 캠핑지 삭제
+	 * @param campId 삭제할 캠핑지의 ID
+	 */
+	@Transactional
+	public void deleteCamp(Integer campId) {
+		// 캠핑지가 존재하는지 확인
+		CampEntity campEntity = campRepository.findById(campId)
+				.orElseThrow(() -> new RuntimeException("Camp not found"));
+
+		// 캠핑지 삭제
+		campRepository.deleteById(campId);
+	}
 }
