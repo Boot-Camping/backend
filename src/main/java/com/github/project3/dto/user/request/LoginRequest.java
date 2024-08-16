@@ -1,4 +1,4 @@
-package com.github.project3.dto.user;
+package com.github.project3.dto.user.request;
 
 
 import jakarta.validation.constraints.NotBlank;
@@ -9,7 +9,7 @@ import lombok.ToString;
 @Getter
 @AllArgsConstructor
 @ToString
-public class loginRequest {
+public class LoginRequest {
 
     @NotBlank(message = "loginId을 입력하세요")
     private String loginId;

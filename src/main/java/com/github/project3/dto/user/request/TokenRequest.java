@@ -1,4 +1,4 @@
-package com.github.project3.dto.user;
+package com.github.project3.dto.user.request;
 
 
 import lombok.AllArgsConstructor;

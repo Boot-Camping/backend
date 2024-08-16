@@ -1,13 +1,29 @@
 package com.github.project3.service.user;
 
 
-import com.github.project3.dto.user.SignupRequest;
+import com.github.project3.dto.user.request.LoginRequest;
+import com.github.project3.dto.user.request.SignupRequest;
+import com.github.project3.dto.user.request.TokenRequest;
+import com.github.project3.dto.user.response.LoginResponse;
 import com.github.project3.dto.user.response.SignupResponse;
+import com.github.project3.entity.user.RefreshEntity;
 import com.github.project3.entity.user.UserEntity;
+import com.github.project3.jwt.JwtTokenProvider;
+import com.github.project3.repository.user.RefreshRepository;
 import com.github.project3.repository.user.UserRepository;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Date;
 
 @Service
 @RequiredArgsConstructor
@@ -15,6 +31,11 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final RefreshRepository refreshRepository;
+    private final AuthenticationManagerBuilder authenticationManagerBuilder;
+
+
 
     public SignupResponse signup(SignupRequest signupRequest) {
 
@@ -30,4 +51,49 @@ public class UserService {
 
         return new SignupResponse("회원가입에 성공했습니다");
     }
+
+    public LoginResponse login(LoginRequest loginRequest, HttpServletResponse response) {
+        UsernamePasswordAuthenticationToken authenticationToken =
+                new UsernamePasswordAuthenticationToken(loginRequest.getLoginId(), loginRequest.getPassword());
+
+        Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        UserEntity user = userRepository.findByLoginId(loginRequest.getLoginId())
+                .orElseThrow(() -> new UsernameNotFoundException("이메일에 해당하는 유저가 없습니다: " + loginRequest.getLoginId()));
+
+        String accessToken = jwtTokenProvider.createToken("access", user.getEmail(), user.getId(), 60000L);
+        String refreshToken = jwtTokenProvider.createToken("refresh", user.getEmail(), user.getId(), 86400000L);
+
+        addRefreshEntity(user.getLoginId(),refreshToken, 86400000L );
+
+        response.setHeader("access", accessToken);
+        response.addCookie(createCookie("refresh", refreshToken));
+        response.setStatus(HttpStatus.OK.value());
+
+        TokenRequest tokenRequest = new TokenRequest(accessToken, refreshToken);
+
+        return new LoginResponse("로그인에 성공했습니다", tokenRequest);
+    }
+
+    private Cookie createCookie(String key, String value) {
+        Cookie cookie = new Cookie(key, value);
+        cookie.setMaxAge(24*60*60);
+        cookie.setHttpOnly(true);
+
+        return cookie;
+    }
+
+    private void addRefreshEntity(String loginId, String refresh, Long expiredMs) {
+        Date date = new Date(System.currentTimeMillis() + expiredMs);
+
+        refreshRepository.save(RefreshEntity.builder()
+                .loginId(loginId)
+                .refresh(refresh)
+                .expiration(date.toString())
+                .build());
+    }
+
+
 }
