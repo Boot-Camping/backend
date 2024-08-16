@@ -64,12 +64,17 @@ public class UserProfileService {
     }
 
     @Transactional
-    public UserProfileUpdateImageResponse getUpdateImage(Integer id, MultipartFile images){
-        UserEntity user = userProfileRepository.findById(id)
+    public UserProfileUpdateImageResponse getUpdateImage(Integer Id, MultipartFile images){
+        UserEntity user = userProfileRepository.findById(Id)
                 .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
 
-        UserImageEntity userImage = userProfileImageRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("이미지를 찾을 수 없습니다."));
+        UserImageEntity userImage = userProfileImageRepository.findByUserId(user)
+                // 값을 갖고있지 않은경우
+                .orElseGet(() -> {
+                    UserImageEntity newUserImage = new UserImageEntity();
+                    newUserImage.setUserId(user);
+                    return newUserImage;
+                });
 
         try {
             // 프로필 이미지 업로드
