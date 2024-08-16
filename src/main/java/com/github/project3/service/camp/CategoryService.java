@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +32,6 @@ public class CategoryService {
 								)
 				)
 				// 최종적으로 처리된 CategoryEntity 객체들을 리스트로 수집.
-				.toList();
+				.collect(Collectors.toList()); // Collectors.toList()로 변경
 	}
 }
