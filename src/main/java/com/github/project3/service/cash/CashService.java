@@ -16,6 +16,7 @@ public class CashService {
 
     private final CashRepository cashRepository;
 
+    // user 의 현재 잔액을 가져오는 로직
     public Integer getCurrentBalance(UserEntity user) {
         return user.getCash().stream()
                 .max(Comparator.comparing(CashEntity::getTransactionDate))
@@ -23,6 +24,7 @@ public class CashService {
                 .orElse(0);
     }
 
+    // switch-case 문으로 transactionType 별 저장
     public void processTransaction(UserEntity user, Integer amount, TransactionType transactionType) {
         Integer currentBalance = getCurrentBalance(user);
         Integer newBalance;

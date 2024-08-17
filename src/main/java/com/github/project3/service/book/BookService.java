@@ -55,6 +55,7 @@ public class BookService {
             throw new NotAcceptException("해당 캠핑지는 이미 예약된 상태입니다. 예약이 취소됩니다.");
         }
 
+        // user 의 cash 변동사항 저장
         cashService.processTransaction(user, bookRegisterRequest.getTotalPrice(), TransactionType.PAYMENT);
 
         // 예약 정보 등록
@@ -102,9 +103,9 @@ public class BookService {
         book.setStatus(Status.CANCEL);
         bookRepository.save(book);
 
-        // 찾은 user 의 현재 잔액
         UserEntity user = userRepository.findById(userId).orElseThrow(()-> new NotFoundException("해당 ID의 사용자가 존재하지 않습니다."));
 
+        // user 의 cash 변동사항 저장
         cashService.processTransaction(user, book.getTotalPrice(), TransactionType.REFUND);
     }
 }
