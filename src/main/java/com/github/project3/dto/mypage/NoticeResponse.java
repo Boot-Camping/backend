@@ -2,7 +2,10 @@ package com.github.project3.dto.mypage;
 
 import com.github.project3.entity.notice.NoticeEntity;
 import com.github.project3.entity.user.UserImageEntity;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@Data
 public class NoticeResponse {
     private Integer id;
     private String title;

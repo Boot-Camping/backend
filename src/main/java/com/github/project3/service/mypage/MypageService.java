@@ -32,6 +32,7 @@ public class MypageService {
     private final MypageImageRepository mypageImageRepository;
     private final MypageRepository mypageRepository;
     private final PasswordEncoder passwordEncoder;
+    private final NoticeRepository noticeRepository;
     private final S3Service s3Service;
 
     // 유저 정보조회
@@ -123,7 +124,12 @@ public class MypageService {
     }
     // 공지사항 조회
     public List<NoticeResponse> getNoticeAll(){
-        List<NoticeEntity> notice = NoticeRepository.findAllByOrderByCreatedAtDesc();
-        return NoticeResponse.from(notice);
+        List<NoticeEntity> notice = noticeRepository.findAllByOrderByCreatedAtDesc();
+
+        if (notice.isEmpty()){
+            throw new NotFoundException("등록된 공지사항이 없습니다.");
+        }
+
+        return notice.stream().map(NoticeResponse::from).collect(Collectors.toList());
     }
 }

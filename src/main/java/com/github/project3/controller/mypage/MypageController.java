@@ -53,7 +53,7 @@ public class MypageController {
     // 공지사항 조회
     @GetMapping("/notice/all")
     public ResponseEntity<List<NoticeResponse>> getNotice(){
-        List<NoticeResponse> notice = MypageService.getNoticeAll();
-        return ResponseEntigty.ok(notice);
+        List<NoticeResponse> notice = mypageService.getNoticeAll();
+        return ResponseEntity.ok(notice);
     }
 }
