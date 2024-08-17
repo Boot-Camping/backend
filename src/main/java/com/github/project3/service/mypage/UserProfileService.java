@@ -92,7 +92,8 @@ public class UserProfileService {
     }
 
     public void getUpdatePasswordUser(Integer id, UserProfileUpdatePasswordRequest UpdatePasswordRequest) {
-        UserEntity user = UserProfileRepository.findById(id)
-                .orElseThrow(() -> )
+//        UserEntity user = UserProfileRepository.findById(id)
+//                .orElseThrow(() -> )
+        //
     }
 }
