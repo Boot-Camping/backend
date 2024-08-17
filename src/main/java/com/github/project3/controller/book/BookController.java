@@ -1,6 +1,5 @@
 package com.github.project3.controller.book;
 
-import com.github.project3.dto.book.BookCancelResponse;
 import com.github.project3.dto.book.BookInquiryResponse;
 import com.github.project3.dto.book.BookRegisterRequest;
 import com.github.project3.service.book.BookService;
