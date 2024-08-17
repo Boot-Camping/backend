@@ -37,7 +37,7 @@ public class ReviewService {
         CampEntity camp = campRepository.findById(reviewRequest.getCampId())
                 .orElseThrow(() -> new NotFoundException("캠핑장 정보가 없습니다."));
 
-        // 리뷰 엔티티 생성
+        // 새로운 리뷰 엔티티 생성 및 초기화
         ReviewEntity review = ReviewEntity.builder()
                 .user(user)
                 .camp(camp)
@@ -45,18 +45,23 @@ public class ReviewService {
                 .grade(reviewRequest.getGrade())
                 .build();
 
-        // 태그와 이미지 처리
-        List<ReviewTagEntity> reviewTags = reviewRequest.getTags().stream()
-                .map(tag -> new ReviewTagEntity(review, tag))
-                .collect(Collectors.toList());
-        List<ReviewImageEntity> reviewImages = reviewRequest.getImageUrls().stream()
-                .map(url -> new ReviewImageEntity(review, url))
-                .collect(Collectors.toList());
+        // 태그 처리: null 또는 빈 리스트일 경우 무시
+        if (reviewRequest.getTags() != null && !reviewRequest.getTags().isEmpty()) {
+            List<ReviewTagEntity> reviewTags = reviewRequest.getTags().stream()
+                    .map(tag -> new ReviewTagEntity(review, tag))
+                    .collect(Collectors.toList());
+            review.getTags().addAll(reviewTags);
+        }
 
-        review.getTags().addAll(reviewTags);
-        review.getImages().addAll(reviewImages);
+        // 이미지 URL 처리: null 또는 빈 리스트일 경우 무시
+        if (reviewRequest.getImageUrls() != null && !reviewRequest.getImageUrls().isEmpty()) {
+            List<ReviewImageEntity> reviewImages = reviewRequest.getImageUrls().stream()
+                    .map(url -> new ReviewImageEntity(review, url))
+                    .collect(Collectors.toList());
+            review.getImages().addAll(reviewImages);
+        }
 
-        // 리뷰 저장
+        // 리뷰엔티티를 데이터베이스에 저장
         reviewRepository.save(review);
 
         // 리뷰 작성 후 500원 적립
@@ -65,15 +70,16 @@ public class ReviewService {
                 .mapToInt(CashEntity::getBalanceAfterTransaction)
                 .sum() + rewardAmount;
 
+        // 적립 거래 내역 생성 및 저장
         CashEntity cashTransaction = CashEntity.of(user, rewardAmount, TransactionType.DEPOSIT, newBalance);
         cashRepository.save(cashTransaction);
-
 
         // 해당 캠핑장 리뷰 개수 계산
         long reviewCount = reviewRepository.countByCampId(camp.getId());
 
         // 응답 DTO 생성
         return ReviewResponse.of(
+                review.getId(),
                 user.getLoginId(),
                 camp.getName(),
                 review.getGrade(),

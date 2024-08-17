@@ -11,23 +11,39 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RequestMapping("/api/review")
 public class ReviewController {
+    // ReviewService를 주입받기 위한 필드
+
     private final ReviewService reviewService;
 
+    /**
+     * 사용자가 특정 캠프에 대한 리뷰를 작성하는 API 엔드포인트입니다.
+     *
+     * @param campId        캠프의 고유 ID
+     * @param userId        사용자의 고유 ID
+     * @param reviewRequest 리뷰 작성 요청 정보가 담긴 DTO 객체
+     * @return 작성된 리뷰에 대한 응답 정보를 포함한 ResponseEntity 객체
+     */
     @PostMapping("/{campId}/{userId}")
     public ResponseEntity<ReviewResponse> createReview(
             @PathVariable Integer campId,
             @PathVariable Integer userId,
+            // 요청 본문에서 리뷰 정보가 담긴 DTO 추출
             @RequestBody ReviewRequest reviewRequest) {
 
         // ReviewRequest DTO에 campId와 userId를 직접 전달하여 객체 생성
         ReviewRequest updatedRequest = ReviewRequest.of(
-                userId, campId, reviewRequest.getContent(), reviewRequest.getGrade(), reviewRequest.getTags(), reviewRequest.getImageUrls()
+                userId,
+                campId,
+                reviewRequest.getContent(),
+                reviewRequest.getGrade(),
+                reviewRequest.getTags(),
+                reviewRequest.getImageUrls()
         );
 
-        // 리뷰 생성
+        // 리뷰 생성하고 결과를 ReviewResponse로 반환
         ReviewResponse reviewResponse = reviewService.createReview(updatedRequest);
 
-        // 응답
+        // HTTP tkdxo 201(created)과 함께 생성된 리뷰 응답을 반환
         return ResponseEntity.status(201).body(reviewResponse);
     }
 }

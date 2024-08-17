@@ -11,6 +11,7 @@ import java.util.List;
 @Builder
 @Getter
 public class ReviewResponse {
+    private Integer id;
     private String loginId;
     private String campName;
     private Integer grade;
@@ -21,8 +22,9 @@ public class ReviewResponse {
     private long reviewCount;
 
     // 정적 팩토리 메서드로 객체 생성
-    public static ReviewResponse of(String loginId, String campName, Integer grade, String reviewContent, LocalDateTime createdAt, List<Tag> reviewTags, List<String> reviewImages, long reviewCount) {
+    public static ReviewResponse of(Integer id, String loginId, String campName, Integer grade, String reviewContent, LocalDateTime createdAt, List<Tag> reviewTags, List<String> reviewImages, long reviewCount) {
         return ReviewResponse.builder()
+                .id(id)
                 .loginId(loginId)
                 .campName(campName)
                 .grade(grade)
