@@ -6,6 +6,7 @@ import com.github.project3.dto.mypage.UserProfileUpdatePasswordRequest;
 import com.github.project3.dto.mypage.UserProfileUpdateResponse;
 import com.github.project3.entity.user.UserEntity;
 import com.github.project3.service.mypage.UserProfileService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -43,12 +44,12 @@ public class UserProfileController {
         userProfileService.getUpdateImage(id, images);
         return ResponseEntity.ok("유저프로필 수정 완료");
     }
-    // 유저 비밀번호 수정
-//    @PutMapping("/password/{id}")
-//    public ResponseEntity <String> getUpdatePasswordUser(
-//            @PathVariable Integer id,
-//            @RequestBody UserProfileUpdatePasswordRequest userProfileUpdatePasswordRequest){
-//        userProfileService.getUpdatePasswordUser(id, userProfileUpdatePasswordRequest);
-//        return new ResponseEntity<>()
-//    }
+    @PutMapping("/password/{id}")
+    public ResponseEntity <String> getUpdatePasswordUser(
+            @PathVariable Integer id,
+            @Valid @RequestBody UserProfileUpdatePasswordRequest UpdatePasswordRequest){
+
+        userProfileService.getUpdatePasswordUser(id, UpdatePasswordRequest);
+        return ResponseEntity.ok("비밀번호 변경 완료");
+    }
 }
