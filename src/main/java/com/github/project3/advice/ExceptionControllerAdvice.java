@@ -35,4 +35,12 @@ public class ExceptionControllerAdvice {
         log.error("Client 요청에 문제가 있어 다음처럼 출력합니다. " + ive.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ive.getMessage());
     }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException ive) {
+        log.error("요청에 문제가 있어 다음처럼 출력합니다. " + ive.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ive.getMessage());
+    }
+
 }
