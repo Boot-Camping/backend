@@ -2,6 +2,7 @@ package com.github.project3.service.mypage;
 
 import com.github.project3.dto.mypage.UserProfileResponse;
 import com.github.project3.dto.mypage.UserProfileUpdateImageResponse;
+import com.github.project3.dto.mypage.UserProfileUpdatePasswordRequest;
 import com.github.project3.dto.mypage.UserProfileUpdateResponse;
 import com.github.project3.entity.user.CashEntity;
 import com.github.project3.entity.user.UserEntity;
@@ -64,8 +65,8 @@ public class UserProfileService {
     }
 
     @Transactional
-    public UserProfileUpdateImageResponse getUpdateImage(Integer Id, MultipartFile images){
-        UserEntity user = userProfileRepository.findById(Id)
+    public UserProfileUpdateImageResponse getUpdateImage(Integer id, MultipartFile images){
+        UserEntity user = userProfileRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
 
         UserImageEntity userImage = userProfileImageRepository.findByUserId(user)
@@ -88,5 +89,10 @@ public class UserProfileService {
             throw new RuntimeException("알수없는 오류가 발생했습니다.");
         }
         return UserProfileUpdateImageResponse.from(userImage);
+    }
+
+    public void getUpdatePasswordUser(Integer id, UserProfileUpdatePasswordRequest UpdatePasswordRequest) {
+        UserEntity user = UserProfileRepository.findById(id)
+                .orElseThrow(() -> )
     }
 }
