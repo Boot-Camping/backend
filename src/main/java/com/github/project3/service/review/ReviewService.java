@@ -13,11 +13,14 @@ import com.github.project3.repository.camp.CampRepository;
 import com.github.project3.repository.cash.CashRepository;
 import com.github.project3.repository.review.ReviewRepository;
 import com.github.project3.repository.user.UserRepository;
+import com.github.project3.service.S3Service;
 import com.github.project3.service.exceptions.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,9 +31,10 @@ public class ReviewService {
     private final UserRepository userRepository;
     private final CampRepository campRepository;
     private final CashRepository cashRepository;
+    private final S3Service s3Service;
 
     @Transactional
-    public ReviewResponse createReview(Integer userId, Integer campId, ReviewRequest reviewRequest) {
+    public ReviewResponse createReview(Integer userId, Integer campId, ReviewRequest reviewRequest, List<MultipartFile> reviewImages) {
         // 사용자와 캠핑장 정보 가져오기
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("유저 정보가 없습니다."));
@@ -63,12 +67,18 @@ public class ReviewService {
             review.getTags().addAll(reviewTags);
         }
 
-        // 이미지 URL 처리: null 또는 빈 리스트일 경우 무시
-        if (updatedRequest.getImageUrls() != null && !updatedRequest.getImageUrls().isEmpty()) {
-            List<ReviewImageEntity> reviewImages = updatedRequest.getImageUrls().stream()
-                    .map(url -> new ReviewImageEntity(review, url))
-                    .collect(Collectors.toList());
-            review.getImages().addAll(reviewImages);
+        if (reviewImages != null && !reviewImages.isEmpty()) {
+            for (MultipartFile image : reviewImages) {
+                try {
+                    String imageUrl = s3Service.uploadReviewImage(image);
+                    ReviewImageEntity reviewImageEntity = new ReviewImageEntity(review, imageUrl);
+                    review.getImages().add(reviewImageEntity);
+                } catch (IOException e) {
+                    // 로깅 또는 적절한 오류 처리
+                    System.err.println("Image upload failed: " + e.getMessage());
+                    throw new RuntimeException("Image upload failed", e);
+                }
+            }
         }
 
         // 리뷰엔티티를 데이터베이스에 저장
