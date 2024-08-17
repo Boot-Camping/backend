@@ -14,6 +14,7 @@ import com.github.project3.repository.bookDate.BookDateRepository;
 import com.github.project3.repository.camp.CampRepository;
 import com.github.project3.repository.cash.CashRepository;
 import com.github.project3.repository.user.UserRepository;
+import com.github.project3.service.cash.CashService;
 import com.github.project3.service.exceptions.NotAcceptException;
 import com.github.project3.service.exceptions.NotFoundException;
 import com.github.project3.service.user.UserService;
@@ -33,6 +34,7 @@ import java.util.List;
 public class BookService {
 
     private final UserService userService;
+    private final CashService cashService;
     private final UserRepository userRepository;
     private final BookRepository bookRepository;
     private final BookDateRepository bookDateRepository;
@@ -53,27 +55,8 @@ public class BookService {
             throw new NotAcceptException("해당 캠핑지는 이미 예약된 상태입니다. 예약이 취소됩니다.");
         }
 
-        // 찾은 user 의 현재 잔액
-        Integer cashValue = user.getCash().stream()
-                .max(Comparator.comparing(CashEntity::getTransactionDate))
-                .map(CashEntity::getBalanceAfterTransaction)
-                .orElse(0);
-
-        // user 의 cash 변경
-        Integer totalPrice = bookRegisterRequest.getTotalPrice();
-        Integer newBalance = cashValue - totalPrice;
-
-        if(totalPrice > cashValue){
-            throw new NotAcceptException("고객님의 현재 잔액은 " + cashValue + "원 입니다. 예약이 취소됩니다.");
-        }
-
-        CashEntity paymentCash = CashEntity.of(
-                user,
-                totalPrice,
-                TransactionType.PAYMENT,
-                newBalance
-        );
-        cashRepository.save(paymentCash);
+        // user 의 cash 변동사항 저장
+        cashService.processTransaction(user, bookRegisterRequest.getTotalPrice(), TransactionType.PAYMENT);
 
         // 예약 정보 등록
         BookEntity book = BookEntity.of(
@@ -108,7 +91,7 @@ public class BookService {
 
     // 예약 취소 기능
     @Transactional
-    public BookCancelResponse cancelBook(Integer bookId, Integer userId) {
+    public void cancelBook(Integer bookId, Integer userId) {
 
         BookEntity book = bookRepository.findById(bookId).orElseThrow(() -> new NotFoundException("해당 ID의 예약이 존재하지 않습니다."));
 
@@ -120,29 +103,9 @@ public class BookService {
         book.setStatus(Status.CANCEL);
         bookRepository.save(book);
 
-        // 찾은 user 의 현재 잔액
         UserEntity user = userRepository.findById(userId).orElseThrow(()-> new NotFoundException("해당 ID의 사용자가 존재하지 않습니다."));
 
-        Integer cashValue = user.getCash().stream()
-                .max(Comparator.comparing(CashEntity::getTransactionDate))
-                .map(CashEntity::getBalanceAfterTransaction)
-                .orElse(0);
-
-        // user 의 cash 환불
-        Integer totalPrice = book.getTotalPrice();
-        Integer newBalance = cashValue + totalPrice;
-
-        CashEntity refundCash = CashEntity.of(
-                book.getUser(),
-                totalPrice,
-                TransactionType.REFUND,
-                newBalance
-        );
-        cashRepository.save(refundCash);
-
-        // 환불하고 남은 잔액 반환
-        return BookCancelResponse.builder()
-                .totalPrice(newBalance)
-                .build();
+        // user 의 cash 변동사항 저장
+        cashService.processTransaction(user, book.getTotalPrice(), TransactionType.REFUND);
     }
 }
