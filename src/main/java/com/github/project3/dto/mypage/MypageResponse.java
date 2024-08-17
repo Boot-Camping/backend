@@ -2,7 +2,6 @@ package com.github.project3.dto.mypage;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
@@ -10,7 +9,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserProfileResponse {
+public class MypageResponse {
     private Integer id;
     private String name;
     private String password;

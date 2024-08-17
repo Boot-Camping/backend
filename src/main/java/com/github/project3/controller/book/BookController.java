@@ -1,14 +1,12 @@
 package com.github.project3.controller.book;
 
-import com.github.project3.dto.book.BookCancelResponse;
+import com.github.project3.dto.book.BookInquiryResponse;
 import com.github.project3.dto.book.BookRegisterRequest;
-import com.github.project3.dto.mypage.UserProfileResponse;
 import com.github.project3.service.book.BookService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -29,5 +27,11 @@ public class BookController {
     public ResponseEntity<String> cancelBook(@PathVariable Integer bookId, @PathVariable Integer userId){
         bookService.cancelBook(bookId, userId);
         return ResponseEntity.ok("예약이 취소되었습니다.");
+    }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<List<BookInquiryResponse>> inquiryBook(@PathVariable Integer userId){
+        List<BookInquiryResponse> response = bookService.inquiryBook(userId);
+        return ResponseEntity.ok(response);
     }
 }

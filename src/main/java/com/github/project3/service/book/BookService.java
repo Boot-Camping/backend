@@ -1,7 +1,9 @@
 package com.github.project3.service.book;
 
 import com.github.project3.dto.book.BookCancelResponse;
+import com.github.project3.dto.book.BookInquiryResponse;
 import com.github.project3.dto.book.BookRegisterRequest;
+import com.github.project3.dto.camp.CampResponse;
 import com.github.project3.entity.book.BookEntity;
 import com.github.project3.entity.book.BookDateEntity;
 import com.github.project3.entity.book.enums.Status;
@@ -23,10 +25,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.awt.print.Book;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -48,11 +52,13 @@ public class BookService {
 
         CampEntity camp = campRepository.findById(campId).orElseThrow(()-> new NotFoundException("해당하는 캠핑지가 존재하지 않습니다."));
 
-        // 예약 상태 확인
-        boolean isBookingExists = bookRepository.existsByUserAndCampAndStatus(user, camp, Status.BOOKING);
+        // 예약 중복 날짜 확인
+        LocalDateTime requestCheckIn = bookRegisterRequest.getCheckIn();
+        LocalDateTime requestCheckOut = bookRegisterRequest.getCheckOut();
+        boolean isDateConflict = bookRepository.existsByCampAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(camp, Status.BOOKING, requestCheckOut, requestCheckIn);
 
-        if (isBookingExists) {
-            throw new NotAcceptException("해당 캠핑지는 이미 예약된 상태입니다. 예약이 취소됩니다.");
+        if (isDateConflict) {
+            throw new NotAcceptException("해당 날짜에 이미 예약이 존재합니다. 다른 날짜를 선택해주세요.");
         }
 
         // user 의 cash 변동사항 저장
@@ -74,8 +80,6 @@ public class BookService {
 
         // 예약 날짜 등록
         List<BookDateEntity> bookDates = new ArrayList<>();
-        LocalDateTime requestCheckIn = bookRegisterRequest.getCheckIn();
-        LocalDateTime requestCheckOut = bookRegisterRequest.getCheckOut();
 
         // 반복문으로 체크인날짜, 체크아웃날짜, 중간에 있는 날짜들도 DB에 저장
         while (!requestCheckIn.isAfter(requestCheckOut)) {
@@ -93,7 +97,7 @@ public class BookService {
     @Transactional
     public void cancelBook(Integer bookId, Integer userId) {
 
-        BookEntity book = bookRepository.findById(bookId).orElseThrow(() -> new NotFoundException("해당 ID의 예약이 존재하지 않습니다."));
+        BookEntity book = bookRepository.findById(bookId).orElseThrow(() -> new NotFoundException("해당하는 예약이 존재하지 않습니다."));
 
         if (book.getStatus() == Status.CANCEL) {
             throw new NotAcceptException("해당 예약은 이미 취소된 상태입니다.");
@@ -107,5 +111,38 @@ public class BookService {
 
         // user 의 cash 변동사항 저장
         cashService.processTransaction(user, book.getTotalPrice(), TransactionType.REFUND);
+    }
+
+    // 예약 조회 기능
+    public List<BookInquiryResponse> inquiryBook(Integer userId) {
+        UserEntity user = userRepository.findById(userId).orElseThrow(()-> new NotFoundException("해당 ID의 사용자가 존재하지 않습니다."));
+
+        List<BookEntity> books = bookRepository.findByUserId(userId);
+
+        if (books.isEmpty()) {
+            throw new NotFoundException("해당하는 예약이 존재하지 않습니다.");
+        }
+
+        // 각 BookEntity 를 BookInquiryResponse 로 변환하여 리스트로 반환
+        return books.stream()
+                .map(book -> {
+                    // camp 의 여러 image 중 첫 번째 이미지를 선택
+                    String firstImage = !book.getCamp().getImages().isEmpty()
+                            ? book.getCamp().getImages().get(0).getImageUrl()
+                            : null;
+
+                    return BookInquiryResponse.of(
+                            book.getId(),
+                            book.getCamp().getName(),
+                            firstImage,
+                            book.getStartDate(),
+                            book.getEndDate(),
+                            book.getNum(),
+                            book.getTotalPrice(),
+                            book.getRequest(),
+                            book.getStatus()
+                    );
+                })
+                .collect(Collectors.toList());
     }
 }
