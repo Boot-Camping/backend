@@ -1,7 +1,6 @@
 package com.github.project3.dto.mypage;
 
 import com.github.project3.entity.user.UserEntity;
-import com.github.project3.entity.user.UserImageEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,12 +8,12 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserProfileUpdatePasswordResponse {
+public class MypageUpdatePasswordResponse {
     private Integer id;
     private boolean newPassword;
 
     // 스태틱 팩토리 메서드
-    public static UserProfileUpdatePasswordResponse from(UserEntity user) {
-        return new UserProfileUpdatePasswordResponse(user.getId(), true);
+    public static MypageUpdatePasswordResponse from(UserEntity user) {
+        return new MypageUpdatePasswordResponse(user.getId(), true);
     }
 }
