@@ -6,6 +6,7 @@ import com.github.project3.dto.mypage.UserProfileUpdatePasswordRequest;
 import com.github.project3.dto.mypage.UserProfileUpdateResponse;
 import com.github.project3.entity.user.UserEntity;
 import com.github.project3.service.mypage.UserProfileService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -46,7 +47,8 @@ public class UserProfileController {
     @PutMapping("/password/{id}")
     public ResponseEntity <String> getUpdatePasswordUser(
             @PathVariable Integer id,
-            @RequestBody UserProfileUpdatePasswordRequest UpdatePasswordRequest){
+            @Valid @RequestBody UserProfileUpdatePasswordRequest UpdatePasswordRequest){
+
         userProfileService.getUpdatePasswordUser(id, UpdatePasswordRequest);
         return ResponseEntity.ok("비밀번호 변경 완료");
     }
