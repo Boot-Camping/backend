@@ -30,12 +30,22 @@ public class ReviewService {
     private final CashRepository cashRepository;
 
     @Transactional
-    public ReviewResponse createReview(ReviewRequest reviewRequest) {
+    public ReviewResponse createReview(Integer userId, Integer campId, ReviewRequest reviewRequest) {
         // 사용자와 캠핑장 정보 가져오기
-        UserEntity user = userRepository.findById(reviewRequest.getUserId())
+        UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("유저 정보가 없습니다."));
-        CampEntity camp = campRepository.findById(reviewRequest.getCampId())
+        CampEntity camp = campRepository.findById(campId)
                 .orElseThrow(() -> new NotFoundException("캠핑장 정보가 없습니다."));
+
+        // ReviewRequest DTO에 campId와 userId를 직접 전달하여 객체 생성
+        ReviewRequest updatedRequest = ReviewRequest.of(
+                userId,
+                campId,
+                reviewRequest.getContent(),
+                reviewRequest.getGrade(),
+                reviewRequest.getTags(),
+                reviewRequest.getImageUrls()
+        );
 
         // 새로운 리뷰 엔티티 생성 및 초기화
         ReviewEntity review = ReviewEntity.builder()
@@ -46,16 +56,16 @@ public class ReviewService {
                 .build();
 
         // 태그 처리: null 또는 빈 리스트일 경우 무시
-        if (reviewRequest.getTags() != null && !reviewRequest.getTags().isEmpty()) {
-            List<ReviewTagEntity> reviewTags = reviewRequest.getTags().stream()
+        if (updatedRequest.getTags() != null && !updatedRequest.getTags().isEmpty()) {
+            List<ReviewTagEntity> reviewTags = updatedRequest.getTags().stream()
                     .map(tag -> new ReviewTagEntity(review, tag))
                     .collect(Collectors.toList());
             review.getTags().addAll(reviewTags);
         }
 
         // 이미지 URL 처리: null 또는 빈 리스트일 경우 무시
-        if (reviewRequest.getImageUrls() != null && !reviewRequest.getImageUrls().isEmpty()) {
-            List<ReviewImageEntity> reviewImages = reviewRequest.getImageUrls().stream()
+        if (updatedRequest.getImageUrls() != null && !updatedRequest.getImageUrls().isEmpty()) {
+            List<ReviewImageEntity> reviewImages = updatedRequest.getImageUrls().stream()
                     .map(url -> new ReviewImageEntity(review, url))
                     .collect(Collectors.toList());
             review.getImages().addAll(reviewImages);
@@ -66,12 +76,14 @@ public class ReviewService {
 
         // 리뷰 작성 후 500원 적립
         int rewardAmount = 500;
-        int newBalance = user.getCash().stream()
-                .mapToInt(CashEntity::getBalanceAfterTransaction)
-                .sum() + rewardAmount;
+        int currentBalance = user.getCash().stream()
+                .max((c1,c2) -> c1.getTransactionDate().compareTo(c2.getTransactionDate()))
+                .map(CashEntity::getBalanceAfterTransaction)
+                .orElse(0);
+        int newBalance = currentBalance + rewardAmount;
 
         // 적립 거래 내역 생성 및 저장
-        CashEntity cashTransaction = CashEntity.of(user, rewardAmount, TransactionType.DEPOSIT, newBalance);
+        CashEntity cashTransaction = CashEntity.of(user, rewardAmount, TransactionType.REWARD, newBalance);
         cashRepository.save(cashTransaction);
 
         // 해당 캠핑장 리뷰 개수 계산
