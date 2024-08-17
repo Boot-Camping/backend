@@ -7,9 +7,12 @@ import com.github.project3.entity.user.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
 public interface BookRepository extends JpaRepository<BookEntity, Integer> {
-    boolean existsByUserAndCampAndStatus(UserEntity user, CampEntity camp, Status status);
+
+    boolean existsByCampAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+            CampEntity camp, Status status, LocalDateTime checkOut, LocalDateTime checkIn);
 }

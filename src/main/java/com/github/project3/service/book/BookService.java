@@ -48,20 +48,13 @@ public class BookService {
 
         CampEntity camp = campRepository.findById(campId).orElseThrow(()-> new NotFoundException("해당하는 캠핑지가 존재하지 않습니다."));
 
-        // 중복 날짜 확인
+        // 예약 중복 날짜 확인
         LocalDateTime requestCheckIn = bookRegisterRequest.getCheckIn();
         LocalDateTime requestCheckOut = bookRegisterRequest.getCheckOut();
-        boolean isDateConflict = bookDateRepository.existsByBook_CampAndDateBetween(camp, requestCheckIn, requestCheckOut);
+        boolean isDateConflict = bookRepository.existsByCampAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(camp, Status.BOOKING, requestCheckOut, requestCheckIn);
 
         if (isDateConflict) {
             throw new NotAcceptException("해당 날짜에 이미 예약이 존재합니다. 다른 날짜를 선택해주세요.");
-        }
-
-        // 예약 상태 확인
-        boolean isBookingExists = bookRepository.existsByUserAndCampAndStatus(user, camp, Status.BOOKING);
-
-        if (isBookingExists) {
-            throw new NotAcceptException("해당 캠핑지는 이미 예약된 상태입니다. 예약이 취소됩니다.");
         }
 
         // user 의 cash 변동사항 저장
