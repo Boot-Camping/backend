@@ -8,13 +8,13 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserProfileUpdateImageResponse {
+public class MypageUpdateImageResponse {
     private Integer id;
     private String profileImageUrl;
 
     // 스태틱 팩토리 메서드
-    public static UserProfileUpdateImageResponse from(UserImageEntity userImage) {
-        UserProfileUpdateImageResponse response = new UserProfileUpdateImageResponse();
+    public static MypageUpdateImageResponse from(UserImageEntity userImage) {
+        MypageUpdateImageResponse response = new MypageUpdateImageResponse();
         response.id = userImage.getId();
         response.profileImageUrl = userImage.getImageUrl();
 

@@ -1,15 +1,10 @@
 package com.github.project3.controller.book;
 
-import com.github.project3.dto.book.BookCancelResponse;
 import com.github.project3.dto.book.BookRegisterRequest;
-import com.github.project3.dto.mypage.UserProfileResponse;
 import com.github.project3.service.book.BookService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor

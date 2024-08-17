@@ -1,14 +1,15 @@
 package com.github.project3.service.mypage;
 
 import com.github.project3.dto.mypage.*;
+import com.github.project3.entity.notice.NoticeEntity;
 import com.github.project3.entity.user.CashEntity;
 import com.github.project3.entity.user.UserEntity;
 import com.github.project3.entity.user.UserImageEntity;
-import com.github.project3.repository.mypage.UserProfileImageRepository;
-import com.github.project3.repository.mypage.UserProfileRepository;
+import com.github.project3.repository.mypage.MypageImageRepository;
+import com.github.project3.repository.mypage.MypageRepository;
+import com.github.project3.repository.mypage.NoticeRepository;
 import com.github.project3.service.S3Service;
 import com.github.project3.service.exceptions.InvalidValueException;
-import com.github.project3.service.exceptions.NotAcceptException;
 import com.github.project3.service.exceptions.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,20 +27,21 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class UserProfileService {
+public class MypageService {
 
-    private final UserProfileImageRepository userProfileImageRepository;
-    private final UserProfileRepository userProfileRepository;
+    private final MypageImageRepository mypageImageRepository;
+    private final MypageRepository mypageRepository;
     private final PasswordEncoder passwordEncoder;
+    private final NoticeRepository noticeRepository;
     private final S3Service s3Service;
 
     // 유저 정보조회
-    public List<UserProfileResponse> getUserMyPage(Integer id){
-        Optional<UserEntity> user = userProfileRepository.findById(id);
+    public List<MypageResponse> getUserMyPage(Integer id){
+        Optional<UserEntity> user = mypageRepository.findById(id);
         return user.stream().map(this::convertToUserProfileResponse).collect(Collectors.toList());
     }
-    private UserProfileResponse convertToUserProfileResponse(UserEntity userEntity){
-        return new UserProfileResponse(
+    private MypageResponse convertToUserProfileResponse(UserEntity userEntity){
+        return new MypageResponse(
                 userEntity.getId(),
                 userEntity.getName(),
                 userEntity.getPassword(),
@@ -53,8 +55,8 @@ public class UserProfileService {
 
     // 유저 정보 수정
     @Transactional
-    public UserProfileUpdateResponse getUpdateUser(Integer id, String tel, String addr){
-        UserEntity user = userProfileRepository.findById(id).orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
+    public MypageUpdateResponse getUpdateUser(Integer id, String tel, String addr){
+        UserEntity user = mypageRepository.findById(id).orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
 
         if (tel != null){
             user.setTel(tel);
@@ -63,18 +65,18 @@ public class UserProfileService {
             user.setAddr(addr);
         }
 
-        userProfileRepository.save(user);
+        mypageRepository.save(user);
 
-        return UserProfileUpdateResponse.from(user);
+        return MypageUpdateResponse.from(user);
     }
 
     // 유저 이미지 수정
     @Transactional
-    public UserProfileUpdateImageResponse getUpdateImage(Integer id, MultipartFile images){
-        UserEntity user = userProfileRepository.findById(id)
+    public MypageUpdateImageResponse getUpdateImage(Integer id, MultipartFile images){
+        UserEntity user = mypageRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
 
-        UserImageEntity userImage = userProfileImageRepository.findByUserId(user)
+        UserImageEntity userImage = mypageImageRepository.findByUserId(user)
                 // 값을 갖고있지 않은경우
                 .orElseGet(() -> {
                     UserImageEntity newUserImage = new UserImageEntity();
@@ -88,17 +90,17 @@ public class UserProfileService {
 
             // 프로필 이미지 URL 업데이트
             userImage.setImageUrl(profileImageUrl);
-            userProfileImageRepository.save(userImage);
+            mypageImageRepository.save(userImage);
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException("알수없는 오류가 발생했습니다.");
         }
-        return UserProfileUpdateImageResponse.from(userImage);
+        return MypageUpdateImageResponse.from(userImage);
     }
 
     // 유저 비밀번호 수정
-    public UserProfileUpdatePasswordResponse getUpdatePasswordUser(Integer id, UserProfileUpdatePasswordRequest PasswordRequest) {
-        UserEntity user = userProfileRepository.findById(id)
+    public MypageUpdatePasswordResponse getUpdatePasswordUser(Integer id, MypageUpdatePasswordRequest PasswordRequest) {
+        UserEntity user = mypageRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
 
         // 비밀번호 패턴 검증 추가
@@ -116,8 +118,18 @@ public class UserProfileService {
         } else {
             throw new InvalidValueException("비밀번호가 다릅니다.");
         }
-        userProfileRepository.save(user);
+        mypageRepository.save(user);
 
-        return UserProfileUpdatePasswordResponse.from(user);
+        return MypageUpdatePasswordResponse.from(user);
+    }
+    // 공지사항 조회
+    public List<NoticeResponse> getNoticeAll(){
+        List<NoticeEntity> notice = noticeRepository.findAllByOrderByCreatedAtDesc();
+
+        if (notice.isEmpty()){
+            throw new NotFoundException("등록된 공지사항이 없습니다.");
+        }
+
+        return notice.stream().map(NoticeResponse::from).collect(Collectors.toList());
     }
 }
