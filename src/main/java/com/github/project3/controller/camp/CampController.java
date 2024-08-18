@@ -2,6 +2,7 @@ package com.github.project3.controller.camp;
 
 import com.github.project3.dto.camp.CampRequest;
 import com.github.project3.dto.camp.CampResponse;
+import com.github.project3.dto.camp.CampSpecResponse;
 import com.github.project3.dto.camp.CampUpdateRequest;
 import com.github.project3.service.camp.CampService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -77,5 +78,19 @@ public class CampController {
 	public ResponseEntity<String> deleteCamp(@PathVariable Integer campId) {
 		campService.deleteCamp(campId);
 		return ResponseEntity.ok("캠핑지가 성공적으로 삭제되었습니다.");
+	}
+
+	/**
+	 * 특정 캠핑지의 세부 정보를 조회합니다.
+	 *
+	 * @param campId 조회할 캠핑지의 ID
+	 * @return 조회된 캠핑지의 세부 정보와 예약된 날짜들이 포함된 응답 객체
+	 */
+	@GetMapping("/{campId}")
+	@Operation(summary = "캠핑지 세부 정보 조회", description = "특정 캠핑지의 세부 정보를 조회합니다.")
+	public ResponseEntity<CampSpecResponse> getCampById(@PathVariable Integer campId) {
+		// 캠핑지 ID를 사용하여 캠핑지의 세부 정보를 조회
+		CampSpecResponse response = campService.getCampById(campId);
+		return ResponseEntity.ok(response);
 	}
 }

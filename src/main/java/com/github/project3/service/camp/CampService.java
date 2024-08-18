@@ -2,6 +2,8 @@ package com.github.project3.service.camp;
 
 import com.github.project3.dto.camp.*;
 import com.github.project3.entity.camp.*;
+
+import com.github.project3.repository.bookDate.BookDateRepository;
 import com.github.project3.repository.camp.CampRepository;
 import com.github.project3.service.S3Service;
 import com.github.project3.service.exceptions.FileUploadException;
@@ -11,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,6 +22,7 @@ import java.util.stream.Collectors;
 public class CampService {
 
 	private final CampRepository campRepository;
+	private final BookDateRepository bookDateRepository;
 	private final DescriptionService descriptionService;
 	private final ImageService imageService;
 	private final CategoryService categoryService;
@@ -143,5 +147,18 @@ public class CampService {
 				.orElseThrow(() -> new NotFoundException("해당 캠핑지를 찾을 수 없습니다."));
 
 		campRepository.deleteById(campId); // 여기서 DataIntegrityViolationException 발생 가능
+	}
+
+	@Transactional
+	public CampSpecResponse getCampById(Integer campId) {
+		// 주어진 캠핑지 ID로 캠핑지 정보를 조회, 존재하지 않을 경우 NotFoundException을 발생
+		CampEntity campEntity = campRepository.findById(campId)
+				.orElseThrow(() -> new NotFoundException("해당 캠핑지를 찾을 수 없습니다."));
+
+		// 해당 캠핑지의 예약된 날짜들을 조회
+		List<LocalDateTime> reservedDates = bookDateRepository.findReservedDatesByCampId(campId);
+
+		// CampSpecResponse의 스태틱 팩토리 메서드를 사용하여 캠핑지 엔티티와 예약된 날짜들을 응답 객체로 변환하여 반환
+		return CampSpecResponse.fromEntity(campEntity, reservedDates);
 	}
 }
