@@ -4,6 +4,8 @@ import com.github.project3.dto.camp.*;
 import com.github.project3.entity.camp.*;
 import com.github.project3.repository.camp.CampRepository;
 import com.github.project3.service.S3Service;
+import com.github.project3.service.exceptions.FileUploadException;
+import com.github.project3.service.exceptions.NotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -44,7 +46,8 @@ public class CampService {
 					try {
 						return s3Service.uploadFile(file);
 					} catch (IOException e) {
-						throw new RuntimeException("이미지 업로드 실패", e);
+						// 파일 업로드 중 문제가 발생하면 FileUploadException을 발생.
+						throw new FileUploadException("이미지 업로드 중 오류가 발생했습니다.", e);
 					}
 				})
 				.collect(Collectors.toList());
@@ -107,7 +110,8 @@ public class CampService {
 					try {
 						return s3Service.uploadFile(file);
 					} catch (IOException e) {
-						throw new RuntimeException("Image upload failed", e);
+						// 파일 업로드 중 문제가 발생하면 FileUploadException을 발생시.
+						throw new FileUploadException("이미지 업로드 중 오류가 발생했습니다.", e);
 					}
 				})
 				.collect(Collectors.toList());
@@ -124,7 +128,7 @@ public class CampService {
 
 		// 업데이트된 엔티티를 다시 로드하여 반환
 		CampEntity updatedCampEntity = campRepository.findById(updateRequest.getId())
-				.orElseThrow(() -> new RuntimeException("Camp not found after update"));
+				.orElseThrow(() -> new NotFoundException("업데이트 후 캠핑지를 찾을 수 없습니다."));
 
 		return CampResponse.fromEntity(updatedCampEntity);
 	}
@@ -135,11 +139,9 @@ public class CampService {
 	 */
 	@Transactional
 	public void deleteCamp(Integer campId) {
-		// 캠핑지가 존재하는지 확인
 		CampEntity campEntity = campRepository.findById(campId)
-				.orElseThrow(() -> new RuntimeException("Camp not found"));
+				.orElseThrow(() -> new NotFoundException("해당 캠핑지를 찾을 수 없습니다."));
 
-		// 캠핑지 삭제
-		campRepository.deleteById(campId);
+		campRepository.deleteById(campId); // 여기서 DataIntegrityViolationException 발생 가능
 	}
 }
