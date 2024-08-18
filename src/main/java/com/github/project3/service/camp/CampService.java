@@ -10,6 +10,9 @@ import com.github.project3.service.exceptions.FileUploadException;
 import com.github.project3.service.exceptions.NotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -72,16 +75,22 @@ public class CampService {
 	}
 
 	/**
-	 * 모든 캠핑지 조회
+	 * 모든 캠핑지 조회 (페이지네이션 적용)
 	 *
-	 * @return 캠핑지 리스트
+	 * @param page 페이지 번호
+	 * @param size 페이지 크기
+	 * @return 페이지네이션이 적용된 캠핑지 응답 리스트
 	 */
 	@Transactional
-	public List<CampResponse> getAllCamps() {
-		List<CampEntity> camps = campRepository.findAll();
-		return camps.stream()
-				.map(CampResponse::fromEntity)
-				.collect(Collectors.toList());
+	public CampPageResponse getAllCamps(int page, int size) {
+		Pageable pageable = PageRequest.of(page, size);
+		Page<CampEntity> campEntities = campRepository.findAll(pageable);
+
+		// CampEntity를 CampResponse로 변환하여 Page로 반환
+		Page<CampResponse> campResponses = campEntities.map(CampResponse::fromEntity);
+
+		// CampPageResponse DTO로 변환하여 반환
+		return new CampPageResponse(campResponses);
 	}
 
 	/**
@@ -160,5 +169,30 @@ public class CampService {
 
 		// CampSpecResponse의 스태틱 팩토리 메서드를 사용하여 캠핑지 엔티티와 예약된 날짜들을 응답 객체로 변환하여 반환
 		return CampSpecResponse.fromEntity(campEntity, reservedDates);
+	}
+
+	/**
+	 * 카테고리별로 캠핑지를 조회하며 페이지네이션을 적용합니다.
+	 *
+	 * @param categoryName 카테고리 이름
+	 * @param page 페이지 번호
+	 * @param size 페이지 크기
+	 * @return 페이지네이션이 적용된 캠핑지 응답 리스트
+	 */
+	@Transactional
+	public CampPageResponse getCampsByCategory(String categoryName, int page, int size) {
+		Pageable pageable = PageRequest.of(page, size);
+		Page<CampEntity> campEntities = campRepository.findByCategoryName(categoryName, pageable);
+
+		if (campEntities.isEmpty()) {
+			// 해당 카테고리에 캠핑지가 없는 경우 예외 처리
+			throw new NotFoundException("해당 카테고리에 등록된 캠핑지가 없습니다.");
+		}
+
+		// CampEntity를 CampResponse로 변환하여 Page로 반환
+		Page<CampResponse> campResponses = campEntities.map(CampResponse::fromEntity);
+
+		// CampPageResponse DTO로 변환하여 반환
+		return new CampPageResponse(campResponses);
 	}
 }
