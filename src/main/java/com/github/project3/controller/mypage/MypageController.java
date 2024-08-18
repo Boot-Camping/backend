@@ -62,9 +62,9 @@ public class MypageController {
 
     // 찜 등록
     @PostMapping("/wishlist/add/{campId}/{userId}")
-    public ResponseEntity <String> signupWishlist(
+    public ResponseEntity <String> registerWishlist(
             @PathVariable Integer campId, @PathVariable Integer userId){
-        mypageService.signupWishlist(campId, userId);
+        mypageService.registerWishlist(campId, userId);
         return ResponseEntity.ok("찜 등록 완료");
     }
     // 찜 조회

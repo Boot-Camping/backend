@@ -16,6 +16,7 @@ import com.github.project3.repository.mypage.WishlistRepository;
 import com.github.project3.repository.user.UserRepository;
 import com.github.project3.service.S3Service;
 import com.github.project3.service.exceptions.InvalidValueException;
+import com.github.project3.service.exceptions.NotAcceptException;
 import com.github.project3.service.exceptions.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.weaver.ast.Not;
@@ -146,14 +147,14 @@ public class MypageService {
     // 공지사항 상세조회
 
     // 찜 등록
-    public void signupWishlist(Integer campId, Integer userId){
+    public void registerWishlist(Integer campId, Integer userId){
         UserEntity user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("등록된 사용자를 찾을 수 없습니다."));
 
         CampEntity camp = campRepository.findById(campId).orElseThrow(() -> new NotFoundException("등록된 캠프를 찾을 수 없습니다."));
 
         boolean alreadyWishlist = wishlistRepository.existsByCampAndUser(camp, user);
         if (alreadyWishlist) {
-            throw new IllegalArgumentException("이미 찜등록이 되어있는 상품입니다.");
+            throw new NotAcceptException("이미 찜등록이 되어있는 상품입니다.");
         }
 
         WishlistEntity wishlist = new WishlistEntity();
