@@ -152,8 +152,9 @@ public class CampService {
 	 */
 	@Transactional
 	public void deleteCamp(Integer campId) {
-		CampEntity campEntity = campRepository.findById(campId)
+		campRepository.findById(campId)
 				.orElseThrow(() -> new NotFoundException("해당 캠핑지를 찾을 수 없습니다."));
+
 
 		campRepository.deleteById(campId); // 여기서 DataIntegrityViolationException 발생 가능
 	}
