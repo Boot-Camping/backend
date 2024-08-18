@@ -1,6 +1,7 @@
 package com.github.project3.entity.camp;
 
 
+import com.github.project3.entity.wishlist.WishlistEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -54,6 +55,9 @@ public class CampEntity {
     @Builder.Default
     @OneToMany(mappedBy = "camp", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CampCategoryEntity> campCategories = new ArrayList<>();
+
+    @OneToMany(mappedBy = "camp", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<WishlistEntity> wishlist;
 
     @PrePersist
     protected void onCreate() {

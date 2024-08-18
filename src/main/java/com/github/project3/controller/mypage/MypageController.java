@@ -1,8 +1,10 @@
 package com.github.project3.controller.mypage;
 
+import com.github.project3.dto.mypage.MypageCampResponse;
 import com.github.project3.dto.mypage.MypageResponse;
 import com.github.project3.dto.mypage.MypageUpdatePasswordRequest;
 import com.github.project3.dto.mypage.NoticeResponse;
+import com.github.project3.entity.camp.CampEntity;
 import com.github.project3.service.mypage.MypageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -55,5 +57,28 @@ public class MypageController {
     public ResponseEntity<List<NoticeResponse>> getNotice(){
         List<NoticeResponse> notice = mypageService.getNoticeAll();
         return ResponseEntity.ok(notice);
+    }
+    // 공지사항 상세조회
+
+    // 찜 등록
+    @PostMapping("/wishlist/add/{campId}/{userId}")
+    public ResponseEntity <String> registerWishlist(
+            @PathVariable Integer campId, @PathVariable Integer userId){
+        mypageService.registerWishlist(campId, userId);
+        return ResponseEntity.ok("찜 등록 완료");
+    }
+    // 찜 조회
+    @GetMapping("/wishlist/{userId}")
+    public ResponseEntity <List<MypageCampResponse>> getWishList(
+            @PathVariable Integer userId){
+        List<MypageCampResponse> wishlist = mypageService.getWishList(userId);
+        return ResponseEntity.ok(wishlist);
+    }
+    // 찜 삭제
+    @DeleteMapping("/wishlist/remove/{wishId}")
+    public ResponseEntity <String> removeWishList(
+            @PathVariable Integer wishId){
+        mypageService.removeWishList(wishId);
+        return ResponseEntity.ok("찜 삭제 완료");
     }
 }
