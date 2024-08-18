@@ -10,8 +10,10 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -26,16 +28,21 @@ public class CampController {
 	/**
 	 * 새로운 캠핑지를 등록.
 	 *
-	 * @param request 캠핑지 등록 요청 데이터
+	 * @param request 캠핑지 등록 요청 데이터 (multipart/form-data 형식)
 	 * @return 등록된 캠핑지에 대한 응답 데이터
 	 */
-	@PostMapping
+	@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	@Operation(summary = "캠핑지 등록", description = "새로운 캠핑지를 등록합니다.")
-	public ResponseEntity<CampResponse> createCamp(@RequestBody CampRequest request) {
+	public ResponseEntity<CampResponse> createCamp(@ModelAttribute CampRequest request) {
 		CampResponse response = campService.createCamp(request);
 		return ResponseEntity.ok(response);
 	}
 
+	/**
+	 * 캠핑지 전체 조회
+	 *
+	 * @return 모든 캠핑지에 대한 응답 데이터 리스트
+	 */
 	@GetMapping
 	@Operation(
 			summary = "캠핑지 전체 조회",
@@ -49,16 +56,22 @@ public class CampController {
 	/**
 	 * 캠핑지 정보 수정
 	 *
-	 * @param updateRequest 캠핑지 수정 요청 데이터
+	 * @param updateRequest 캠핑지 수정 요청 데이터 (multipart/form-data 형식)
 	 * @return 수정된 캠핑지에 대한 응답 데이터
 	 */
-	@PutMapping
+	@PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	@Operation(summary = "캠핑지 수정", description = "기존 캠핑지 정보를 수정합니다.")
-	public ResponseEntity<CampResponse> updateCamp(@RequestBody CampUpdateRequest updateRequest) {
+	public ResponseEntity<CampResponse> updateCamp(@ModelAttribute CampUpdateRequest updateRequest) {
 		CampResponse response = campService.updateCamp(updateRequest);
 		return ResponseEntity.ok(response);
 	}
 
+	/**
+	 * 캠핑지 삭제
+	 *
+	 * @param campId 삭제할 캠핑지의 ID
+	 * @return 삭제 성공 메시지
+	 */
 	@DeleteMapping("/{campId}")
 	@Operation(summary = "캠핑지 삭제", description = "등록된 캠핑지를 삭제합니다.")
 	public ResponseEntity<String> deleteCamp(@PathVariable Integer campId) {
