@@ -21,19 +21,24 @@ public class S3Service {
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
 
-    // 기존 유저 프로필 이미지 업로드 메서드
+    // 캠프 이미지 업로드 메서드
+    public String uploadCampImage(MultipartFile file) throws IOException {
+        return uploadFileToS3(file, "camp-images/");
+    }
+
+    // 유저 프로필 이미지 업로드 메서드
     public String uploadUserImage(MultipartFile file) throws IOException {
-        return uploadFileToS3(file, "user-profile-images/");
+        return uploadFileToS3(file, "user-images/");
     }
 
-    // 새로운 리뷰 이미지 업로드 메서드
+    // 리뷰 이미지 업로드 메서드
     public String uploadReviewImage(MultipartFile file) throws IOException {
-        return uploadFileToS3(file, "reviewImage/");
+        return uploadFileToS3(file, "review-image/");
     }
 
-    // 기존 유저 프로필 이미지 업로드 메서드
+    // 공지사항 이미지 업로드 메서드
     public String uploadNoticeImage(MultipartFile file) throws IOException {
-        return uploadFileToS3(file, "admin-notice-images/");
+        return uploadFileToS3(file, "notice-images/");
     }
 
     // 공통된 파일 업로드 메서드

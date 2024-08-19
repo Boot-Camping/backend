@@ -51,7 +51,7 @@ public class CampService {
 		List<String> imageUrls = campRequest.getImageFiles().stream()
 				.map(file -> {
 					try {
-						return s3Service.uploadFile(file);
+						return s3Service.uploadCampImage(file);
 					} catch (IOException e) {
 						// 파일 업로드 중 문제가 발생하면 FileUploadException을 발생.
 						throw new FileUploadException("이미지 업로드 중 오류가 발생했습니다.", e);
@@ -121,7 +121,7 @@ public class CampService {
 		List<String> imageUrls = updateRequest.getImageFiles().stream()
 				.map(file -> {
 					try {
-						return s3Service.uploadFile(file);
+						return s3Service.uploadCampImage(file);
 					} catch (IOException e) {
 						// 파일 업로드 중 문제가 발생하면 FileUploadException을 발생시.
 						throw new FileUploadException("이미지 업로드 중 오류가 발생했습니다.", e);

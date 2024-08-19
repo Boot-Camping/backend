@@ -11,11 +11,13 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AdminNoticeCheckResponse {
+    private Integer id;
     private String title;
     private LocalDateTime createAt;
 
     public static AdminNoticeCheckResponse from(NoticeEntity notice){
         AdminNoticeCheckResponse response = new AdminNoticeCheckResponse();
+        response.id = notice.getId();
         response.title = notice.getTitle();
         response.createAt = notice.getCreatedAt();
 
