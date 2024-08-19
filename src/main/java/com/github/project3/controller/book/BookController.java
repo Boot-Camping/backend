@@ -25,8 +25,8 @@ public class BookController {
 
     @PutMapping("/{bookId}/{userId}")
     public ResponseEntity<String> cancelBook(@PathVariable Integer bookId, @PathVariable Integer userId){
-        bookService.cancelBook(bookId, userId);
-        return ResponseEntity.ok("예약이 취소되었습니다.");
+        Integer cash = bookService.cancelBook(bookId, userId);
+        return ResponseEntity.ok("예약이 취소되었습니다." + cash + " 원이 환불되었습니다.");
     }
 
     @GetMapping("/{userId}")

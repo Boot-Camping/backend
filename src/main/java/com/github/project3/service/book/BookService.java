@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.awt.print.Book;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -52,10 +53,18 @@ public class BookService {
 
         CampEntity camp = campRepository.findById(campId).orElseThrow(()-> new NotFoundException("해당하는 캠핑지가 존재하지 않습니다."));
 
-        // 예약 중복 날짜 확인
         LocalDateTime requestCheckIn = bookRegisterRequest.getCheckIn();
         LocalDateTime requestCheckOut = bookRegisterRequest.getCheckOut();
-        boolean isDateConflict = bookRepository.existsByCampAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(camp, Status.BOOKING, requestCheckOut, requestCheckIn);
+
+        List<Status> statuses = Arrays.asList(Status.BOOKING, Status.DECIDE);
+
+        // 예약 날짜 중복 확인
+        boolean isDateConflict = bookRepository.existsByCampAndStartDateLessThanEqualAndEndDateGreaterThanEqualAndStatusIn(
+                camp,
+                requestCheckIn,
+                requestCheckOut,
+                statuses
+        );
 
         if (isDateConflict) {
             throw new NotAcceptException("해당 날짜에 이미 예약이 존재합니다. 다른 날짜를 선택해주세요.");
@@ -95,7 +104,7 @@ public class BookService {
 
     // 예약 취소 기능
     @Transactional
-    public void cancelBook(Integer bookId, Integer userId) {
+    public Integer cancelBook(Integer bookId, Integer userId) {
 
         BookEntity book = bookRepository.findById(bookId).orElseThrow(() -> new NotFoundException("해당하는 예약이 존재하지 않습니다."));
 
@@ -103,14 +112,28 @@ public class BookService {
             throw new NotAcceptException("해당 예약은 이미 취소된 상태입니다.");
         }
 
-        // 예약 상태를 취소로 변경
+        // 예약 상태를 취소로 변경한 후 저장
         book.setStatus(Status.CANCEL);
         bookRepository.save(book);
 
         UserEntity user = userRepository.findById(userId).orElseThrow(()-> new NotFoundException("해당 ID의 사용자가 존재하지 않습니다."));
 
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startDate = book.getStartDate();
+        LocalDateTime threeDaysBeforeStartDate = startDate.minusDays(3);
+
+        // 환불 금액 계산
+        int refundAmount;
+        if (now.isAfter(threeDaysBeforeStartDate) && now.isBefore(startDate)) {
+            // 현재 시간이 start_date 3일 전과 end_date 사이면 절반만 환불
+            refundAmount = book.getTotalPrice() / 2;
+        } else {
+            refundAmount = book.getTotalPrice();
+        }
+
         // user 의 cash 변동사항 저장
-        cashService.processTransaction(user, book.getTotalPrice(), TransactionType.REFUND);
+        return cashService.processTransaction(user, refundAmount, TransactionType.REFUND);
+
     }
 
     // 예약 조회 기능
