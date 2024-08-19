@@ -15,20 +15,20 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MypageCampResponse {
-    private Integer campId;
+    private Integer id;
     private List<Integer> wishId;
-    private String campName;
-    private String campAddr;
+    private String name;
+    private String addr;
     private Integer price;
     private List<String> campImages;
 
     // 스태틱 팩토리 메서드
     public static MypageCampResponse from(CampEntity camp) {
         MypageCampResponse response = new MypageCampResponse();
-        response.campId = camp.getId();
+        response.id = camp.getId();
         response.wishId = camp.getWishlist().stream().map(WishlistEntity::getId).collect(Collectors.toList());
-        response.campName = camp.getName();
-        response.campAddr = camp.getAddr();
+        response.name = camp.getName();
+        response.addr = camp.getAddr();
         response.price = camp.getPrice();
         response.campImages = camp.getImages().stream().map(CampImageEntity::getImageUrl).collect(Collectors.toList());
 

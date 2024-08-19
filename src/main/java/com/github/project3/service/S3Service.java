@@ -22,13 +22,18 @@ public class S3Service {
     private String bucketName;
 
     // 기존 유저 프로필 이미지 업로드 메서드
-    public String uploadFile(MultipartFile file) throws IOException {
+    public String uploadUserImage(MultipartFile file) throws IOException {
         return uploadFileToS3(file, "user-profile-images/");
     }
 
     // 새로운 리뷰 이미지 업로드 메서드
     public String uploadReviewImage(MultipartFile file) throws IOException {
         return uploadFileToS3(file, "reviewImage/");
+    }
+
+    // 기존 유저 프로필 이미지 업로드 메서드
+    public String uploadNoticeImage(MultipartFile file) throws IOException {
+        return uploadFileToS3(file, "admin-notice-images/");
     }
 
     // 공통된 파일 업로드 메서드

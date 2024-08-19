@@ -19,7 +19,7 @@ import java.util.Map;
 @EnableJpaRepositories(
         basePackages = {"com.github.project3.repository.user", "com.github.project3.repository.mypage"
         , "com.github.project3.repository.book", "com.github.project3.repository.bookDate", "com.github.project3.repository.camp"
-        , "com.github.project3.repository.cash", "com.github.project3.repository.review"},
+        , "com.github.project3.repository.cash", "com.github.project3.repository.review","com.github.project3.repository.admin"},
         entityManagerFactoryRef = "entityManagerFactoryBean1"
 )
 public class JpaConfig {

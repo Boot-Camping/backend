@@ -43,7 +43,7 @@ public class MypageController {
         mypageService.getUpdateImage(id, images);
         return ResponseEntity.ok("유저프로필 수정 완료");
     }
-    // 비밀번호 수정(+같은비밀번호 에러처리)
+    // 비밀번호 수정(+같은비밀번호 에러처리, +UpdateAt)
     @PutMapping("/password/{id}")
     public ResponseEntity <String> getUpdatePasswordUser(
             @PathVariable Integer id,
@@ -60,7 +60,7 @@ public class MypageController {
     }
     // 공지사항 상세조회
 
-    // 찜 등록
+    // 찜 등록(+찜을 한번 더 눌렀을경우 삭제)
     @PostMapping("/wishlist/add/{campId}/{userId}")
     public ResponseEntity <String> registerWishlist(
             @PathVariable Integer campId, @PathVariable Integer userId){
