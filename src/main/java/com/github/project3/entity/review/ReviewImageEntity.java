@@ -24,4 +24,9 @@ public class ReviewImageEntity {
 
     @Column(name = "image_url", nullable = false)
     private String imageUrl;
+
+    public ReviewImageEntity(ReviewEntity review, String imageUrl) {
+        this.review = review;
+        this.imageUrl = imageUrl;
+    }
 }

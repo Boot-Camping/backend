@@ -5,6 +5,7 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
+
 logging:
   config: classpath:logback-spring.xml
   level:
@@ -12,19 +13,13 @@ logging:
       hibernate:
         SQL: DEBUG
 
-
-##aws
-#cloud:
-#  aws:
-#    credentials:
-#      secret-key: ${CLOUD_AWS_CREDENTIALS_SECRET_KEY}
-#      access-key: ${CLOUD_AWS_CREDENTIALS_ACCESS_KEY}
-#    region:
-#      static: ap-northeast-2
-#    s3:
-#      bucket: myawsbucketteam
-
-
-
-#jwt:
-#  secret-key-source: ${JWT_SECRET_KEY}
+#aws
+cloud:
+  aws:
+    credentials:
+      secret-key: ${CLOUD_AWS_CREDENTIALS_SECRET_KEY}
+      access-key: ${CLOUD_AWS_CREDENTIALS_ACCESS_KEY}
+    region:
+      static: ap-northeast-2
+    s3:
+      bucket: ${CLOUD_AWS_S3_BUCKET}
