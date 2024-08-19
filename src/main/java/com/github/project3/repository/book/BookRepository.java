@@ -18,8 +18,13 @@ import java.util.Optional;
 @Repository
 public interface BookRepository extends JpaRepository<BookEntity, Integer> {
 
-    boolean existsByCampAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
-            CampEntity camp, Status status, LocalDateTime checkOut, LocalDateTime checkIn);
+    boolean existsByCampAndStartDateLessThanEqualAndEndDateGreaterThanEqualAndStatusOrStatus(
+            CampEntity camp,
+            LocalDateTime requestCheckOut,
+            LocalDateTime requestCheckIn,
+            Status status1,
+            Status status2
+    );
 
     List<BookEntity> findByUserId(Integer userId);
 

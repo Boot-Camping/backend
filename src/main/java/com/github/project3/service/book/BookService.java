@@ -55,7 +55,14 @@ public class BookService {
         // 예약 중복 날짜 확인
         LocalDateTime requestCheckIn = bookRegisterRequest.getCheckIn();
         LocalDateTime requestCheckOut = bookRegisterRequest.getCheckOut();
-        boolean isDateConflict = bookRepository.existsByCampAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(camp, Status.BOOKING, requestCheckOut, requestCheckIn);
+
+        boolean isDateConflict = bookRepository.existsByCampAndStartDateLessThanEqualAndEndDateGreaterThanEqualAndStatusOrStatus(
+                camp,
+                requestCheckOut,
+                requestCheckIn,
+                Status.BOOKING,
+                Status.DECIDE
+        );
 
         if (isDateConflict) {
             throw new NotAcceptException("해당 날짜에 이미 예약이 존재합니다. 다른 날짜를 선택해주세요.");
