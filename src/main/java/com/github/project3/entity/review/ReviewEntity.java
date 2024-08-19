@@ -3,17 +3,16 @@ package com.github.project3.entity.review;
 import com.github.project3.entity.camp.CampEntity;
 import com.github.project3.entity.user.UserEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.checkerframework.checker.units.qual.C;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
-@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "Review")
@@ -39,6 +38,14 @@ public class ReviewEntity {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "review", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReviewTagEntity> tags = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "review", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReviewImageEntity> images = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

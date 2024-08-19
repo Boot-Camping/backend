@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -19,7 +20,7 @@ public class CampUpdateRequest {
 	private Integer maxNum;
 	private Integer standardNum;
 	private Integer overCharge;
-	private List<String> imageUrls;
+	private List<MultipartFile> imageFiles;
 	private String description;
 	private List<String> categories;
 

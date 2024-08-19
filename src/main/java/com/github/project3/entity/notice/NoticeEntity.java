@@ -1,5 +1,6 @@
 package com.github.project3.entity.notice;
 
+import com.github.project3.entity.review.ReviewEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -28,6 +30,9 @@ public class NoticeEntity {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @OneToMany(mappedBy = "notice", fetch = FetchType.LAZY)
+    private List<NoticeImageEntity> images;
 
     @PrePersist
     protected void onCreate() {

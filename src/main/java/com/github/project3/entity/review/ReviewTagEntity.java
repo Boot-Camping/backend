@@ -26,4 +26,9 @@ public class ReviewTagEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "tag", nullable = false)
     private Tag tag;
+
+    public ReviewTagEntity(ReviewEntity review, Tag tag) {
+        this.review = review;
+        this.tag = tag;
+    }
 }
