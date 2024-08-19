@@ -1,20 +1,15 @@
 spring:
-  config:
-    activate:
-      on-profile: local
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: "jdbc:mariadb://database-1.cboi6c8y6f1c.ap-northeast-2.rds.amazonaws.com:3306/project3"
+    driver-class-name: org.mariadb.jdbc.Driver
+    url: jdbc:mariadb://database-1.cboi6c8y6f1c.ap-northeast-2.rds.amazonaws.com:3306/project3?useUnicode=true&characterEncoding=UTF-8
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
-
+  config:
+    activate:
+      on-profile: prod
 
 logging:
-  config: classpath:logback-spring.xml
-  level:
-    org:
-      hibernate:
-        SQL: DEBUG
+  config: classpath:logback-spring-prod.xml
 
 #aws
 cloud:
