@@ -3,6 +3,7 @@ package com.github.project3.controller.review;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.project3.dto.review.ReviewRequest;
 import com.github.project3.dto.review.ReviewResponse;
+import com.github.project3.dto.review.ReviewSummaryResponse;
 import com.github.project3.service.review.ReviewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -45,5 +46,26 @@ public class ReviewController {
 
         // HTTP 상태 201(created)과 함께 생성된 리뷰 응답을 반환
         return ResponseEntity.status(201).body(reviewResponse);
+    }
+
+    // 모든 리뷰 조회
+    @GetMapping("/all")
+    public ResponseEntity<List<ReviewSummaryResponse>> getAllReviews() {
+        List<ReviewSummaryResponse> reviews = reviewService.getAllReviews();
+        return ResponseEntity.status(200).body(reviews);
+    }
+
+    // 캠프별 리뷰 조회
+    @GetMapping("/camp/{campId}")
+    public ResponseEntity<List<ReviewResponse>> getReviewsByCampId(@PathVariable Integer campId) {
+        List<ReviewResponse> reviews = reviewService.getReviewsByCampId(campId);
+        return ResponseEntity.status(200).body(reviews);
+    }
+
+    // 유저별 리뷰 조회
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<ReviewSummaryResponse>> getReviewsByUserId(@PathVariable Integer userId) {
+        List<ReviewSummaryResponse> reviews = reviewService.getReviewsByUserId(userId);
+        return ResponseEntity.status(200).body(reviews);
     }
 }

@@ -3,6 +3,7 @@ package com.github.project3.dto.camp;
 import com.github.project3.entity.camp.CampEntity;
 import lombok.Builder;
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -15,7 +16,7 @@ public class CampRequest {
 	private Integer maxNum;
 	private Integer standardNum;
 	private Integer overCharge;
-	private List<String> imageUrls;
+	private List<MultipartFile> imageFiles;
 	private String description;
 	private List<String> categories;
 
