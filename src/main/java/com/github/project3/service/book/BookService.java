@@ -112,14 +112,27 @@ public class BookService {
             throw new NotAcceptException("해당 예약은 이미 취소된 상태입니다.");
         }
 
-        // 예약 상태를 취소로 변경
+        // 예약 상태를 취소로 변경한 후 저장
         book.setStatus(Status.CANCEL);
         bookRepository.save(book);
 
         UserEntity user = userRepository.findById(userId).orElseThrow(()-> new NotFoundException("해당 ID의 사용자가 존재하지 않습니다."));
 
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startDate = book.getStartDate();
+        LocalDateTime threeDaysBeforeStartDate = startDate.minusDays(3);
+
+        // 환불 금액 계산
+        int refundAmount;
+        if (now.isAfter(threeDaysBeforeStartDate) && now.isBefore(startDate)) {
+            // 현재 시간이 start_date 3일 전과 end_date 사이면 절반만 환불
+            refundAmount = book.getTotalPrice() / 2;
+        } else {
+            refundAmount = book.getTotalPrice();
+        }
+
         // user 의 cash 변동사항 저장
-        cashService.processTransaction(user, book.getTotalPrice(), TransactionType.REFUND);
+        cashService.processTransaction(user, refundAmount, TransactionType.REFUND);
     }
 
     // 예약 조회 기능
