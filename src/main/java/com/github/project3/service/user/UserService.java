@@ -110,9 +110,9 @@ public class UserService {
     }
 
 
-    public CashResponse chargeCash(CashRequest cashRequest, Integer userId) {
+    public Integer chargeCash(CashRequest cashRequest, Integer userId) {
         UserEntity user = userRepository.findById(userId).orElseThrow(()-> new NotFoundException("해당 ID의 사용자가 존재하지 않습니다."));
 
-        return new CashResponse(cashService.processTransaction(user, cashRequest.getCash(), TransactionType.DEPOSIT));
+        return cashService.processTransaction(user, cashRequest.getCash(), TransactionType.DEPOSIT);
     }
 }

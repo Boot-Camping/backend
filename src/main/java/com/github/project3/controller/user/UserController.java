@@ -38,9 +38,9 @@ public class UserController {
     }
 
     @PutMapping("/chargeCash/{userId}")
-    public ResponseEntity<CashResponse> cashCharge(@RequestBody CashRequest cashRequest,
+    public ResponseEntity<String> cashCharge(@RequestBody CashRequest cashRequest,
                                                    @PathVariable Integer userId){
-        CashResponse response = userService.chargeCash(cashRequest, userId);
-        return ResponseEntity.ok(response);
+        Integer cash = userService.chargeCash(cashRequest, userId);
+        return ResponseEntity.ok(cash + " 원이 충전되었습니다.");
     }
 }
