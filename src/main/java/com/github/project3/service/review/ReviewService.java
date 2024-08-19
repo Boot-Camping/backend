@@ -18,7 +18,6 @@ import com.github.project3.repository.review.ReviewRepository;
 import com.github.project3.repository.user.UserRepository;
 import com.github.project3.service.S3Service;
 import com.github.project3.service.exceptions.NotFoundException;
-import com.github.project3.service.exceptions.UnauthorizedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -174,14 +173,6 @@ public class ReviewService {
         ReviewEntity existingReview = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new NotFoundException("리뷰를 찾을 수 없습니다."));
 
-        // JWT에서 userId 추출
-        Integer authenticatedUserId = jwtTokenProvider.getUserId(access);
-
-        // 리뷰 작성 유저인지 확인
-        if (!authenticatedUserId.equals(userId)) {
-            throw new UnauthorizedException("리뷰를 수정할 권한이 없습니다.");
-        }
-
         // 기존 리뷰 데이터를 기반으로 새로운 리뷰 엔티티 생성
         ReviewEntity updatedReview = ReviewEntity.builder()
                 .id(existingReview.getId())
@@ -256,14 +247,6 @@ public class ReviewService {
         // 리뷰 엔티티 가져오기
         ReviewEntity review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new NotFoundException("리뷰를 찾을 수 없습니다."));
-
-        // JWT에서 userId 추출
-        Integer authenticatedUserId = jwtTokenProvider.getUserId(access);
-
-        // 리뷰 작성 유저인지 확인
-        if (!authenticatedUserId.equals(userId)) {
-            throw new UnauthorizedException("리뷰를 삭제할 권한이 없습니다.");
-        }
 
 //        // 리뷰에 연결된 이미지 삭제 (S3 관련 구현해야함)
 //        for (ReviewImageEntity image : review.getImages()) {
