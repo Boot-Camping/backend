@@ -31,12 +31,8 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public LoginResponse signup(@Valid @RequestBody LoginRequest loginRequest, BindingResult bindingResult, HttpServletResponse response ){
-        if(bindingResult.hasErrors()) {
-            String errorMessage = bindingResult.getFieldError().getDefaultMessage();
-            throw new IllegalArgumentException(errorMessage);
-        }
-
-        return userService.login(loginRequest, response);
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response) {
+        LoginResponse loginResponse = userService.login(loginRequest, response);
+        return ResponseEntity.ok(loginResponse);
     }
 }

@@ -39,6 +39,11 @@ public class UserService {
 
     public SignupResponse signup(SignupRequest signupRequest) {
 
+        if (userRepository.findByLoginId(signupRequest.getLoginId()).isPresent()) {
+            // 중복된 loginId가 있으면 예외 발생
+            throw new IllegalArgumentException("중복된 loginId가 있습니다.");
+        }
+
         UserEntity user = userRepository.findByLoginId(signupRequest.getLoginId())
                 .orElseGet(() -> userRepository.save(UserEntity.builder()
                         .email(signupRequest.getEmail())
@@ -61,10 +66,10 @@ public class UserService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         UserEntity user = userRepository.findByLoginId(loginRequest.getLoginId())
-                .orElseThrow(() -> new UsernameNotFoundException("이메일에 해당하는 유저가 없습니다: " + loginRequest.getLoginId()));
+                .orElseThrow(() -> new UsernameNotFoundException("loginId 해당하는 유저가 없습니다: " + loginRequest.getLoginId()));
 
-        String accessToken = jwtTokenProvider.createToken("access", user.getEmail(), user.getId(), 60000L);
-        String refreshToken = jwtTokenProvider.createToken("refresh", user.getEmail(), user.getId(), 86400000L);
+        String accessToken = jwtTokenProvider.createToken("access", user.getLoginId(), user.getId(), 3600000L);
+        String refreshToken = jwtTokenProvider.createToken("refresh", user.getLoginId(), user.getId(), 86400000L);
 
         addRefreshEntity(user.getLoginId(),refreshToken, 86400000L );
 

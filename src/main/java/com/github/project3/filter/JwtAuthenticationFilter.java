@@ -24,19 +24,43 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        String requestURI = request.getRequestURI();
+        log.info("Request URI: " + requestURI);
 
+        // Swagger 관련 경로 필터 통과
+        if (requestURI.startsWith("/swagger-ui/")
+                || requestURI.startsWith("/v3/")
+                || requestURI.startsWith("/swagger-resources/")
+                || requestURI.startsWith("/webjars/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // 회원가입, 로그인, 물품 조회 요청 필터 통과
+        if ("/api/user/login".equals(requestURI)
+                || "/api/user/signup".equals(requestURI)
+                || "/api/camp".equals(requestURI)
+                ) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // JWT 토큰 검증
         String jwtToken = jwtTokenProvider.resolveToken(request);
         log.info("jwtToken = " + jwtToken);
 
-        if(jwtToken != null && jwtTokenProvider.validateToken(jwtToken)) {
+        if (jwtToken != null && jwtTokenProvider.validateToken(jwtToken)) {
             Authentication authentication = jwtTokenProvider.getAuthentication(jwtToken);
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
-        if(jwtToken != null && !jwtTokenProvider.isNotExpired(jwtToken)) {
+        // JWT 만료 체크
+        if (jwtToken != null && !jwtTokenProvider.isNotExpired(jwtToken)) {
             response.setStatus(HttpStatus.BAD_REQUEST.value());
+            return;
         }
 
+        // 필터 체인 계속 진행
         filterChain.doFilter(request, response);
     }
 }

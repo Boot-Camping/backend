@@ -20,7 +20,7 @@ public class SignupRequest {
     private String email;
 
     @NotBlank(message = "비밀번호를 입력하세요")
-    @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,20}$", message = "비밀번호는 영문자, 숫자의 조합으로 8자 이상 20자 이하로 설정해주세요")
+    @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-={}|\\[\\]:'\";,.<>?/])[A-Za-z\\d!@#$%^&*()_+\\-={}|\\[\\]:'\";,.<>?/]{8,20}$", message = "비밀번호는 영문자, 숫자, 특수문자의 조합으로 8자 이상 20자 이하로 설정해주세요")
     private String password;
 
     @Pattern(regexp = "^[ㄱ-ㅎ가-힣a-z0-9-_]{2,10}$", message = "ID는 특수문자를 제외한 2~10자리여야 합니다.")
