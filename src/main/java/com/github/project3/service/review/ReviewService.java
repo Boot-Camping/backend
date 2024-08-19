@@ -2,6 +2,7 @@ package com.github.project3.service.review;
 
 import com.github.project3.dto.review.ReviewRequest;
 import com.github.project3.dto.review.ReviewResponse;
+import com.github.project3.dto.review.ReviewSummaryResponse;
 import com.github.project3.entity.camp.CampEntity;
 import com.github.project3.entity.review.ReviewEntity;
 import com.github.project3.entity.review.ReviewImageEntity;
@@ -111,5 +112,55 @@ public class ReviewService {
                 review.getImages().stream().map(ReviewImageEntity::getImageUrl).collect(Collectors.toList()),
                 reviewCount
         );
+    }
+
+    // 모든 리뷰 조회
+    @Transactional(readOnly = true)
+    public List<ReviewSummaryResponse> getAllReviews(){
+        return reviewRepository.findAll().stream()
+                .map(review -> ReviewSummaryResponse.of(
+                        review.getId(),
+                        review.getUser().getLoginId(),
+                        review.getCamp().getName(),
+                        review.getContent(),
+                        review.getImages().isEmpty() ? null : review.getImages().get(0).getImageUrl(),
+                        review.getCreatedAt()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    // 캠프별 리뷰 조회
+    @Transactional(readOnly = true)
+    public List<ReviewResponse> getReviewsByCampId(Integer campId) {
+        List<ReviewEntity> reviews = reviewRepository.findByCampId(campId);
+        long reviewCount = reviewRepository.countByCampId(campId);
+        return reviews.stream()
+                .map(review -> ReviewResponse.of(
+                        review.getId(),
+                        review.getUser().getLoginId(),
+                        review.getCamp().getName(),
+                        review.getGrade(),
+                        review.getContent(),
+                        review.getCreatedAt(),
+                        review.getTags().stream().map(tag -> tag.getTag()).collect(Collectors.toList()),
+                        review.getImages().stream().map(image -> image.getImageUrl()).collect(Collectors.toList()),
+                        reviewCount
+                ))
+                .collect(Collectors.toList());
+    }
+
+    // 유저별 리뷰 조회
+    @Transactional(readOnly = true)
+    public List<ReviewSummaryResponse> getReviewsByUserId(Integer userId){
+        return reviewRepository.findByUserId(userId).stream()
+                .map(review -> ReviewSummaryResponse.of(
+                        review.getId(),
+                        review.getUser().getLoginId(),
+                        review.getCamp().getName(),
+                        review.getContent(),
+                        review.getImages().isEmpty() ? null : review.getImages().get(0).getImageUrl(),
+                        review.getCreatedAt()
+                ))
+                .collect(Collectors.toList());
     }
 }
