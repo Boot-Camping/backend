@@ -93,10 +93,14 @@ public class UserService {
     private void addRefreshEntity(String loginId, String refresh, Long expiredMs) {
         Date date = new Date(System.currentTimeMillis() + expiredMs);
 
+        UserEntity user = userRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
         refreshRepository.save(RefreshEntity.builder()
                 .loginId(loginId)
                 .refresh(refresh)
                 .expiration(date.toString())
+                .user(user)
                 .build());
     }
 

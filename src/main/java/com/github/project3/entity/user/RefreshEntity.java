@@ -24,4 +24,8 @@ public class RefreshEntity {
 
     @Column(nullable = false, length = 40)
     private String expiration;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private UserEntity user; // UserEntity와의 관계
 }
