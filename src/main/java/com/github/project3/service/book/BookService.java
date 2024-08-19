@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.awt.print.Book;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -52,16 +53,17 @@ public class BookService {
 
         CampEntity camp = campRepository.findById(campId).orElseThrow(()-> new NotFoundException("해당하는 캠핑지가 존재하지 않습니다."));
 
-        // 예약 중복 날짜 확인
         LocalDateTime requestCheckIn = bookRegisterRequest.getCheckIn();
         LocalDateTime requestCheckOut = bookRegisterRequest.getCheckOut();
 
-        boolean isDateConflict = bookRepository.existsByCampAndStartDateLessThanEqualAndEndDateGreaterThanEqualAndStatusOrStatus(
+        List<Status> statuses = Arrays.asList(Status.BOOKING, Status.DECIDE);
+
+        // 예약 날짜 중복 확인
+        boolean isDateConflict = bookRepository.existsByCampAndStartDateLessThanEqualAndEndDateGreaterThanEqualAndStatusIn(
                 camp,
-                requestCheckOut,
                 requestCheckIn,
-                Status.BOOKING,
-                Status.DECIDE
+                requestCheckOut,
+                statuses
         );
 
         if (isDateConflict) {
