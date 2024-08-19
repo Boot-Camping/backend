@@ -104,7 +104,7 @@ public class BookService {
 
     // 예약 취소 기능
     @Transactional
-    public void cancelBook(Integer bookId, Integer userId) {
+    public Integer cancelBook(Integer bookId, Integer userId) {
 
         BookEntity book = bookRepository.findById(bookId).orElseThrow(() -> new NotFoundException("해당하는 예약이 존재하지 않습니다."));
 
@@ -132,7 +132,8 @@ public class BookService {
         }
 
         // user 의 cash 변동사항 저장
-        cashService.processTransaction(user, refundAmount, TransactionType.REFUND);
+        return cashService.processTransaction(user, refundAmount, TransactionType.REFUND);
+
     }
 
     // 예약 조회 기능

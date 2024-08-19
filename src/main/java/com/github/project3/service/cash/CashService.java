@@ -61,6 +61,6 @@ public class CashService {
         );
         cashRepository.save(cashTransaction);
 
-        return newBalance;
+        return amount;
     }
 }
