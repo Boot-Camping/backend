@@ -36,7 +36,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || requestURI.startsWith("/webjars/")
                 || "/api/user/login".equals(requestURI)
                 || "/api/user/signup".equals(requestURI)
-                || "/api/camp/all".equals(requestURI)
+                || "/api/camp".equals(requestURI)
                 || requestURI.startsWith("/api/camp/category")
                 || requestURI.matches("/api/camp/\\d+")
                 || requestURI.startsWith("/api/userprofile/notice/all")

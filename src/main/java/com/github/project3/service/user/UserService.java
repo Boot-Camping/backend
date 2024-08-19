@@ -11,6 +11,8 @@ import com.github.project3.entity.user.UserEntity;
 import com.github.project3.jwt.JwtTokenProvider;
 import com.github.project3.repository.user.RefreshRepository;
 import com.github.project3.repository.user.UserRepository;
+import com.github.project3.service.exceptions.InvalidValueException;
+import com.github.project3.service.exceptions.NotFoundException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -39,10 +42,13 @@ public class UserService {
 
     public SignupResponse signup(SignupRequest signupRequest) {
 
-        if (userRepository.findByLoginId(signupRequest.getLoginId()).isPresent()) {
-            // 중복된 loginId가 있으면 예외 발생
-            throw new IllegalArgumentException("중복된 loginId가 있습니다.");
+        Optional<UserEntity> foundeduser = userRepository.findByLoginId(signupRequest.getLoginId());
+
+        if (foundeduser.isPresent()) {
+            throw new InvalidValueException("이미 존재하는 loginID입니다.");
         }
+
+
 
         UserEntity user = userRepository.findByLoginId(signupRequest.getLoginId())
                 .orElseGet(() -> userRepository.save(UserEntity.builder()
@@ -58,25 +64,36 @@ public class UserService {
     }
 
     public LoginResponse login(LoginRequest loginRequest, HttpServletResponse response) {
+        // UserEntity를 loginId로 조회
+        UserEntity foundedUser = userRepository.findByLoginId(loginRequest.getLoginId())
+                .orElseThrow(() -> new NotFoundException("loginId를 찾을 수 없습니다."));
+
+        // 비밀번호 비교 (PasswordEncoder 사용)
+        if (!passwordEncoder.matches(loginRequest.getPassword(), foundedUser.getPassword())) {
+            throw new InvalidValueException("잘못된 비밀번호입니다.");
+        }
+
+        // 인증 토큰 생성 및 인증 설정
         UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(loginRequest.getLoginId(), loginRequest.getPassword());
+                new UsernamePasswordAuthenticationToken(foundedUser.getLoginId(), loginRequest.getPassword());
 
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        UserEntity user = userRepository.findByLoginId(loginRequest.getLoginId())
-                .orElseThrow(() -> new UsernameNotFoundException("loginId 해당하는 유저가 없습니다: " + loginRequest.getLoginId()));
+        // JWT 토큰 생성
+        String accessToken = jwtTokenProvider.createToken("access", foundedUser.getLoginId(), foundedUser.getId(), 3600000L);
+        String refreshToken = jwtTokenProvider.createToken("refresh", foundedUser.getLoginId(), foundedUser.getId(), 86400000L);
 
-        String accessToken = jwtTokenProvider.createToken("access", user.getLoginId(), user.getId(), 3600000L);
-        String refreshToken = jwtTokenProvider.createToken("refresh", user.getLoginId(), user.getId(), 86400000L);
+        // RefreshToken 저장
+        addRefreshEntity(foundedUser.getLoginId(), refreshToken, 86400000L);
 
-        addRefreshEntity(user.getLoginId(),refreshToken, 86400000L );
-
+        // HTTP 응답에 토큰 설정
         response.setHeader("access", accessToken);
         response.addCookie(createCookie("refresh", refreshToken));
         response.setStatus(HttpStatus.OK.value());
 
+        // TokenRequest 생성
         TokenRequest tokenRequest = new TokenRequest(accessToken, refreshToken);
 
         return new LoginResponse("로그인에 성공했습니다", tokenRequest);
