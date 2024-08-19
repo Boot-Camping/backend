@@ -1,6 +1,8 @@
 package com.github.project3.service.user;
 
 
+import com.github.project3.dto.cash.CashRequest;
+import com.github.project3.dto.cash.CashResponse;
 import com.github.project3.dto.user.request.LoginRequest;
 import com.github.project3.dto.user.request.SignupRequest;
 import com.github.project3.dto.user.request.TokenRequest;
@@ -8,9 +10,12 @@ import com.github.project3.dto.user.response.LoginResponse;
 import com.github.project3.dto.user.response.SignupResponse;
 import com.github.project3.entity.user.RefreshEntity;
 import com.github.project3.entity.user.UserEntity;
+import com.github.project3.entity.user.enums.TransactionType;
 import com.github.project3.jwt.JwtTokenProvider;
 import com.github.project3.repository.user.RefreshRepository;
 import com.github.project3.repository.user.UserRepository;
+import com.github.project3.service.cash.CashService;
+import com.github.project3.service.exceptions.NotFoundException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +39,7 @@ public class UserService {
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshRepository refreshRepository;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
-
+    private final CashService cashService;
 
 
     public SignupResponse signup(SignupRequest signupRequest) {
@@ -105,4 +110,9 @@ public class UserService {
     }
 
 
+    public Integer chargeCash(CashRequest cashRequest, Integer userId) {
+        UserEntity user = userRepository.findById(userId).orElseThrow(()-> new NotFoundException("해당 ID의 사용자가 존재하지 않습니다."));
+
+        return cashService.processTransaction(user, cashRequest.getCash(), TransactionType.DEPOSIT);
+    }
 }
