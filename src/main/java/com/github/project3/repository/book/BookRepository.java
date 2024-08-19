@@ -23,6 +23,7 @@ public interface BookRepository extends JpaRepository<BookEntity, Integer> {
 
     List<BookEntity> findByUserId(Integer userId);
 
+    //조건에 해당하는 예약 상태를 변경
     @Modifying
     @Transactional
     @Query("UPDATE BookEntity b SET b.status = 'DECIDE' WHERE b.endDate <= CURRENT_TIMESTAMP AND b.status = 'BOOKING'")
