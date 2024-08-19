@@ -98,7 +98,7 @@ public class MypageService {
 
         try {
             // 프로필 이미지 업로드
-            String profileImageUrl = s3Service.uploadFile(images);
+            String profileImageUrl = s3Service.uploadUserImage(images);
 
             // 프로필 이미지 URL 업데이트
             userImage.setImageUrl(profileImageUrl);
@@ -123,7 +123,6 @@ public class MypageService {
         if (!matcher.matches()) {
             throw new IllegalArgumentException("비밀번호는 영문자, 숫자의 조합으로 8자 이상 20자 이하로 설정해주세요");
         }
-
 
         if (passwordEncoder.matches(PasswordRequest.getOldPassword(), user.getPassword())){
             user.setPassword(passwordEncoder.encode(PasswordRequest.getNewPassword()));
