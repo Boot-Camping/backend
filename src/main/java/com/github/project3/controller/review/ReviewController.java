@@ -68,4 +68,35 @@ public class ReviewController {
         List<ReviewSummaryResponse> reviews = reviewService.getReviewsByUserId(userId);
         return ResponseEntity.status(200).body(reviews);
     }
+
+    // 리뷰 수정
+    @PutMapping("/{reviewId}/{userId}")
+    public ResponseEntity<ReviewResponse> updateReview(
+            @PathVariable Integer reviewId,
+            @PathVariable Integer userId,
+            @RequestHeader("Authorization") String accessKey,
+            @RequestPart("reviewRequest") String reviewRequestJson,
+            @RequestPart(value = "reviewImages", required = false) List<MultipartFile> reviewImages) throws IOException {
+
+        // JSON 문자열을 ReviewRequest 객체로 변환
+        ReviewRequest reviewRequest = objectMapper.readValue(reviewRequestJson, ReviewRequest.class);
+
+        // 리뷰 수정하고 결과를 ReviewResponse로 반환
+        ReviewResponse reviewResponse = reviewService.updateReview(userId, reviewId, accessKey, reviewRequest, reviewImages);
+
+        // HTTP 상태 200(ok)와 함께 수정된 리뷰 응답을 반환
+        return ResponseEntity.status(200).body(reviewResponse);
+    }
+
+    @DeleteMapping("/{reviewId}/{userId}")
+    public ResponseEntity<Void> deleteReview(
+            @RequestHeader("Authorization") String accessKey,
+            @PathVariable Integer reviewId,
+            @PathVariable Integer userId) {
+        // 리뷰 삭제
+        reviewService.deleteReview(userId, reviewId, accessKey);
+
+        // 성공적으로 삭제된 경우 204 반환
+        return ResponseEntity.noContent().build();
+    }
 }
