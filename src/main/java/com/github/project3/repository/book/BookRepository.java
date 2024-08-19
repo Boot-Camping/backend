@@ -6,7 +6,10 @@ import com.github.project3.entity.camp.CampEntity;
 import com.github.project3.entity.user.UserEntity;
 import com.github.project3.entity.user.UserImageEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,4 +22,9 @@ public interface BookRepository extends JpaRepository<BookEntity, Integer> {
             CampEntity camp, Status status, LocalDateTime checkOut, LocalDateTime checkIn);
 
     List<BookEntity> findByUserId(Integer userId);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE BookEntity b SET b.status = 'DECIDE' WHERE b.endDate <= CURRENT_TIMESTAMP AND b.status = 'BOOKING'")
+    void updateStatusIfEndDatePassed();
 }
