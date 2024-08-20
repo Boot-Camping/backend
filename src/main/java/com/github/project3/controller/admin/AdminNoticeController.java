@@ -3,6 +3,7 @@ package com.github.project3.controller.admin;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.project3.dto.admin.AdminNoticeCheckResponse;
+import com.github.project3.dto.admin.AdminNoticeDetailCheckResponse;
 import com.github.project3.dto.admin.AdminNoticeRegisterRequest;
 import com.github.project3.service.admin.AdminNoticeService;
 import lombok.RequiredArgsConstructor;
@@ -39,10 +40,28 @@ public class AdminNoticeController {
         return ResponseEntity.ok(noticeResponse);
     }
     // 공지사항 상세조회
+    @GetMapping("/notice/{id}")
+    public ResponseEntity <AdminNoticeDetailCheckResponse> getNoticeDetail(
+            @PathVariable Integer id){
+        AdminNoticeDetailCheckResponse noticeDetailResponse = adminNoticeService.getNoticeDetail(id);
+        return ResponseEntity.ok(noticeDetailResponse);
+    }
 
     // 공지사항 수정
-
-    // 공지사항 삭제
+//    @PutMapping("/notice/{id}")
+//    public ResponseEntity <AdminNoticeDetailCheckResponse> getNoticeDetail(
+//            @PathVariable Integer id,
+//            @RequestPart(value = "noticeRequest") String noticeRequestJson,
+//            @RequestPart(value = "images") MultipartFile images){
+//        AdminNoticeDetailCheckRequest noticeDetailRequest = objectMapper.readValue(noticeRequestJson, AdminNoticeDetailCheckRequest.class);
+//        AdminNoticeDetailCheckResponse noticeDetailResponse = AdminNoticeService.getNoticeDetail(id, noticeDetailRequest, images);
+//        return ResponseEntity.ok(noticeDetailResponse);
+        // 공지사항 삭제
+    @DeleteMapping("/notice/{id}")
+    public ResponseEntity <String> removeNotice(@PathVariable Integer id){
+        adminNoticeService.removeNotice(id);
+        return ResponseEntity.ok("공지사항이 삭제 완료.");
+    }
 
 
 }
