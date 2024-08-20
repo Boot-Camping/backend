@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.awt.print.Book;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -70,8 +71,18 @@ public class BookService {
             throw new NotAcceptException("해당 날짜에 이미 예약이 존재합니다. 다른 날짜를 선택해주세요.");
         }
 
+        // 예약 날짜와 요청 시간의 차이 계산
+        LocalDateTime now = LocalDateTime.now();
+        long daysUntilCheckIn = ChronoUnit.DAYS.between(now, requestCheckIn);
+
+        // 예약 날짜에 임박하면(2일 이내) 예약금 10,000원 할인
+        int totalPrice = bookRegisterRequest.getTotalPrice();
+        if (daysUntilCheckIn <= 2) {
+            totalPrice -= 10000;
+        }
+
         // user 의 cash 변동사항 저장
-        cashService.processTransaction(user, bookRegisterRequest.getTotalPrice(), TransactionType.PAYMENT);
+        cashService.processTransaction(user, totalPrice, TransactionType.PAYMENT);
 
         // 예약 정보 등록
         BookEntity book = BookEntity.of(
