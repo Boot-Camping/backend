@@ -48,7 +48,6 @@ public class MypageController {
     public ResponseEntity <String> getUpdatePasswordUser(
             @PathVariable Integer id,
             @Valid @RequestBody MypageUpdatePasswordRequest UpdatePasswordRequest){
-
         mypageService.getUpdatePasswordUser(id, UpdatePasswordRequest);
         return ResponseEntity.ok("비밀번호 변경 완료");
     }
@@ -59,6 +58,11 @@ public class MypageController {
         return ResponseEntity.ok(notice);
     }
     // 공지사항 상세조회
+    @GetMapping("/notice/{id}")
+    public ResponseEntity <NoticeResponse> getDetailNotice(@PathVariable Integer id){
+        NoticeResponse noticeDetail = mypageService.getDetailNotice(id);
+        return ResponseEntity.ok(noticeDetail);
+    }
 
     // 찜 등록(+찜을 한번 더 눌렀을경우 삭제)
     @PostMapping("/wishlist/add/{campId}/{userId}")

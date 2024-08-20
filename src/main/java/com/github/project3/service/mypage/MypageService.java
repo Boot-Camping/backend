@@ -144,6 +144,7 @@ public class MypageService {
         return notice.stream().map(NoticeResponse::from).collect(Collectors.toList());
     }
     // 공지사항 상세조회
+    public ResponseEntity
 
     // 찜 등록
     public void registerWishlist(Integer campId, Integer userId){
