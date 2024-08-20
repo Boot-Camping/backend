@@ -1,6 +1,7 @@
 package com.github.project3.service.admin;
 
 import com.github.project3.dto.admin.AdminNoticeCheckResponse;
+import com.github.project3.dto.admin.AdminNoticeDetailCheckResponse;
 import com.github.project3.dto.admin.AdminNoticeRegisterRequest;
 import com.github.project3.dto.mypage.NoticeResponse;
 import com.github.project3.entity.notice.NoticeEntity;
@@ -66,8 +67,18 @@ public class AdminNoticeService {
         return noticePage.map(AdminNoticeCheckResponse::from).getContent();
     }
     // 공지사항 상세조회
+    public AdminNoticeDetailCheckResponse getNoticeDetail(Integer id){
+        NoticeEntity notice = adminNoticeRepository.findById(id).orElseThrow(() -> new NotFoundException("해당 공지사항을 찾을 수 없습니다."));
+
+        return AdminNoticeDetailCheckResponse.from(notice);
+    }
 
     // 공지사항 수정
 
     // 공지사항 삭제
+    public void removeNotice(Integer id){
+        NoticeEntity notice = adminNoticeRepository.findById(id).orElseThrow(() -> new NotFoundException("존재하지 않는 공지사항 입니다."));
+
+        adminNoticeRepository.delete(notice);
+    }
 }
