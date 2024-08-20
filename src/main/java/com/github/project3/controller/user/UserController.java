@@ -2,7 +2,6 @@ package com.github.project3.controller.user;
 
 
 import com.github.project3.dto.cash.CashRequest;
-import com.github.project3.dto.cash.CashResponse;
 import com.github.project3.dto.user.request.LoginRequest;
 import com.github.project3.dto.user.request.SignupRequest;
 import com.github.project3.dto.user.response.LoginResponse;
@@ -14,7 +13,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
