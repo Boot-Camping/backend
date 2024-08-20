@@ -2,7 +2,6 @@ package com.github.project3.service.user;
 
 
 import com.github.project3.dto.cash.CashRequest;
-import com.github.project3.dto.cash.CashResponse;
 import com.github.project3.dto.user.request.LoginRequest;
 import com.github.project3.dto.user.request.SignupRequest;
 import com.github.project3.dto.user.request.TokenRequest;

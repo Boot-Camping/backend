@@ -1,14 +1,11 @@
 package com.github.project3.service.book;
 
-import com.github.project3.dto.book.BookCancelResponse;
 import com.github.project3.dto.book.BookInquiryResponse;
 import com.github.project3.dto.book.BookRegisterRequest;
-import com.github.project3.dto.camp.CampResponse;
 import com.github.project3.entity.book.BookEntity;
 import com.github.project3.entity.book.BookDateEntity;
 import com.github.project3.entity.book.enums.Status;
 import com.github.project3.entity.camp.CampEntity;
-import com.github.project3.entity.user.CashEntity;
 import com.github.project3.entity.user.UserEntity;
 import com.github.project3.entity.user.enums.TransactionType;
 import com.github.project3.repository.book.BookRepository;
@@ -25,12 +22,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.awt.print.Book;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -136,7 +131,7 @@ public class BookService {
         // 환불 금액 계산
         int refundAmount;
         if (now.isAfter(threeDaysBeforeStartDate) && now.isBefore(startDate)) {
-            // 현재 시간이 start_date 3일 전과 end_date 사이면 절반만 환불
+            // 현재 시간이 start_date 3일 전 ~ start_date 사이면 절반만 환불
             refundAmount = book.getTotalPrice() / 2;
         } else {
             refundAmount = book.getTotalPrice();
