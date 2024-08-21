@@ -137,22 +137,6 @@ public class MypageService {
 
         return MypageUpdatePasswordResponse.from(user);
     }
-    // 공지사항 조회
-    public List<NoticeResponse> getNoticeAll(){
-        List<NoticeEntity> notice = noticeRepository.findAllByOrderByCreatedAtDesc();
-
-        if (notice.isEmpty()){
-            throw new NotFoundException("등록된 공지사항이 없습니다.");
-        }
-
-        return notice.stream().map(NoticeResponse::from).collect(Collectors.toList());
-    }
-    // 공지사항 상세조회
-    public NoticeDetailResponse getDetailNotice(Integer id){
-        NoticeEntity notice = noticeRepository.findById(id).orElseThrow(() -> new NotFoundException("존재하지 않는 공지 입니다."));
-
-        return NoticeDetailResponse.from(notice);
-    }
 
     // 찜 등록
     public String registerWishlist(Integer campId, Integer userId){
