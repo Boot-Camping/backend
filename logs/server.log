@@ -1,6 +1,0 @@
-2024-08-19 23:33:52.795 [http-nio-8080-exec-2] [34mINFO [0;39m [36mo.a.c.c.C.[Tomcat].[localhost].[/][0;39m - Initializing Spring DispatcherServlet 'dispatcherServlet'
-2024-08-19 23:33:52.808 [http-nio-8080-exec-2] [34mINFO [0;39m [36mo.s.web.servlet.DispatcherServlet[0;39m - Initializing Servlet 'dispatcherServlet'
-2024-08-19 23:33:52.922 [http-nio-8080-exec-2] [34mINFO [0;39m [36mo.s.web.servlet.DispatcherServlet[0;39m - Completed initialization in 114 ms
-2024-08-19 23:33:53.045 [http-nio-8080-exec-2] [34mINFO [0;39m [36mc.g.p.filter.JwtAuthenticationFilter[0;39m - Request URI: /api/camp/12
-2024-08-20 00:38:57.710 [http-nio-8080-exec-4] [34mINFO [0;39m [36mc.g.p.filter.JwtAuthenticationFilter[0;39m - Request URI: /api/userprofile/1
-2024-08-20 00:38:57.747 [http-nio-8080-exec-4] [34mINFO [0;39m [36mc.g.p.filter.JwtAuthenticationFilter[0;39m - jwtToken = null
