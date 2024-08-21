@@ -64,6 +64,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource(){
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of( "http://localhost:8080"));
+        configuration.setAllowedOrigins(List.of( "http://localhost:5173"));
         configuration.setAllowCredentials(true); // token을 주고받을 때 필요
         configuration.addExposedHeader("Authorization"); // token
         configuration.addAllowedHeader("*");
