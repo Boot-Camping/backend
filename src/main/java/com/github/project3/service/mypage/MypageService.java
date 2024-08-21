@@ -9,6 +9,7 @@ import com.github.project3.entity.user.UserEntity;
 import com.github.project3.entity.user.UserImageEntity;
 import com.github.project3.entity.wishlist.WishlistEntity;
 import com.github.project3.repository.camp.CampRepository;
+import com.github.project3.repository.cash.CashRepository;
 import com.github.project3.repository.mypage.MypageImageRepository;
 import com.github.project3.repository.mypage.MypageRepository;
 import com.github.project3.repository.mypage.NoticeRepository;
@@ -46,6 +47,7 @@ public class MypageService {
     private final CampRepository campRepository;
     private final WishlistRepository wishlistRepository;
     private final S3Service s3Service;
+    private final CashRepository cashRepository;
 
     // 유저 정보조회
     public List<MypageResponse> getUserMyPage(Integer id){
@@ -177,5 +179,12 @@ public class MypageService {
                 .orElseThrow(() -> new NotFoundException("등록된 찜 내역이 존재하지 않습니다."));
 
         wishlistRepository.delete(wishlist);
+    }
+
+    public CashTransactionResponse getUserCashTransactions(Integer userId) {
+        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("등록된 사용자를 찾을 수 없습니다."));
+
+        CashEntity cash = cashRepository.findByUserId
+
     }
 }
