@@ -54,10 +54,11 @@ public class UserService {
             throw new InvalidValueException("이미 존재하는 loginID입니다.");
         }
 
-        // email 중복 확인 (필요 시 추가)
-        if (userRepository.existsByEmail(signupRequest.getEmail())) {
-            throw new InvalidValueException("이미 사용 중인 이메일입니다.");
+        if (!isValidPassword(signupRequest.getPassword())) {
+            throw new InvalidValueException("비밀번호는 영문자, 숫자, 특수문자의 조합으로 8자 이상 20자 이하로 설정해주세요.");
         }
+
+
 
 
 
@@ -73,6 +74,11 @@ public class UserService {
                         .build()));
 
         return new SignupResponse("회원가입에 성공했습니다");
+    }
+
+    private boolean isValidPassword(String password) {
+        // 비밀번호 패턴 검증 (정규식을 직접 사용할 수도 있음)
+        return password != null && password.matches("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-={}|\\[\\]:'\";,.<>?/])[A-Za-z\\d!@#$%^&*()_+\\-={}|\\[\\]:'\";,.<>?/]{8,20}$");
     }
 
     public LoginResponse login(LoginRequest loginRequest, HttpServletResponse response) {

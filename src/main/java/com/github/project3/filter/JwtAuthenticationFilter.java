@@ -1,8 +1,10 @@
 package com.github.project3.filter;
 
+import com.github.project3.entity.user.CustomUserDetails;
 import com.github.project3.jwt.JwtTokenProvider;
 import com.github.project3.service.exceptions.JwtTokenException;
 import com.github.project3.service.exceptions.NotFoundException;
+import com.github.project3.service.user.CustomUserDetailsService;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -12,8 +14,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -25,6 +30,7 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final CustomUserDetailsService customUserDetailsService;
 
 
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -44,53 +50,51 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || requestURI.matches("/api/camp/\\d+")
                 || requestURI.startsWith("/api/userprofile/notice/all")
                 || "/api/review/all".equals(requestURI)
-                || requestURI.matches("/api/review/camp/\\d+"))
-        {
+                || requestURI.matches("/api/review/camp/\\d+")) {
             filterChain.doFilter(request, response);
             return;
         }
 
 
-
         String jwtToken = jwtTokenProvider.resolveToken(request);
-        log.info("jwtToken = " + jwtToken);
+        log.info("Extracted JWT Token: " + jwtToken);
 
-        if (jwtToken == null) {
-            // JWT가 없는 경우 401 Unauthorized 반환
-            sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "TOKEN IS NULL");
-            return;
-        }
+        if (jwtToken != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            String LoginId = jwtTokenProvider.getLoginid(jwtToken);
+            log.info("Extracted loginId: " + LoginId);
 
-        try {
-            if (jwtTokenProvider.validateToken(jwtToken)) {
-                Authentication authentication = jwtTokenProvider.getAuthentication(jwtToken);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            } else {
-                // 토큰이 유효하지 않은 경우
-                sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다.");
-                return;
+            try {
+                // 사용자 세부 정보 로드
+                UserDetails userDetails = customUserDetailsService.loadUserByUsername(LoginId);
+                log.info("User Details: " + userDetails);
+
+                if (userDetails instanceof CustomUserDetails) {
+                    CustomUserDetails customUserDetail = (CustomUserDetails) userDetails;
+                    log.info("User ID: " + customUserDetail.getId());
+                    log.info("User loginId: " + customUserDetail.getUsername());
+                    log.info("User Password: " + customUserDetail.getPassword());
+                }
+
+                // 토큰 유효성 검사
+                if (jwtTokenProvider.validateToken(jwtToken)) {
+                    // 인증 객체 생성
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                    // 인증 객체를 SecurityContext에 설정
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    log.info("인증 성공");
+                } else {
+                    log.warn("유효하지 않은 토큰입니다.");
+                }
+            } catch (Exception e) {
+                log.error("토큰 검증 실패: ", e);
             }
-        } catch (JwtTokenException e) {
-            // JWT 예외 발생 시
-            sendErrorResponse(response, HttpStatus.UNAUTHORIZED, e.getMessage());
-            return;
+
+
         }
-
-        // JWT 만료 체크
-        if (!jwtTokenProvider.isNotExpired(jwtToken)) {
-            sendErrorResponse(response, HttpStatus.BAD_REQUEST, "토큰이 만료되었습니다.");
-            return;
-        }
-
-        // 필터 체인 계속 진행
-        filterChain.doFilter(request, response);
-    }
-
-    private void sendErrorResponse(HttpServletResponse response, HttpStatus status, String message) throws IOException {
-        response.setStatus(status.value());
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setCharacterEncoding("UTF-8");
-        response.getWriter().write("{\"message\":\"" + message + "\"}");
     }
 }
+
 

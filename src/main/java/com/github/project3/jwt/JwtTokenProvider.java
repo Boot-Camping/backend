@@ -94,6 +94,10 @@ public class JwtTokenProvider {
         return parseClaims(jwtToken).get("userId", Integer.class);
     }
 
+    public String getLoginid(String jwtToken) {
+        return parseClaims(jwtToken).getSubject();
+    }
+
     public Boolean isNotExpired(String jwtToken) {
         return parseClaims(jwtToken).getExpiration().after(new Date());
     }

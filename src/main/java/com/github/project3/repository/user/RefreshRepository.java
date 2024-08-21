@@ -7,7 +7,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public interface RefreshRepository extends JpaRepository<RefreshEntity, Integer> {
+
     Boolean existsByRefresh(String refreshToken);
+
     @Transactional
     void deleteByRefresh(String refreshToken);
 }
