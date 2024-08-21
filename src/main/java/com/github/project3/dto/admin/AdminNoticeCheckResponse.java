@@ -15,6 +15,7 @@ public class AdminNoticeCheckResponse {
     private String title;
     private LocalDateTime createAt;
 
+    // 스태틱 팩토리 메서드
     public static AdminNoticeCheckResponse from(NoticeEntity notice){
         AdminNoticeCheckResponse response = new AdminNoticeCheckResponse();
         response.id = notice.getId();

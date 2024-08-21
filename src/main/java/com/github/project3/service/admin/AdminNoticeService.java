@@ -1,10 +1,11 @@
 package com.github.project3.service.admin;
 
 import com.github.project3.dto.admin.*;
-import com.github.project3.dto.mypage.NoticeResponse;
+import com.github.project3.dto.admin.AdminNoticeRegisterResponse;
 import com.github.project3.entity.notice.NoticeEntity;
 import com.github.project3.entity.notice.NoticeImageEntity;
 import com.github.project3.entity.user.UserEntity;
+import com.github.project3.entity.user.enums.Role;
 import com.github.project3.entity.user.enums.Status;
 import com.github.project3.jwt.JwtTokenProvider;
 import com.github.project3.repository.admin.AdminNoticeImageRepository;
@@ -17,7 +18,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,10 +33,12 @@ public class AdminNoticeService {
     private final AdminNoticeImageRepository adminNoticeImageRepository;
     private final UserRepository userRepository;
     private final S3Service s3Service;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final AuthService authService;
 
     // 공지사항 등록
-    public NoticeResponse registerNotice(AdminNoticeRegisterRequest registerRequest, List<MultipartFile> images){
+    public AdminNoticeRegisterResponse registerNotice(AdminNoticeRegisterRequest registerRequest, List<MultipartFile> images, Integer userId){
+        authService.verifyAdmin(userId);
+
         NoticeEntity notice = new NoticeEntity();
         if (registerRequest.getTitle() == null || registerRequest.getTitle().isEmpty()){
             throw new IllegalArgumentException("공지 제목을 입력해주세요.");
@@ -63,12 +65,15 @@ public class AdminNoticeService {
                 }
             }
         }
-        return NoticeResponse.from(notice);
+        return AdminNoticeRegisterResponse.from(notice);
     }
     // 공지사항 전체조회
     public Page<AdminNoticeCheckResponse> getNoticeAll(Integer page,Integer size){
         Pageable pageable = PageRequest.of(page, size);
         Page<NoticeEntity> noticePage = adminNoticeRepository.findAllByOrderByCreatedAtDesc(pageable);
+        if (noticePage == null && noticePage.isEmpty()){
+            throw new NotFoundException("등록된 공지사항이 없습니다.");
+        }
 
         return noticePage.map(AdminNoticeCheckResponse::from);
     }
@@ -80,7 +85,9 @@ public class AdminNoticeService {
     }
 
     // 공지사항 수정
-    public AdminNoticeUpdateResponse getUpdateNotice(Integer id, AdminNoticeUpdateRequest noticeUpdateRequest, List<MultipartFile> images){
+    public AdminNoticeUpdateResponse getUpdateNotice(Integer id, AdminNoticeUpdateRequest noticeUpdateRequest, List<MultipartFile> images, Integer userId){
+        authService.verifyAdmin(userId);
+
         NoticeEntity notice = adminNoticeRepository.findById(id).orElseThrow(() -> new NotFoundException("해당 공지사항을 찾을 수 없습니다."));
         if (noticeUpdateRequest.getTitle() == null && noticeUpdateRequest.getDescription() == null){
             throw new NotFoundException("수정사항을 입력해 주세요.");
@@ -123,14 +130,18 @@ public class AdminNoticeService {
     }
 
     // 공지사항 삭제
-    public void removeNotice(Integer id){
+    public void removeNotice(Integer id, Integer userId){
+        authService.verifyAdmin(userId);
+
         NoticeEntity notice = adminNoticeRepository.findById(id).orElseThrow(() -> new NotFoundException("존재하지 않는 공지사항 입니다."));
 
         adminNoticeRepository.delete(notice);
     }
 
     // 회원 블랙리스트 등록
-    public void getBlacklist(Integer id){
+    public void getBlacklist(Integer id, Integer userId){
+        authService.verifyAdmin(userId);
+
         UserEntity user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("해당 유저를 찾을 수 없습니다."));
 
         if (user.getStatus() == Status.BLACKLIST){
