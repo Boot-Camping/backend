@@ -1,9 +1,6 @@
 package com.github.project3.controller.mypage;
 
-import com.github.project3.dto.mypage.MypageCampResponse;
-import com.github.project3.dto.mypage.MypageResponse;
-import com.github.project3.dto.mypage.MypageUpdatePasswordRequest;
-import com.github.project3.dto.mypage.NoticeResponse;
+import com.github.project3.dto.mypage.*;
 import com.github.project3.entity.camp.CampEntity;
 import com.github.project3.service.mypage.MypageService;
 import jakarta.validation.Valid;
@@ -35,7 +32,7 @@ public class MypageController {
         mypageService.getUpdateUser(id, tel, addr);
         return ResponseEntity.ok("유저정보 수정 완료");
     }
-    // 유저 이미지 생성/수정(+UpdateAt, 업데이트시간)
+    // 유저 이미지 생성/수정(+UpdateAt)
     @PostMapping("/images/{id}")
     public ResponseEntity <String> getUpdateImageUser(
             @PathVariable Integer id,
@@ -43,7 +40,7 @@ public class MypageController {
         mypageService.getUpdateImage(id, images);
         return ResponseEntity.ok("유저프로필 수정 완료");
     }
-    // 비밀번호 수정(+같은비밀번호 에러처리, +UpdateAt)
+    // 비밀번호 수정(=같은비밀번호 에러처리 완료, +UpdateAt)
     @PutMapping("/password/{id}")
     public ResponseEntity <String> getUpdatePasswordUser(
             @PathVariable Integer id,
@@ -59,17 +56,17 @@ public class MypageController {
     }
     // 공지사항 상세조회
     @GetMapping("/notice/{id}")
-    public ResponseEntity <NoticeResponse> getDetailNotice(@PathVariable Integer id){
-        NoticeResponse noticeDetail = mypageService.getDetailNotice(id);
+    public ResponseEntity <NoticeDetailResponse> getDetailNotice(@PathVariable Integer id){
+        NoticeDetailResponse noticeDetail = mypageService.getDetailNotice(id);
         return ResponseEntity.ok(noticeDetail);
     }
 
-    // 찜 등록(+찜을 한번 더 눌렀을경우 삭제)
+    // 찜 등록(= 찜을 한번 더 눌렀을경우 삭제 완료)
     @PostMapping("/wishlist/add/{campId}/{userId}")
     public ResponseEntity <String> registerWishlist(
             @PathVariable Integer campId, @PathVariable Integer userId){
-        mypageService.registerWishlist(campId, userId);
-        return ResponseEntity.ok("찜 등록 완료");
+        String message = mypageService.registerWishlist(campId, userId);
+        return ResponseEntity.ok(message);
     }
     // 찜 조회
     @GetMapping("/wishlist/{userId}")

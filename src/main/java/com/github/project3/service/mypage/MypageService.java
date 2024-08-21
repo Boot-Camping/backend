@@ -116,19 +116,23 @@ public class MypageService {
                 .orElseThrow(() -> new NotFoundException("등록된 사용자를 찾을 수 없습니다."));
 
         // 비밀번호 패턴 검증 추가
-        String passwordPattern = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,20}$";
+        String passwordPattern = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d@#$%^&*!+=]{8,20}$";
         Pattern pattern = Pattern.compile(passwordPattern);
         Matcher matcher = pattern.matcher(PasswordRequest.getNewPassword());
 
         if (!matcher.matches()) {
-            throw new IllegalArgumentException("비밀번호는 영문자, 숫자의 조합으로 8자 이상 20자 이하로 설정해주세요");
+            throw new IllegalArgumentException("비밀번호는 영문자(필수), 숫자(필수), 특수문자의 조합으로 8자 이상 20자 이하로 설정해주세요");
         }
 
-        if (passwordEncoder.matches(PasswordRequest.getOldPassword(), user.getPassword())){
-            user.setPassword(passwordEncoder.encode(PasswordRequest.getNewPassword()));
-        } else {
-            throw new InvalidValueException("비밀번호가 다릅니다.");
+        if (passwordEncoder.matches(PasswordRequest.getNewPassword(), user.getPassword())){
+            throw new IllegalArgumentException("새 비밀번호가 기존 비밀번호와 동일합니다.");
         }
+
+        if (!passwordEncoder.matches(PasswordRequest.getOldPassword(), user.getPassword())){
+            throw new InvalidValueException("검증 비밀번호가 기존 비밀번호와 동일하지 않습니다.");
+        }
+
+        user.setPassword(passwordEncoder.encode(PasswordRequest.getNewPassword()));
         mypageRepository.save(user);
 
         return MypageUpdatePasswordResponse.from(user);
@@ -144,24 +148,30 @@ public class MypageService {
         return notice.stream().map(NoticeResponse::from).collect(Collectors.toList());
     }
     // 공지사항 상세조회
-    public ResponseEntity
+    public NoticeDetailResponse getDetailNotice(Integer id){
+        NoticeEntity notice = noticeRepository.findById(id).orElseThrow(() -> new NotFoundException("존재하지 않는 공지 입니다."));
+
+        return NoticeDetailResponse.from(notice);
+    }
 
     // 찜 등록
-    public void registerWishlist(Integer campId, Integer userId){
+    public String registerWishlist(Integer campId, Integer userId){
         UserEntity user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("등록된 사용자를 찾을 수 없습니다."));
 
         CampEntity camp = campRepository.findById(campId).orElseThrow(() -> new NotFoundException("등록된 캠프를 찾을 수 없습니다."));
 
-        boolean alreadyWishlist = wishlistRepository.existsByCampAndUser(camp, user);
-        if (alreadyWishlist) {
-            throw new NotAcceptException("이미 찜등록이 되어있는 상품입니다.");
+        WishlistEntity alreadyWishlist = wishlistRepository.findByCampAndUser(camp, user);
+        if (alreadyWishlist != null) {
+            wishlistRepository.delete(alreadyWishlist);
+            return "찜 삭제 완료";
+        } else {
+            WishlistEntity wishlist = new WishlistEntity();
+            wishlist.setCamp(camp);
+            wishlist.setUser(user);
+
+            wishlistRepository.save(wishlist);
+            return "찜 등록 완료";
         }
-
-        WishlistEntity wishlist = new WishlistEntity();
-        wishlist.setCamp(camp);
-        wishlist.setUser(user);
-
-        wishlistRepository.save(wishlist);
     }
     // 찜 조회
     public List<MypageCampResponse> getWishList(Integer userId){
