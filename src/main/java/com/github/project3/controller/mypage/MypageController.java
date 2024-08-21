@@ -72,8 +72,8 @@ public class MypageController {
 
     // cash 사용내역 조회
     @GetMapping("/cashTransaction/{userId}")
-    public ResponseEntity<CashTransactionResponse> getUserCashTransactions(@PathVariable Integer userId){
-        CashTransactionResponse response = mypageService.getUserCashTransactions(userId);
+    public ResponseEntity<List<CashTransactionResponse>> getUserCashTransactions(@PathVariable Integer userId){
+        List<CashTransactionResponse> response = mypageService.getUserCashTransactions(userId);
         return ResponseEntity.ok(response);
     }
 }

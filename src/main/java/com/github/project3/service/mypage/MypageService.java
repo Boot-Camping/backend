@@ -181,10 +181,13 @@ public class MypageService {
         wishlistRepository.delete(wishlist);
     }
 
-    public CashTransactionResponse getUserCashTransactions(Integer userId) {
+    public List<CashTransactionResponse> getUserCashTransactions(Integer userId) {
         UserEntity user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("등록된 사용자를 찾을 수 없습니다."));
 
-        CashEntity cash = cashRepository.findByUserId
+        List<CashEntity> cashTransactions  = cashRepository.findByUserId(userId);
 
+        return cashTransactions.stream()
+                .map(CashTransactionResponse::from)
+                .collect(Collectors.toList());
     }
 }
