@@ -25,7 +25,7 @@ public class CashService {
     }
 
     // switch-case 문으로 transactionType 별 저장
-    public void processTransaction(UserEntity user, Integer amount, TransactionType transactionType) {
+    public Integer processTransaction(UserEntity user, Integer amount, TransactionType transactionType) {
         Integer currentBalance = getCurrentBalance(user);
         Integer newBalance;
 
@@ -60,5 +60,7 @@ public class CashService {
                 newBalance
         );
         cashRepository.save(cashTransaction);
+
+        return amount;
     }
 }

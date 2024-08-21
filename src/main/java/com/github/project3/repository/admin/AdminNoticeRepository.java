@@ -8,5 +8,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface AdminNoticeRepository extends JpaRepository<NoticeEntity, Integer> {
-    Page<NoticeEntity> findAll(Pageable pageable);
+    Page<NoticeEntity> findAllByOrderByCreatedAtDesc(Pageable pageable);
 }
