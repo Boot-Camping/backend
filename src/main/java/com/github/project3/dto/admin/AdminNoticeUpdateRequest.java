@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AdminNoticeRegisterRequest {
+public class AdminNoticeUpdateRequest {
     private String title;
     private String description;
 }
