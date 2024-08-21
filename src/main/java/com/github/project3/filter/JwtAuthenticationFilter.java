@@ -1,7 +1,9 @@
 package com.github.project3.filter;
 
 import com.github.project3.jwt.JwtTokenProvider;
+import com.github.project3.service.exceptions.JwtTokenException;
 import com.github.project3.service.exceptions.NotFoundException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,6 +38,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || requestURI.startsWith("/webjars/")
                 || "/api/user/login".equals(requestURI)
                 || "/api/user/signup".equals(requestURI)
+                || "/api/user/logout".equals(requestURI)
                 || "/api/camp".equals(requestURI)
                 || requestURI.startsWith("/api/camp/category")
                 || requestURI.matches("/api/camp/\\d+")
@@ -49,33 +52,45 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 
 
-        // JWT 토큰 검증
         String jwtToken = jwtTokenProvider.resolveToken(request);
         log.info("jwtToken = " + jwtToken);
 
         if (jwtToken == null) {
             // JWT가 없는 경우 401 Unauthorized 반환
-            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            response.setCharacterEncoding("UTF-8");
-
-            // JSON 응답 본문 설정
-            response.getWriter().write("{\"message\":\"토큰 없음\"}");
+            sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "TOKEN IS NULL");
             return;
         }
 
-        if (jwtToken != null && jwtTokenProvider.validateToken(jwtToken)) {
-            Authentication authentication = jwtTokenProvider.getAuthentication(jwtToken);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+        try {
+            if (jwtTokenProvider.validateToken(jwtToken)) {
+                Authentication authentication = jwtTokenProvider.getAuthentication(jwtToken);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            } else {
+                // 토큰이 유효하지 않은 경우
+                sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다.");
+                return;
+            }
+        } catch (JwtTokenException e) {
+            // JWT 예외 발생 시
+            sendErrorResponse(response, HttpStatus.UNAUTHORIZED, e.getMessage());
+            return;
         }
 
         // JWT 만료 체크
-        if (jwtToken != null && !jwtTokenProvider.isNotExpired(jwtToken)) {
-            response.setStatus(HttpStatus.BAD_REQUEST.value());
+        if (!jwtTokenProvider.isNotExpired(jwtToken)) {
+            sendErrorResponse(response, HttpStatus.BAD_REQUEST, "토큰이 만료되었습니다.");
             return;
         }
 
         // 필터 체인 계속 진행
         filterChain.doFilter(request, response);
     }
+
+    private void sendErrorResponse(HttpServletResponse response, HttpStatus status, String message) throws IOException {
+        response.setStatus(status.value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("{\"message\":\"" + message + "\"}");
+    }
 }
+

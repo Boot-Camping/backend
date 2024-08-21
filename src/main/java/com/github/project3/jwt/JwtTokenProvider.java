@@ -1,6 +1,7 @@
 package com.github.project3.jwt;
 
 
+import com.github.project3.service.exceptions.JwtTokenException;
 import io.jsonwebtoken.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -42,12 +43,20 @@ public class JwtTokenProvider {
             Claims claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(accessToken).getBody();
             Date now = new Date();
             return !claims.getExpiration().before(now); // 만료시간이 현재 시간 이전인지 여부 확인
-        } catch (Exception e) {
-            return false;
+        } catch (ExpiredJwtException e) {
+            // 토큰 만료 예외 처리
+            throw new JwtTokenException("토큰이 만료되었습니다.", e);
+        } catch (MalformedJwtException e) {
+            // 토큰 형식 오류 예외 처리
+            throw new JwtTokenException("잘못된 토큰 형식입니다.", e);
+        } catch (SignatureException e) {
+            // 토큰 서명 오류 예외 처리
+            throw new JwtTokenException("토큰 서명이 유효하지 않습니다.", e);
+        } catch (IllegalArgumentException e) {
+            // 기타 JWT 오류 처리
+            throw new JwtTokenException("토큰이 비어 있거나 잘못되었습니다.", e);
         }
-
     }
-
     public Authentication getAuthentication(String accessToken) {
         Claims claims = parseClaims(accessToken);
 

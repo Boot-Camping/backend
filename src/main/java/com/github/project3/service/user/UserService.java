@@ -15,12 +15,14 @@ import com.github.project3.jwt.JwtTokenProvider;
 import com.github.project3.repository.user.RefreshRepository;
 import com.github.project3.repository.user.UserRepository;
 import com.github.project3.service.cash.CashService;
+import com.github.project3.service.exceptions.JwtTokenException;
 import com.github.project3.service.exceptions.NotFoundException;
 import com.github.project3.service.exceptions.InvalidValueException;
 import com.github.project3.service.exceptions.NotFoundException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -35,6 +37,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
@@ -47,11 +50,16 @@ public class UserService {
 
     public SignupResponse signup(SignupRequest signupRequest) {
 
-        Optional<UserEntity> foundeduser = userRepository.findByLoginId(signupRequest.getLoginId());
-
-        if (foundeduser.isPresent()) {
+        // loginId 중복 확인
+        if (userRepository.existsByLoginId(signupRequest.getLoginId())) {
             throw new InvalidValueException("이미 존재하는 loginID입니다.");
         }
+
+        // email 중복 확인 (필요 시 추가)
+        if (userRepository.existsByEmail(signupRequest.getEmail())) {
+            throw new InvalidValueException("이미 사용 중인 이메일입니다.");
+        }
+
 
 
 
@@ -75,7 +83,7 @@ public class UserService {
 
         // 비밀번호 비교 (PasswordEncoder 사용)
         if (!passwordEncoder.matches(loginRequest.getPassword(), foundedUser.getPassword())) {
-            throw new InvalidValueException("잘못된 비밀번호입니다.");
+            throw new InvalidValueException("비밀번호가 일치하지 않습니다.");
         }
 
         // 인증 토큰 생성 및 인증 설정
@@ -131,5 +139,24 @@ public class UserService {
         UserEntity user = userRepository.findById(userId).orElseThrow(()-> new NotFoundException("해당 ID의 사용자가 존재하지 않습니다."));
 
         return cashService.processTransaction(user, cashRequest.getCash(), TransactionType.DEPOSIT);
+    }
+
+    public Cookie logout(String refreshToken) {
+        if (refreshToken == null) {
+            throw new JwtTokenException("리프레시 토큰이 null값입니다");
+        }
+
+        Boolean isExist = refreshRepository.existsByRefresh(refreshToken);
+        if (!isExist) {
+            throw new JwtTokenException("리프레시토큰을 찾을 수 없습니다.");
+        }
+
+        refreshRepository.deleteByRefresh(refreshToken);
+
+        Cookie cookie = new Cookie("refresh", null);
+        cookie.setMaxAge(0);
+        cookie.setPath("/");
+
+        return cookie;
     }
 }
