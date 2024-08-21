@@ -35,7 +35,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String requestURI = request.getRequestURI();
-        log.info("Request URI: " + requestURI);
+        log.info("Request URI: {}", requestURI);
 
         // Swagger 관련 경로 필터 통과
         if (requestURI.startsWith("/swagger-ui/")
@@ -59,20 +59,36 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String jwtToken = jwtTokenProvider.resolveToken(request);
         log.info("Extracted JWT Token: " + jwtToken);
 
-        if (jwtToken != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            String LoginId = jwtTokenProvider.getLoginid(jwtToken);
-            log.info("Extracted loginId: " + LoginId);
 
+        if (jwtToken == null) {
+            log.warn("JWT Token is missing");
+            throw new JwtTokenException("TOKEN IS NULL");
+        }
+
+        String tokenLoginId = jwtTokenProvider.getLoginid(jwtToken);
+        log.info("Extracted loginId from Token: {}", tokenLoginId);
+
+        if (tokenLoginId == null || tokenLoginId.isEmpty()) {
+            log.warn("loginId is missing in the token");
+            throw new JwtTokenException("로그인ID가 토큰에 없습니다.");
+        }
+
+        if (SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
-                // 사용자 세부 정보 로드
-                UserDetails userDetails = customUserDetailsService.loadUserByUsername(LoginId);
-                log.info("User Details: " + userDetails);
+                // 사용자의 세부 정보를 로드
+                UserDetails userDetails = customUserDetailsService.loadUserByUsername(tokenLoginId);
+                log.info("User Details: {}", userDetails);
 
                 if (userDetails instanceof CustomUserDetails) {
                     CustomUserDetails customUserDetail = (CustomUserDetails) userDetails;
-                    log.info("User ID: " + customUserDetail.getId());
-                    log.info("User loginId: " + customUserDetail.getUsername());
-                    log.info("User Password: " + customUserDetail.getPassword());
+                    log.info("User ID: {}", customUserDetail.getId());
+                    log.info("User loginId: {}", customUserDetail.getUsername());
+
+                    // loginId가 토큰에 포함된 ID와 일치하는지 확인
+                    if (!customUserDetail.getUsername().equals(tokenLoginId)) {
+                        log.warn("Token loginId does not match the user loginId");
+                        throw new JwtTokenException("로그인ID와 토큰ID가 일치하지 않습니다.");
+                    }
                 }
 
                 // 토큰 유효성 검사
@@ -84,17 +100,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     // 인증 객체를 SecurityContext에 설정
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-                    log.info("인증 성공");
+                    log.info("Authentication successful");
                 } else {
-                    log.warn("유효하지 않은 토큰입니다.");
+                    log.warn("Invalid token");
+                    throw new JwtTokenException("INVALID TOKEN");
                 }
-            } catch (Exception e) {
-                log.error("토큰 검증 실패: ", e);
+            } catch (JwtTokenException e) {
+                log.error("Token validation failed: ", e);
+                throw new JwtTokenException("Token validation falied");
+
             }
-
-
         }
+
+        filterChain.doFilter(request, response);
     }
-}
+
+
+
+
+
+    }
+
+
+
 
 

@@ -4,7 +4,6 @@ package com.github.project3.service.user;
 import com.github.project3.dto.cash.CashRequest;
 import com.github.project3.dto.user.request.LoginRequest;
 import com.github.project3.dto.user.request.SignupRequest;
-import com.github.project3.dto.user.request.TokenRequest;
 import com.github.project3.dto.user.response.LoginResponse;
 import com.github.project3.dto.user.response.SignupResponse;
 import com.github.project3.entity.user.RefreshEntity;
@@ -17,7 +16,6 @@ import com.github.project3.service.cash.CashService;
 import com.github.project3.service.exceptions.JwtTokenException;
 import com.github.project3.service.exceptions.NotFoundException;
 import com.github.project3.service.exceptions.InvalidValueException;
-import com.github.project3.service.exceptions.NotFoundException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -27,12 +25,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -102,19 +98,18 @@ public class UserService {
         // JWT 토큰 생성
         String accessToken = jwtTokenProvider.createToken("access", foundedUser.getLoginId(), foundedUser.getId(), 3600000L);
         String refreshToken = jwtTokenProvider.createToken("refresh", foundedUser.getLoginId(), foundedUser.getId(), 86400000L);
-
+        String bearerToken = "Bearer " + accessToken;
         // RefreshToken 저장
         addRefreshEntity(foundedUser.getLoginId(), refreshToken, 86400000L);
 
         // HTTP 응답에 토큰 설정
-        response.setHeader("access", accessToken);
+        response.setHeader("access", bearerToken);
         response.addCookie(createCookie("refresh", refreshToken));
         response.setStatus(HttpStatus.OK.value());
 
-        // TokenRequest 생성
-        TokenRequest tokenRequest = new TokenRequest(accessToken, refreshToken);
 
-        return new LoginResponse("로그인에 성공했습니다", tokenRequest);
+
+        return new LoginResponse("로그인에 성공했습니다");
     }
 
     private Cookie createCookie(String key, String value) {
