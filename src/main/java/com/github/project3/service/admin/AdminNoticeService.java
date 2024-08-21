@@ -36,8 +36,8 @@ public class AdminNoticeService {
     private final AuthService authService;
 
     // 공지사항 등록
-    public AdminNoticeRegisterResponse registerNotice(AdminNoticeRegisterRequest registerRequest, List<MultipartFile> images, Integer userId){
-        authService.verifyAdmin(userId);
+    public AdminNoticeRegisterResponse registerNotice(AdminNoticeRegisterRequest registerRequest, List<MultipartFile> images, String token){
+        authService.verifyAdmin(token);
 
         NoticeEntity notice = new NoticeEntity();
         if (registerRequest.getTitle() == null || registerRequest.getTitle().isEmpty()){
@@ -85,8 +85,8 @@ public class AdminNoticeService {
     }
 
     // 공지사항 수정
-    public AdminNoticeUpdateResponse getUpdateNotice(Integer id, AdminNoticeUpdateRequest noticeUpdateRequest, List<MultipartFile> images, Integer userId){
-        authService.verifyAdmin(userId);
+    public AdminNoticeUpdateResponse getUpdateNotice(Integer id, AdminNoticeUpdateRequest noticeUpdateRequest, List<MultipartFile> images, String token){
+        authService.verifyAdmin(token);
 
         NoticeEntity notice = adminNoticeRepository.findById(id).orElseThrow(() -> new NotFoundException("해당 공지사항을 찾을 수 없습니다."));
         if (noticeUpdateRequest.getTitle() == null && noticeUpdateRequest.getDescription() == null){
@@ -100,8 +100,6 @@ public class AdminNoticeService {
             notice.setDescription(noticeUpdateRequest.getDescription());
             notice.setTitle(noticeUpdateRequest.getTitle());
         }
-
-            notice.setDescription(noticeUpdateRequest.getDescription());
             // 기존 이미지 삭제
             List<NoticeImageEntity> removeImages = notice.getImages();
             if (removeImages != null && !removeImages.isEmpty()) {
@@ -130,8 +128,8 @@ public class AdminNoticeService {
     }
 
     // 공지사항 삭제
-    public void removeNotice(Integer id, Integer userId){
-        authService.verifyAdmin(userId);
+    public void removeNotice(Integer id, String token){
+        authService.verifyAdmin(token);
 
         NoticeEntity notice = adminNoticeRepository.findById(id).orElseThrow(() -> new NotFoundException("존재하지 않는 공지사항 입니다."));
 
@@ -139,8 +137,8 @@ public class AdminNoticeService {
     }
 
     // 회원 블랙리스트 등록
-    public void getBlacklist(Integer id, Integer userId){
-        authService.verifyAdmin(userId);
+    public void getBlacklist(Integer id, String token){
+        authService.verifyAdmin(token);
 
         UserEntity user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("해당 유저를 찾을 수 없습니다."));
 

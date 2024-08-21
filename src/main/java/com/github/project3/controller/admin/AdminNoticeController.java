@@ -10,6 +10,7 @@ import com.github.project3.entity.notice.NoticeEntity;
 import com.github.project3.jwt.JwtTokenProvider;
 import com.github.project3.service.admin.AdminNoticeService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin")
+@Slf4j
 public class AdminNoticeController {
 
     private final AdminNoticeService adminNoticeService;
@@ -35,9 +37,8 @@ public class AdminNoticeController {
             @RequestPart(value = "request") String noticeRequestJson,
             @RequestPart(value = "images", required = false) List<MultipartFile> images) throws JsonProcessingException{
 
-        Integer userId = jwtTokenProvider.getUserId(token.substring(7));
         AdminNoticeRegisterRequest noticeRequest = objectMapper.readValue(noticeRequestJson, AdminNoticeRegisterRequest.class);
-        adminNoticeService.registerNotice(noticeRequest, images, userId);
+        adminNoticeService.registerNotice(noticeRequest, images, token);
         return ResponseEntity.ok("공지사항 등록 완료.");
     }
     // 공지사항 전체조회(= size부분은 전체갯수->페이지별 갯수로 전환 완료)
@@ -63,9 +64,8 @@ public class AdminNoticeController {
             @RequestPart(value = "request", required = false) String noticeRequestJson,
             @RequestPart(value = "images", required = false) List<MultipartFile> images) throws JsonProcessingException {
 
-        Integer userId = jwtTokenProvider.getUserId(token.substring(7));
         AdminNoticeUpdateRequest noticeUpdateRequest = objectMapper.readValue(noticeRequestJson, AdminNoticeUpdateRequest.class);
-        adminNoticeService.getUpdateNotice(id, noticeUpdateRequest, images, userId);
+        adminNoticeService.getUpdateNotice(id, noticeUpdateRequest, images, token);
         return ResponseEntity.ok("공지사항 수정 완료");
     }
     // 공지사항 삭제
@@ -73,8 +73,7 @@ public class AdminNoticeController {
     public ResponseEntity <String> removeNotice(
             @PathVariable Integer id,
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token){
-        Integer userId = jwtTokenProvider.getUserId(token.substring(7));
-        adminNoticeService.removeNotice(id, userId);
+        adminNoticeService.removeNotice(id, token);
         return ResponseEntity.ok("공지사항이 삭제 완료.");
     }
     // 회원 블랙리스트 등록
@@ -82,8 +81,7 @@ public class AdminNoticeController {
     public ResponseEntity <String> getBlacklist(
             @PathVariable Integer id,
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token){
-        Integer userId = jwtTokenProvider.getUserId(token.substring(7));
-        adminNoticeService.getBlacklist(id, userId);
+        adminNoticeService.getBlacklist(id, token);
         return ResponseEntity.ok("블랙리스트 등록 완료.");
     }
 

@@ -82,7 +82,6 @@ public class JwtTokenProvider {
 
 
     public Integer getUserId(String jwtToken) {
-        log.info("Received JWT Token: {}", jwtToken);
         return parseClaims(jwtToken).get("userId", Integer.class);
     }
 
