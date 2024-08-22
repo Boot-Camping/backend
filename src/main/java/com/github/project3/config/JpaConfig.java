@@ -19,7 +19,8 @@ import java.util.Map;
 @EnableJpaRepositories(
         basePackages = {"com.github.project3.repository.user", "com.github.project3.repository.mypage"
         , "com.github.project3.repository.book", "com.github.project3.repository.bookDate", "com.github.project3.repository.camp"
-        , "com.github.project3.repository.cash", "com.github.project3.repository.review","com.github.project3.repository.admin"},
+        , "com.github.project3.repository.cash", "com.github.project3.repository.review","com.github.project3.repository.admin"
+        , "com.github.project3.repository.reply"},
         entityManagerFactoryRef = "entityManagerFactoryBean1"
 )
 public class JpaConfig {
@@ -36,7 +37,8 @@ public class JpaConfig {
                 "com.github.project3.entity.camp",
                 "com.github.project3.entity.notice",
                 "com.github.project3.entity.review",
-                "com.github.project3.entity.wishlist"
+                "com.github.project3.entity.wishlist",
+                "com.github.project3.entity.reply"
         );
 
         JpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();

@@ -48,19 +48,6 @@ public class MypageController {
         mypageService.getUpdatePasswordUser(id, UpdatePasswordRequest);
         return ResponseEntity.ok("비밀번호 변경 완료");
     }
-    // 공지사항 조회
-    @GetMapping("/notice/all")
-    public ResponseEntity<List<NoticeResponse>> getNotice(){
-        List<NoticeResponse> notice = mypageService.getNoticeAll();
-        return ResponseEntity.ok(notice);
-    }
-    // 공지사항 상세조회
-    @GetMapping("/notice/{id}")
-    public ResponseEntity <NoticeDetailResponse> getDetailNotice(@PathVariable Integer id){
-        NoticeDetailResponse noticeDetail = mypageService.getDetailNotice(id);
-        return ResponseEntity.ok(noticeDetail);
-    }
-
     // 찜 등록(= 찜을 한번 더 눌렀을경우 삭제 완료)
     @PostMapping("/wishlist/add/{campId}/{userId}")
     public ResponseEntity <String> registerWishlist(
@@ -81,5 +68,12 @@ public class MypageController {
             @PathVariable Integer wishId){
         mypageService.removeWishList(wishId);
         return ResponseEntity.ok("찜 삭제 완료");
+    }
+
+    // cash 사용내역 조회
+    @GetMapping("/cashTransaction/{userId}")
+    public ResponseEntity<List<CashTransactionResponse>> getUserCashTransactions(@PathVariable Integer userId){
+        List<CashTransactionResponse> response = mypageService.getUserCashTransactions(userId);
+        return ResponseEntity.ok(response);
     }
 }
