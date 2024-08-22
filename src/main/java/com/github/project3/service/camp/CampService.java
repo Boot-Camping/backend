@@ -196,4 +196,50 @@ public class CampService {
 		// CampPageResponse DTO로 변환하여 반환
 		return new CampPageResponse(campResponses);
 	}
+
+	/**
+	 * 주소 기반으로 캠핑지를 검색하며 페이지네이션을 적용합니다.
+	 *
+	 * @param addr 검색할 주소
+	 * @param page 페이지 번호
+	 * @param size 페이지 크기
+	 * @return 페이지네이션이 적용된 캠핑지 응답 리스트
+	 */
+	@Transactional
+	public CampPageResponse getCampsByAddr(String addr, int page, int size) {
+		Pageable pageable = PageRequest.of(page, size);
+		Page<CampEntity> campEntities = campRepository.findByAddrContainingRegion(addr, pageable);
+
+		if (campEntities.isEmpty()) {
+			throw new NotFoundException("해당 지역에 등록된 캠핑지가 존재하지 않습니다: " + addr);
+		}
+
+		// CampEntity를 CampResponse로 변환하여 Page로 반환
+		Page<CampResponse> campResponses = campEntities.map(CampResponse::fromEntity);
+
+		return new CampPageResponse(campResponses);
+	}
+
+
+	/**
+	 * 주소 기반으로 캠핑지를 검색하며 페이지네이션을 적용합니다.
+	 *
+	 * @param campName 검색할 캠핑지 이름
+	 * @param page 페이지 번호
+	 * @param size 페이지 크기
+	 * @return 페이지네이션이 적용된 캠핑지 응답 리스트
+	 */
+	@Transactional
+	public CampPageResponse getCampsByNmae(String campName, int page, int size) {
+		Pageable pageable = PageRequest.of(page, size);
+		Page<CampEntity> campEntities = campRepository.findByCampNameContainingName(campName, pageable);
+
+		if (campEntities.isEmpty()) {
+			throw new NotFoundException("해당 이름을 가진 캠핑지는 아직 등록되지 않았습니다.");
+		}
+
+		Page<CampResponse> campResponses = campEntities.map(CampResponse::fromEntity);
+
+		return new CampPageResponse(campResponses);
+	}
 }
