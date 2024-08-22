@@ -136,6 +136,17 @@ public class AdminNoticeService {
         adminNoticeRepository.delete(notice);
     }
 
+    // 유저 조회
+    public List<AdminUserCheckResponse> getUserAll(String token){
+        authService.verifyAdmin(token);
+
+        List<UserEntity> user = userRepository.findAllByOrderByCreatedAtDesc();
+        if (user == null && user.isEmpty()){
+            throw new NotFoundException("유저가 존재하지 않습니다.");
+        }
+        return AdminUserCheckResponse.from(user);
+    }
+
     // 회원 블랙리스트 등록
     public void getBlacklist(Integer id, String token){
         authService.verifyAdmin(token);
