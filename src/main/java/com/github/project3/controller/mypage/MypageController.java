@@ -128,4 +128,11 @@ public class MypageController {
         mypageService.removeWishList(wishId);
         return ResponseEntity.ok("찜 삭제 완료");
     }
+
+    // cash 사용내역 조회
+    @GetMapping("/cashTransaction/{userId}")
+    public ResponseEntity<List<CashTransactionResponse>> getUserCashTransactions(@PathVariable Integer userId){
+        List<CashTransactionResponse> response = mypageService.getUserCashTransactions(userId);
+        return ResponseEntity.ok(response);
+    }
 }
