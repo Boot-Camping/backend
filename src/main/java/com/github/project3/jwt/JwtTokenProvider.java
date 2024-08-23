@@ -1,8 +1,14 @@
 package com.github.project3.jwt;
 
 
+import com.github.project3.entity.user.UserEntity;
+import com.github.project3.entity.user.enums.Status;
+import com.github.project3.repository.user.UserRepository;
+import com.github.project3.service.exceptions.NotAcceptException;
+import com.github.project3.service.exceptions.NotFoundException;
 import io.jsonwebtoken.*;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -11,6 +17,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.Base64;
 import java.util.Date;
@@ -21,10 +28,12 @@ public class JwtTokenProvider {
 
     private final String secretKey;
     private final UserDetailsService userDetailsService;
+    private final UserRepository userRepository;
 
-    public JwtTokenProvider(@Value("${JWT_SECRET_KEY}") String secretKey, UserDetailsService userDetailsService) {
+    public JwtTokenProvider(@Value("${JWT_SECRET_KEY}") String secretKey, UserDetailsService userDetailsService, UserRepository userRepository) {
         this.secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
         this.userDetailsService = userDetailsService;
+        this.userRepository = userRepository;
     }
 
     public String resolveToken(HttpServletRequest request) {
@@ -52,6 +61,12 @@ public class JwtTokenProvider {
         Claims claims = parseClaims(accessToken);
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(claims.getSubject());
+
+        Integer userId = getUserId(accessToken);
+        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("존재하지 않는 유저 입니다."));
+        if (user.getStatus() == Status.BLACKLIST){
+            throw new NotAcceptException("블랙리스트 유저는 로그인이 불가능합니다.");
+        }
 
         return new UsernamePasswordAuthenticationToken(userDetails, accessToken);
     }
