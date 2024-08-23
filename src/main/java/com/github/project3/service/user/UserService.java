@@ -13,6 +13,7 @@ import com.github.project3.entity.user.enums.TransactionType;
 import com.github.project3.jwt.JwtTokenProvider;
 import com.github.project3.repository.user.RefreshRepository;
 import com.github.project3.repository.user.UserRepository;
+import com.github.project3.service.admin.AuthService;
 import com.github.project3.service.cash.CashService;
 import com.github.project3.service.exceptions.NotFoundException;
 import jakarta.servlet.http.Cookie;
@@ -39,6 +40,7 @@ public class UserService {
     private final RefreshRepository refreshRepository;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final CashService cashService;
+    private final AuthService authService;
 
 
     public SignupResponse signup(SignupRequest signupRequest) {
@@ -71,6 +73,8 @@ public class UserService {
 
         UserEntity user = userRepository.findByLoginId(loginRequest.getLoginId())
                 .orElseThrow(() -> new UsernameNotFoundException("loginId 해당하는 유저가 없습니다: " + loginRequest.getLoginId()));
+
+        authService.verifyNotBlacklisted(user);
 
         String accessToken = jwtTokenProvider.createToken("access", user.getLoginId(), user.getId(), 3600000L);
         String refreshToken = jwtTokenProvider.createToken("refresh", user.getLoginId(), user.getId(), 86400000L);
