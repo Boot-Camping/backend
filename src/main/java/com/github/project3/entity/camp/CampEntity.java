@@ -29,6 +29,9 @@ public class CampEntity {
     @Column(name = "addr")
     private String addr;
 
+    @Column(name = "tel") // 새로운 전화번호 컬럼 추가
+    private String tel;
+
     @Column(name = "max_num")
     private Integer maxNum;
 
