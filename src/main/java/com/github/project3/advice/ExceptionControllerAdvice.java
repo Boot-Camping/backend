@@ -28,7 +28,7 @@ public class ExceptionControllerAdvice {
     @ExceptionHandler(NotAcceptException.class)
     public ResponseEntity<String> handleNotAcceptException(NotAcceptException nae) {
         log.error("Client 요청이 거부됩니다." + nae.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(nae.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(nae.getMessage());
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
