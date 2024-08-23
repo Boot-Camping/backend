@@ -1,7 +1,6 @@
 package com.github.project3.jwt;
 
 
-import com.github.project3.entity.user.UserEntity;
 import io.jsonwebtoken.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
