@@ -110,7 +110,7 @@ public class AdminNoticeController {
             // "Bearer "가 포함되어 있다면 "Bearer "를 제거한 부분을 subToken에 저장
             subToken = token.substring(7);
         }
-        adminNoticeService.getUpdateNotice(id, noticeUpdateRequest, images, token);
+        adminNoticeService.getUpdateNotice(id, noticeUpdateRequest, images, subToken);
         return ResponseEntity.ok("공지사항 수정 완료");
     }
 
@@ -131,7 +131,7 @@ public class AdminNoticeController {
             // "Bearer "가 포함되어 있다면 "Bearer "를 제거한 부분을 subToken에 저장
             subToken = token.substring(7);
         }
-        adminNoticeService.removeNotice(id, token);
+        adminNoticeService.removeNotice(id, subToken);
         return ResponseEntity.ok("공지사항 삭제 완료.");
     }
 
@@ -140,7 +140,12 @@ public class AdminNoticeController {
     @GetMapping("/stats")
     public ResponseEntity <AdminDataResponse> getAllData(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token){
-        AdminDataResponse dataResponse = adminNoticeService.getAllData(token);
+        String subToken = token;
+        if (token.startsWith("Bearer ")) {
+            // "Bearer "가 포함되어 있다면 "Bearer "를 제거한 부분을 subToken에 저장
+            subToken = token.substring(7);
+        }
+        AdminDataResponse dataResponse = adminNoticeService.getAllData(subToken);
         return ResponseEntity.ok(dataResponse);
     }
 
@@ -153,7 +158,12 @@ public class AdminNoticeController {
     @ApiOperation(value = "회원 전체 조회", notes = "모든 회원 정보를 조회합니다.")
     @GetMapping("/user/all")
     public ResponseEntity<List<AdminUserCheckResponse>> getUserAll(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-        List<AdminUserCheckResponse> userResponse = adminNoticeService.getUserAll(token);
+        String subToken = token;
+        if (token.startsWith("Bearer ")) {
+            // "Bearer "가 포함되어 있다면 "Bearer "를 제거한 부분을 subToken에 저장
+            subToken = token.substring(7);
+        }
+        List<AdminUserCheckResponse> userResponse = adminNoticeService.getUserAll(subToken);
         return ResponseEntity.ok(userResponse);
     }
 
@@ -174,7 +184,7 @@ public class AdminNoticeController {
             // "Bearer "가 포함되어 있다면 "Bearer "를 제거한 부분을 subToken에 저장
             subToken = token.substring(7);
         }
-        adminNoticeService.getBlacklist(id, token);
+        adminNoticeService.getBlacklist(id, subToken);
         return ResponseEntity.ok("블랙리스트 등록 완료.");
     }
 
