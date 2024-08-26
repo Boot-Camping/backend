@@ -47,9 +47,8 @@ public class AdminNoticeController {
             @RequestPart(value = "request") String noticeRequestJson,
             @RequestPart(value = "images", required = false) List<MultipartFile> images) throws JsonProcessingException {
 
-        String userToken = token.substring(7);
         AdminNoticeRegisterRequest noticeRequest = objectMapper.readValue(noticeRequestJson, AdminNoticeRegisterRequest.class);
-        adminNoticeService.registerNotice(noticeRequest, images, userToken);
+        adminNoticeService.registerNotice(noticeRequest, images, token);
         return ResponseEntity.ok("공지사항 등록 완료.");
     }
 
@@ -100,9 +99,8 @@ public class AdminNoticeController {
             @RequestPart(value = "request", required = false) String noticeRequestJson,
             @RequestPart(value = "images", required = false) List<MultipartFile> images) throws JsonProcessingException {
 
-        String userToken = token.substring(7);
         AdminNoticeUpdateRequest noticeUpdateRequest = objectMapper.readValue(noticeRequestJson, AdminNoticeUpdateRequest.class);
-        adminNoticeService.getUpdateNotice(id, noticeUpdateRequest, images, userToken);
+        adminNoticeService.getUpdateNotice(id, noticeUpdateRequest, images, token);
         return ResponseEntity.ok("공지사항 수정 완료");
     }
 
@@ -118,8 +116,7 @@ public class AdminNoticeController {
     public ResponseEntity<String> removeNotice(
             @PathVariable Integer id,
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-        String userToken = token.substring(7);
-        adminNoticeService.removeNotice(id, userToken);
+        adminNoticeService.removeNotice(id, token);
         return ResponseEntity.ok("공지사항 삭제 완료.");
     }
 
@@ -128,8 +125,7 @@ public class AdminNoticeController {
     @GetMapping("/stats")
     public ResponseEntity <AdminDataResponse> getAllData(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token){
-        String userToken = token.substring(7);
-        AdminDataResponse dataResponse = adminNoticeService.getAllData(userToken);
+        AdminDataResponse dataResponse = adminNoticeService.getAllData(token);
         return ResponseEntity.ok(dataResponse);
     }
 
@@ -142,8 +138,7 @@ public class AdminNoticeController {
     @ApiOperation(value = "회원 전체 조회", notes = "모든 회원 정보를 조회합니다.")
     @GetMapping("/user/all")
     public ResponseEntity<List<AdminUserCheckResponse>> getUserAll(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-        String userToken = token.substring(7);
-        List<AdminUserCheckResponse> userResponse = adminNoticeService.getUserAll(userToken);
+        List<AdminUserCheckResponse> userResponse = adminNoticeService.getUserAll(token);
         return ResponseEntity.ok(userResponse);
     }
 
@@ -159,8 +154,7 @@ public class AdminNoticeController {
     public ResponseEntity<String> getBlacklist(
             @PathVariable Integer id,
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-        String userToken = token.substring(7);
-        adminNoticeService.getBlacklist(id, userToken);
+        adminNoticeService.getBlacklist(id, token);
         return ResponseEntity.ok("블랙리스트 등록 완료.");
     }
 
