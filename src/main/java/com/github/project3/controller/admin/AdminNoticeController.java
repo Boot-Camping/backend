@@ -30,7 +30,6 @@ public class AdminNoticeController {
 
     private final AdminNoticeService adminNoticeService;
     private final ObjectMapper objectMapper;
-    private final JwtTokenProvider jwtTokenProvider;
 
     /**
      * 새로운 공지사항을 등록합니다.
@@ -121,6 +120,15 @@ public class AdminNoticeController {
         return ResponseEntity.ok("공지사항 삭제 완료.");
     }
 
+    // 사이트 통계 (매출추이, 유저추이, 예약수, (카테고리별 예약자수))
+    @ApiOperation(value = "사이트 통계", notes = "유저추이, 예약추이")
+    @GetMapping("/stats")
+    public ResponseEntity <AdminDataResponse> getAllData(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token){
+        AdminDataResponse dataResponse = adminNoticeService.getAllData(token);
+        return ResponseEntity.ok(dataResponse);
+    }
+
     /**
      * 모든 회원 정보를 조회합니다.
      *
@@ -148,5 +156,12 @@ public class AdminNoticeController {
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
         adminNoticeService.getBlacklist(id, token);
         return ResponseEntity.ok("블랙리스트 등록 완료.");
+    }
+
+    // 관리자 통장 업데이트(수동작업)
+    @PutMapping("/update-balance")
+    public ResponseEntity<String> updateAdminBalance(){
+        adminNoticeService.updateAdminBalance();
+        return ResponseEntity.ok("관리자 잔고 업데이트 완료.");
     }
 }
