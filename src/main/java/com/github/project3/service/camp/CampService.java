@@ -13,7 +13,6 @@ import com.github.project3.service.exceptions.NotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -73,7 +72,6 @@ public class CampService {
 		campEntity.addCategories(categoryEntities);
 
 
-
 		// 캠핑지 엔티티를 데이터베이스에 저장.
 		CampEntity savedCamp = campRepository.save(campEntity);
 
@@ -82,24 +80,39 @@ public class CampService {
 	}
 
 	/**
-	 * 모든 캠핑지 조회 (페이지네이션 적용)
+	 * 캠핑지 검색 및 전체 조회를 처리합니다.
+	 * 카테고리, 주소, 이름을 기준으로 검색할 수 있으며, 페이지네이션이 적용됩니다.
 	 *
-	 * @param page 페이지 번호
-	 * @param size 페이지 크기
-	 * @return 페이지네이션이 적용된 캠핑지 응답 리스트
+	 * @param categoryName 검색할 카테고리 이름 (선택적)
+	 * @param addr         검색할 주소 (선택적)
+	 * @param name         검색할 캠핑지 이름 (선택적)
+	 * @param page         페이지 번호
+	 * @param size         페이지 크기
+	 * @return 검색된 캠핑지 정보를 페이지네이션이 적용된 CampPageResponse 객체로 반환
 	 */
 	@Transactional
-	public CampPageResponse getAllCamps(int page, int size) {
+	public CampPageResponse searchCamps(String categoryName, String addr, String name, int page, int size) {
 		Pageable pageable = PageRequest.of(page, size);
-		Page<CampEntity> campEntities = campRepository.findAll(pageable);
+		Page<CampEntity> campEntities;
+
+		if (categoryName != null) {
+			campEntities = campRepository.findByCategoryName(categoryName, pageable);
+		} else if (addr != null) {
+			campEntities = campRepository.findByAddrContainingRegion(addr, pageable);
+		} else if (name != null) {
+			campEntities = campRepository.findByCampNameContainingName(name, pageable);
+		} else {
+			campEntities = campRepository.findAll(pageable);
+		}
+
+		if (campEntities.isEmpty()) {
+			throw new NotFoundException("검색 조건에 맞는 캠핑지가 없습니다.");
+		}
 
 		Page<CampResponse> campResponses = campEntities.map(campEntity -> {
-			// 캠핑지의 평균 평점과 리뷰 수, 예약된 날짜를 조회
 			Double averageGrade = reviewRepository.calculateAverageGradeByCampId(campEntity.getId());
 			Long reviewCount = reviewRepository.countByCampId(campEntity.getId());
-			// 예약된 날짜의 수를 계산
 			Long reservedDateCount = bookDateRepository.countReservedDatesByCampId(campEntity.getId());
-			// CampResponse로 변환하여 반환
 			return CampResponse.fromEntity(campEntity, averageGrade, reviewCount, reservedDateCount);
 		});
 
@@ -161,6 +174,7 @@ public class CampService {
 
 	/**
 	 * 캠핑지 삭제
+	 *
 	 * @param campId 삭제할 캠핑지의 ID
 	 */
 	@Transactional
@@ -172,6 +186,12 @@ public class CampService {
 		campRepository.deleteById(campId); // 여기서 DataIntegrityViolationException 발생 가능
 	}
 
+	/**
+	 * 특정 캠핑지의 세부 정보를 조회합니다.
+	 *
+	 * @param campId 조회할 캠핑지의 ID
+	 * @return 조회된 캠핑지의 세부 정보와 예약된 날짜들이 포함된 CampSpecResponse 객체
+	 */
 	@Transactional
 	public CampSpecResponse getCampById(Integer campId) {
 		// 주어진 캠핑지 ID로 캠핑지 정보를 조회, 존재하지 않을 경우 NotFoundException을 발생
@@ -198,96 +218,6 @@ public class CampService {
 
 
 		// CampSpecResponse의 스태틱 팩토리 메서드를 사용하여 캠핑지 엔티티와 예약된 날짜들을 응답 객체로 변환하여 반환
-		return CampSpecResponse.fromEntity(campEntity, reservedDates ,viewCount, averageGrade);
-	}
-
-	/**
-	 * 카테고리별로 캠핑지를 조회하며 페이지네이션을 적용합니다.
-	 *
-	 * @param categoryName 카테고리 이름
-	 * @param page 페이지 번호
-	 * @param size 페이지 크기
-	 * @return 페이지네이션이 적용된 캠핑지 응답 리스트
-	 */
-	@Transactional
-	public CampPageResponse getCampsByCategory(String categoryName, int page, int size) {
-		Pageable pageable = PageRequest.of(page, size);
-		Page<CampEntity> campEntities = campRepository.findByCategoryName(categoryName, pageable);
-
-		if (campEntities.isEmpty()) {
-			// 해당 카테고리에 캠핑지가 없는 경우 예외 처리
-			throw new NotFoundException("해당 카테고리에 등록된 캠핑지가 없습니다.");
-		}
-
-		Page<CampResponse> campResponses = campEntities.map(campEntity -> {
-			// 캠핑지의 평균 평점과 리뷰 수, 예약된 날짜를 조회
-			Double averageGrade = reviewRepository.calculateAverageGradeByCampId(campEntity.getId());
-			Long reviewCount = reviewRepository.countByCampId(campEntity.getId());
-			Long reservedDateCount = bookDateRepository.countReservedDatesByCampId(campEntity.getId());
-			// CampResponse로 변환하여 반환
-			return CampResponse.fromEntity(campEntity, averageGrade, reviewCount, reservedDateCount);
-		});
-
-		return new CampPageResponse(campResponses);
-	}
-
-	/**
-	 * 주소 기반으로 캠핑지를 검색하며 페이지네이션을 적용합니다.
-	 *
-	 * @param addr 검색할 주소
-	 * @param page 페이지 번호
-	 * @param size 페이지 크기
-	 * @return 페이지네이션이 적용된 캠핑지 응답 리스트
-	 */
-	@Transactional
-	public CampPageResponse getCampsByAddr(String addr, int page, int size) {
-		Pageable pageable = PageRequest.of(page, size);
-		Page<CampEntity> campEntities = campRepository.findByAddrContainingRegion(addr, pageable);
-
-		if (campEntities.isEmpty()) {
-			throw new NotFoundException("해당 지역에 등록된 캠핑지가 존재하지 않습니다: " + addr);
-		}
-
-		Page<CampResponse> campResponses = campEntities.map(campEntity -> {
-			// 캠핑지의 평균 평점과 리뷰 수, 예약된 날짜를 조회
-			Double averageGrade = reviewRepository.calculateAverageGradeByCampId(campEntity.getId());
-			Long reviewCount = reviewRepository.countByCampId(campEntity.getId());
-			Long reservedDateCount = bookDateRepository.countReservedDatesByCampId(campEntity.getId());
-			// CampResponse로 변환하여 반환
-			return CampResponse.fromEntity(campEntity, averageGrade, reviewCount, reservedDateCount);
-		});
-
-		return new CampPageResponse(campResponses);
-	}
-
-
-	/**
-	 * 캠핑지 이름 기반으로 캠핑지를 검색하며 페이지네이션을 적용합니다.
-	 *
-	 * @param campName 검색할 캠핑지 이름
-	 * @param page 페이지 번호
-	 * @param size 페이지 크기
-	 * @return 페이지네이션이 적용된 캠핑지 응답 리스트
-	 */
-	@Transactional
-	public CampPageResponse getCampsByNmae(String campName, int page, int size) {
-		Pageable pageable = PageRequest.of(page, size);
-		Page<CampEntity> campEntities = campRepository.findByCampNameContainingName(campName, pageable);
-
-		if (campEntities.isEmpty()) {
-			throw new NotFoundException("해당 이름을 가진 캠핑지는 아직 등록되지 않았습니다.");
-		}
-
-		Page<CampResponse> campResponses = campEntities.map(campEntity -> {
-			// 캠핑지의 평균 평점과 리뷰 수, 예약된 날짜를 조회
-			Double averageGrade = reviewRepository.calculateAverageGradeByCampId(campEntity.getId());
-			Long reviewCount = reviewRepository.countByCampId(campEntity.getId());
-			Long reservedDateCount = bookDateRepository.countReservedDatesByCampId(campEntity.getId());
-
-			// CampResponse로 변환하여 반환
-			return CampResponse.fromEntity(campEntity, averageGrade, reviewCount, reservedDateCount);
-		});
-
-		return new CampPageResponse(campResponses);
+		return CampSpecResponse.fromEntity(campEntity, reservedDates, viewCount, averageGrade);
 	}
 }
