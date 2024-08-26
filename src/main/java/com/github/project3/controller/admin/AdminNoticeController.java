@@ -49,7 +49,12 @@ public class AdminNoticeController {
             @RequestPart(value = "images", required = false) List<MultipartFile> images) throws JsonProcessingException {
 
         AdminNoticeRegisterRequest noticeRequest = objectMapper.readValue(noticeRequestJson, AdminNoticeRegisterRequest.class);
-        adminNoticeService.registerNotice(noticeRequest, images, token);
+        String subToken = token;
+        if (token.startsWith("Bearer ")) {
+            // "Bearer "가 포함되어 있다면 "Bearer "를 제거한 부분을 subToken에 저장
+            subToken = token.substring(7);
+        }
+        adminNoticeService.registerNotice(noticeRequest, images, subToken);
         return ResponseEntity.ok("공지사항 등록 완료.");
     }
 
@@ -101,6 +106,11 @@ public class AdminNoticeController {
             @RequestPart(value = "images", required = false) List<MultipartFile> images) throws JsonProcessingException {
 
         AdminNoticeUpdateRequest noticeUpdateRequest = objectMapper.readValue(noticeRequestJson, AdminNoticeUpdateRequest.class);
+        String subToken = token;
+        if (token.startsWith("Bearer ")) {
+            // "Bearer "가 포함되어 있다면 "Bearer "를 제거한 부분을 subToken에 저장
+            subToken = token.substring(7);
+        }
         adminNoticeService.getUpdateNotice(id, noticeUpdateRequest, images, token);
         return ResponseEntity.ok("공지사항 수정 완료");
     }
@@ -117,6 +127,11 @@ public class AdminNoticeController {
     public ResponseEntity<String> removeNotice(
             @PathVariable Integer id,
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+        String subToken = token;
+        if (token.startsWith("Bearer ")) {
+            // "Bearer "가 포함되어 있다면 "Bearer "를 제거한 부분을 subToken에 저장
+            subToken = token.substring(7);
+        }
         adminNoticeService.removeNotice(id, token);
         return ResponseEntity.ok("공지사항 삭제 완료.");
     }
@@ -146,6 +161,11 @@ public class AdminNoticeController {
     public ResponseEntity<String> getBlacklist(
             @PathVariable Integer id,
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+        String subToken = token;
+        if (token.startsWith("Bearer ")) {
+            // "Bearer "가 포함되어 있다면 "Bearer "를 제거한 부분을 subToken에 저장
+            subToken = token.substring(7);
+        }
         adminNoticeService.getBlacklist(id, token);
         return ResponseEntity.ok("블랙리스트 등록 완료.");
     }
