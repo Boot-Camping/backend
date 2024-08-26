@@ -10,10 +10,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends JpaRepository<UserEntity, Integer>, CreatedAtRepository {
+public interface UserRepository extends JpaRepository<UserEntity, Integer> {
 
     Optional<UserEntity> findByLoginId(String loginId);
     List<UserEntity> findAllByOrderByCreatedAtDesc();
-    Optional<UserEntity> findByRole(Role role);
-    boolean existsByEmail(String email);
 }
