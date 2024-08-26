@@ -113,6 +113,7 @@ public class MypageService {
     }
 
     // 유저 비밀번호 수정
+    @Transactional
     public MypageUpdatePasswordResponse getUpdatePasswordUser(Integer id, MypageUpdatePasswordRequest PasswordRequest) {
         UserEntity user = mypageRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("등록된 사용자를 찾을 수 없습니다."));
@@ -141,6 +142,7 @@ public class MypageService {
     }
 
     // 찜 등록
+    @Transactional
     public String registerWishlist(Integer campId, Integer userId){
         UserEntity user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("등록된 사용자를 찾을 수 없습니다."));
 
@@ -170,10 +172,10 @@ public class MypageService {
         }
 
         return wishlist.stream()
-                .map(wishlistEntity -> MypageCampResponse.from(wishlistEntity.getCamp()))
-                .collect(Collectors.toList());
+                .map(MypageCampResponse::from).collect(Collectors.toList());
     }
     // 찜 삭제
+    @Transactional
     public void removeWishList(Integer wishId){
         WishlistEntity wishlist = wishlistRepository.findById(wishId)
                 .orElseThrow(() -> new NotFoundException("등록된 찜 내역이 존재하지 않습니다."));

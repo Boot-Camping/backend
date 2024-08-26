@@ -16,17 +16,19 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class MypageCampResponse {
     private Integer id;
-    private List<Integer> wishId;
+    private Integer wishId;
     private String name;
     private String addr;
     private Integer price;
     private List<String> campImages;
 
     // 스태틱 팩토리 메서드
-    public static MypageCampResponse from(CampEntity camp) {
+    public static MypageCampResponse from(WishlistEntity wishlistEntity) {
         MypageCampResponse response = new MypageCampResponse();
+        CampEntity camp = wishlistEntity.getCamp();
+
         response.id = camp.getId();
-        response.wishId = camp.getWishlist().stream().map(WishlistEntity::getId).collect(Collectors.toList());
+        response.wishId = wishlistEntity.getId();
         response.name = camp.getName();
         response.addr = camp.getAddr();
         response.price = camp.getPrice();
