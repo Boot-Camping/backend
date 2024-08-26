@@ -46,11 +46,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || "/api/user/signup".equals(requestURI)
                 || "/api/user/logout".equals(requestURI)
                 || "/api/camp".equals(requestURI)
+                || requestURI.startsWith("/api/camp/campName")
+                || requestURI.startsWith("/api/camp/addr")
                 || requestURI.startsWith("/api/camp/category")
                 || requestURI.matches("/api/camp/\\d+")
-                || requestURI.startsWith("/api/userprofile/notice/all")
+                || requestURI.startsWith("/api/admin/notice/all")
+                || requestURI.matches("/api/admin/notice/\\d+")
                 || "/api/review/all".equals(requestURI)
-                || requestURI.matches("/api/review/camp/\\d+")) {
+                || requestURI.matches("/api/review/camp/\\d+")
+                || requestURI.matches("/api/review/user/\\d+")
+                || requestURI.matches("/api/reply/review/\\d+")) {
             filterChain.doFilter(request, response);
             return;
         }
