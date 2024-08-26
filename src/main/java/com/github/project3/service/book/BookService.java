@@ -48,15 +48,16 @@ public class BookService {
      * 캠핑장 예약을 등록합니다.
      *
      * @param campId                예약하려는 캠핑장의 ID
-     * @param userId                예약을 요청하는 사용자의 ID
      * @param bookRegisterRequest   예약 등록 요청 정보를 담고 있는 객체
      * @throws NotFoundException    해당 ID의 사용자 또는 캠핑장이 존재하지 않을 경우 발생
      * @throws NotAcceptException   요청된 날짜에 이미 예약이 존재할 경우 발생
      */
     @Transactional
     public void registerBook(Integer campId, BookRegisterRequest bookRegisterRequest) {
+
+        // 인증이 완료되어 SecurityContextHolder 저장된 user 의 id로 검색
         UserEntity user = userService.findAuthenticatedUser();
-        log.info("Authenticated User ID: {}", user.getId());
+        log.info("인증된 유저의 ID : {}", user.getId());
 
         CampEntity camp = campRepository.findById(campId).orElseThrow(()-> new NotFoundException("해당하는 캠핑지가 존재하지 않습니다."));
 
@@ -123,13 +124,12 @@ public class BookService {
      * 캠핑장 예약을 취소합니다.
      *
      * @param bookId  취소하려는 예약의 ID
-     * @param userId  예약 취소를 요청하는 사용자의 ID
      * @return 환불 금액
      * @throws NotFoundException    해당 예약 또는 사용자가 존재하지 않을 경우 발생
      * @throws NotAcceptException   예약이 이미 취소된 상태이거나 기타 조건에 따라 발생
      */
     @Transactional
-    public Integer cancelBook(Integer bookId, Integer userId) {
+    public Integer cancelBook(Integer bookId) {
 
         BookEntity book = bookRepository.findById(bookId).orElseThrow(() -> new NotFoundException("해당하는 예약이 존재하지 않습니다."));
 
@@ -141,7 +141,7 @@ public class BookService {
         book.setStatus(Status.CANCEL);
         bookRepository.save(book);
 
-        UserEntity user = userRepository.findById(userId).orElseThrow(()-> new NotFoundException("해당 ID의 사용자가 존재하지 않습니다."));
+        UserEntity user = userService.findAuthenticatedUser();
 
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime startDate = book.getStartDate();
@@ -164,14 +164,15 @@ public class BookService {
     /**
      * 사용자의 예약 내역을 조회합니다.
      *
-     * @param userId  예약 내역을 조회하려는 사용자의 ID
      * @return 예약 내역 리스트
      * @throws NotFoundException    해당 사용자가 존재하지 않거나 예약이 없을 경우 발생
      */
-    public List<BookInquiryResponse> inquiryBook(Integer userId) {
-        UserEntity user = userRepository.findById(userId).orElseThrow(()-> new NotFoundException("해당 ID의 사용자가 존재하지 않습니다."));
+    public List<BookInquiryResponse> inquiryBook() {
+        UserEntity user = userService.findAuthenticatedUser();
 
-        List<BookEntity> books = bookRepository.findByUserId(userId);
+//        UserEntity user = userRepository.findById(userId).orElseThrow(()-> new NotFoundException("해당 ID의 사용자가 존재하지 않습니다."));
+
+        List<BookEntity> books = bookRepository.findByUserId(user.getId());
 
         if (books.isEmpty()) {
             throw new NotFoundException("해당하는 예약이 존재하지 않습니다.");

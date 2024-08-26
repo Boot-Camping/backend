@@ -211,6 +211,7 @@ public class UserService {
         userRepository.save(foundedUser);
     }
 
+    // 인증이 완료되어 SecurityContextHolder 저장된 user 의 id로 검색
     public UserEntity findAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof UserDetails) {
