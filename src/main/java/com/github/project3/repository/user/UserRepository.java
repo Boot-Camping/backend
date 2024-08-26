@@ -10,10 +10,11 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends JpaRepository<UserEntity, Integer> {
+public interface UserRepository extends JpaRepository<UserEntity, Integer>, CreatedAtRepository {
 
     Optional<UserEntity> findByLoginId(String loginId);
 
+    Optional<UserEntity> findByRole(Role role);
     boolean existsByEmail(String email);
 
     boolean existsByLoginId(String loginId);
