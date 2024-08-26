@@ -209,10 +209,6 @@ public class AdminNoticeService {
         // decide 조회
         List<BookEntity> decideBook = bookRepository.findAllByStartDateBeforeAndStatus(now, com.github.project3.entity.book.enums.Status.BOOKING);
 
-        // StartDate가 지난 캠핑 DECIDE로 업데이트
-        decideBook.forEach(book -> book.setStatus(com.github.project3.entity.book.enums.Status.DECIDE));
-        bookRepository.saveAll(decideBook);
-
         if (!decideBook.isEmpty()){
             UserEntity adminUser = userRepository.findByRole(Role.ADMIN).orElseThrow(() -> new NotFoundException("관리자 유저가 존재하지 않습니다."));
             // decide 상태의 캠프 총합계
