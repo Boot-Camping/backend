@@ -2,6 +2,7 @@ package com.github.project3.service.admin;
 
 import com.github.project3.entity.user.UserEntity;
 import com.github.project3.entity.user.enums.Role;
+import com.github.project3.entity.user.enums.Status;
 import com.github.project3.jwt.JwtTokenProvider;
 import com.github.project3.repository.user.UserRepository;
 import com.github.project3.service.exceptions.NotAcceptException;
@@ -24,5 +25,11 @@ public class AuthService {
             throw new NotAcceptException("권한이 없습니다.");
         }
     }
+    public void verifyNotBlacklisted(UserEntity user) {
+        if (user.getStatus() == Status.BLACKLIST) {
+            throw new NotAcceptException("블랙리스트 회원입니다. 로그인이 불가능합니다.");
+        }
+    }
+
 
 }
