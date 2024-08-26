@@ -13,6 +13,7 @@ import com.github.project3.entity.user.enums.TransactionType;
 import com.github.project3.jwt.JwtTokenProvider;
 import com.github.project3.repository.user.RefreshRepository;
 import com.github.project3.repository.user.UserRepository;
+import com.github.project3.service.admin.AuthService;
 import com.github.project3.service.cash.CashService;
 import com.github.project3.service.exceptions.JwtTokenException;
 import com.github.project3.service.exceptions.NotAcceptException;
@@ -45,6 +46,7 @@ public class UserService {
     private final RefreshRepository refreshRepository;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final CashService cashService;
+    private final AuthService authService;
 
 
     public SignupResponse signup(SignupRequest signupRequest) {
@@ -123,6 +125,8 @@ public class UserService {
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        authService.verifyNotBlacklisted(foundedUser);
 
         // JWT 토큰 생성
         String accessToken = jwtTokenProvider.createToken("access", foundedUser.getLoginId(), foundedUser.getId(), 3600000L);
