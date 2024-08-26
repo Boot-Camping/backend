@@ -170,8 +170,6 @@ public class BookService {
     public List<BookInquiryResponse> inquiryBook() {
         UserEntity user = userService.findAuthenticatedUser();
 
-//        UserEntity user = userRepository.findById(userId).orElseThrow(()-> new NotFoundException("해당 ID의 사용자가 존재하지 않습니다."));
-
         List<BookEntity> books = bookRepository.findByUserId(user.getId());
 
         if (books.isEmpty()) {
@@ -188,6 +186,7 @@ public class BookService {
 
                     return BookInquiryResponse.of(
                             book.getId(),
+                            book.getCamp().getId(),
                             book.getCamp().getName(),
                             firstImage,
                             book.getStartDate(),
