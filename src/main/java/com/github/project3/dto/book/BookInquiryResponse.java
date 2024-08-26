@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 @Builder
 public class BookInquiryResponse {
     private Integer bookId;
+    private Integer campId;
     private String campName;
     private String imgUrl;
     private LocalDateTime startDate;
@@ -26,9 +27,10 @@ public class BookInquiryResponse {
     private Status bookStatus;
 
     // 스태틱 팩토리 메소드
-    public static BookInquiryResponse of(Integer bookId, String campName, String imgUrl, LocalDateTime startDate, LocalDateTime endDate, Integer bookNum, Integer totalPrice, String bookRequest, Status bookStatus) {
+    public static BookInquiryResponse of(Integer bookId, Integer campId, String campName, String imgUrl, LocalDateTime startDate, LocalDateTime endDate, Integer bookNum, Integer totalPrice, String bookRequest, Status bookStatus) {
         return BookInquiryResponse.builder()
                 .bookId(bookId)
+                .campId(campId)
                 .campName(campName)
                 .imgUrl(imgUrl)
                 .startDate(startDate)
