@@ -9,6 +9,7 @@ import com.github.project3.entity.user.UserEntity;
 import com.github.project3.entity.user.UserImageEntity;
 import com.github.project3.entity.wishlist.WishlistEntity;
 import com.github.project3.repository.camp.CampRepository;
+import com.github.project3.repository.cash.CashRepository;
 import com.github.project3.repository.mypage.MypageImageRepository;
 import com.github.project3.repository.mypage.MypageRepository;
 import com.github.project3.repository.mypage.NoticeRepository;
@@ -46,6 +47,7 @@ public class MypageService {
     private final CampRepository campRepository;
     private final WishlistRepository wishlistRepository;
     private final S3Service s3Service;
+    private final CashRepository cashRepository;
 
     // 유저 정보조회
     public List<MypageResponse> getUserMyPage(Integer id){
@@ -116,51 +118,46 @@ public class MypageService {
                 .orElseThrow(() -> new NotFoundException("등록된 사용자를 찾을 수 없습니다."));
 
         // 비밀번호 패턴 검증 추가
-        String passwordPattern = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,20}$";
+        String passwordPattern = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d@#$%^&*!+=]{8,20}$";
         Pattern pattern = Pattern.compile(passwordPattern);
         Matcher matcher = pattern.matcher(PasswordRequest.getNewPassword());
 
         if (!matcher.matches()) {
-            throw new IllegalArgumentException("비밀번호는 영문자, 숫자의 조합으로 8자 이상 20자 이하로 설정해주세요");
+            throw new IllegalArgumentException("비밀번호는 영문자(필수), 숫자(필수), 특수문자의 조합으로 8자 이상 20자 이하로 설정해주세요");
         }
 
-        if (passwordEncoder.matches(PasswordRequest.getOldPassword(), user.getPassword())){
-            user.setPassword(passwordEncoder.encode(PasswordRequest.getNewPassword()));
-        } else {
-            throw new InvalidValueException("비밀번호가 다릅니다.");
+        if (passwordEncoder.matches(PasswordRequest.getNewPassword(), user.getPassword())){
+            throw new IllegalArgumentException("새 비밀번호가 기존 비밀번호와 동일합니다.");
         }
+
+        if (!passwordEncoder.matches(PasswordRequest.getOldPassword(), user.getPassword())){
+            throw new InvalidValueException("검증 비밀번호가 기존 비밀번호와 동일하지 않습니다.");
+        }
+
+        user.setPassword(passwordEncoder.encode(PasswordRequest.getNewPassword()));
         mypageRepository.save(user);
 
         return MypageUpdatePasswordResponse.from(user);
     }
-    // 공지사항 조회
-    public List<NoticeResponse> getNoticeAll(){
-        List<NoticeEntity> notice = noticeRepository.findAllByOrderByCreatedAtDesc();
-
-        if (notice.isEmpty()){
-            throw new NotFoundException("등록된 공지사항이 없습니다.");
-        }
-
-        return notice.stream().map(NoticeResponse::from).collect(Collectors.toList());
-    }
-    // 공지사항 상세조회
 
     // 찜 등록
-    public void registerWishlist(Integer campId, Integer userId){
+    public String registerWishlist(Integer campId, Integer userId){
         UserEntity user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("등록된 사용자를 찾을 수 없습니다."));
 
         CampEntity camp = campRepository.findById(campId).orElseThrow(() -> new NotFoundException("등록된 캠프를 찾을 수 없습니다."));
 
-        boolean alreadyWishlist = wishlistRepository.existsByCampAndUser(camp, user);
-        if (alreadyWishlist) {
-            throw new NotAcceptException("이미 찜등록이 되어있는 상품입니다.");
+        WishlistEntity alreadyWishlist = wishlistRepository.findByCampAndUser(camp, user);
+        if (alreadyWishlist != null) {
+            wishlistRepository.delete(alreadyWishlist);
+            return "찜 삭제 완료";
+        } else {
+            WishlistEntity wishlist = new WishlistEntity();
+            wishlist.setCamp(camp);
+            wishlist.setUser(user);
+
+            wishlistRepository.save(wishlist);
+            return "찜 등록 완료";
         }
-
-        WishlistEntity wishlist = new WishlistEntity();
-        wishlist.setCamp(camp);
-        wishlist.setUser(user);
-
-        wishlistRepository.save(wishlist);
     }
     // 찜 조회
     public List<MypageCampResponse> getWishList(Integer userId){
@@ -182,5 +179,15 @@ public class MypageService {
                 .orElseThrow(() -> new NotFoundException("등록된 찜 내역이 존재하지 않습니다."));
 
         wishlistRepository.delete(wishlist);
+    }
+
+    public List<CashTransactionResponse> getUserCashTransactions(Integer userId) {
+        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("등록된 사용자를 찾을 수 없습니다."));
+
+        List<CashEntity> cashTransactions  = cashRepository.findByUserId(userId);
+
+        return cashTransactions.stream()
+                .map(CashTransactionResponse::from)
+                .collect(Collectors.toList());
     }
 }

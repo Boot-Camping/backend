@@ -28,7 +28,7 @@ public class ExceptionControllerAdvice {
     @ExceptionHandler(NotAcceptException.class)
     public ResponseEntity<String> handleNotAcceptException(NotAcceptException nae) {
         log.error("Client 요청이 거부됩니다." + nae.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(nae.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(nae.getMessage());
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -86,6 +86,13 @@ public class ExceptionControllerAdvice {
 
         log.error("데이터 무결성 제약 조건 위반: " + ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorMessage);
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(JsonProcessingException.class)
+    public ResponseEntity<String> handleJsonProcessingException(JsonProcessingException jpe) {
+        log.error("JSON 처리 중 오류 발생: " + jpe.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jpe.getMessage());
     }
 
 }

@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AdminNoticeRegisterRequest {
-    private String noticeTitle;
-    private String noticeDescription;
+    private String title;
+    private String description;
 }

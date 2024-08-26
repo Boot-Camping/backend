@@ -108,4 +108,45 @@ public class CampController {
 		CampPageResponse response = campService.getCampsByCategory(categoryName, page, size);
 		return ResponseEntity.ok(response);
 	}
+
+	/**
+	 * 주소 기반으로 캠핑지를 검색합니다. 페이지네이션이 적용됩니다.
+	 *
+	 * @param addr 검색할 주소 이름
+	 * @param page 페이지 번호 (기본값 0)
+	 * @param size 페이지 크기 (기본값 10)
+	 * @return 페이지네이션이 적용된 캠핑지 응답 리스트
+	 */
+	@GetMapping("/addr")
+	@Operation(summary = "주소 기반 캠핑지 검색", description = "주소를 기준으로 캠핑지를 검색합니다. 페이지네이션이 적용됩니다.")
+	public ResponseEntity<CampPageResponse> getCampsByAddr(
+			@RequestParam String addr,
+			@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "10") int size) {
+
+		CampPageResponse response = campService.getCampsByAddr(addr, page, size);
+		return ResponseEntity.ok(response);
+	}
+
+	/**
+	 * 주소 기반으로 캠핑지를 검색합니다. 페이지네이션이 적용됩니다.
+	 *
+	 * @param campName 검색할 캠핑지 이름
+	 * @param page 페이지 번호 (기본값 0)
+	 * @param size 페이지 크기 (기본값 10)
+	 * @return 페이지네이션이 적용된 캠핑지 응답 리스트
+	 */
+	@GetMapping("/campName")
+	@Operation(summary = "캠핑지 이름 기반 검색",description = "캠핑지 이름을 기준으로 캠핑지를 검색합니다. 페이지네이션 적용")
+	public ResponseEntity<CampPageResponse> getCampsByCampName(
+			@RequestParam String campName,
+			@RequestParam (defaultValue = "0") int page,
+			@RequestParam (defaultValue = "10") int size) {
+
+		CampPageResponse response = campService.getCampsByNmae(campName, page, size);
+		return ResponseEntity.ok(response);
+
+	}
+
+
 }
