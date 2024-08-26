@@ -5,6 +5,8 @@ import com.github.project3.entity.camp.*;
 
 import com.github.project3.repository.bookDate.BookDateRepository;
 import com.github.project3.repository.camp.CampRepository;
+import com.github.project3.repository.camp.ViewCountRepository;
+import com.github.project3.repository.review.ReviewRepository;
 import com.github.project3.service.S3Service;
 import com.github.project3.service.exceptions.FileUploadException;
 import com.github.project3.service.exceptions.NotFoundException;
@@ -26,6 +28,8 @@ public class CampService {
 
 	private final CampRepository campRepository;
 	private final BookDateRepository bookDateRepository;
+	private final ViewCountRepository viewCountRepository;
+	private final ReviewRepository reviewRepository;
 	private final DescriptionService descriptionService;
 	private final ImageService imageService;
 	private final CategoryService categoryService;
@@ -165,11 +169,27 @@ public class CampService {
 		CampEntity campEntity = campRepository.findById(campId)
 				.orElseThrow(() -> new NotFoundException("해당 캠핑지를 찾을 수 없습니다."));
 
+		// 조회수 증가 처리
+		ViewCountEntity viewCountEntity = viewCountRepository.findByCampId(campId)
+				.orElseGet(() -> ViewCountEntity.createWithInitialCount(campEntity));
+
+		viewCountEntity.incrementCount(); // 조회수 증가 메서드
+		viewCountRepository.save(viewCountEntity);
+
 		// 해당 캠핑지의 예약된 날짜들을 조회
 		List<LocalDateTime> reservedDates = bookDateRepository.findReservedDatesByCampId(campId);
 
+		// 해당 캠핑지의 조회수 가져오기
+		Integer viewCount = viewCountRepository.findByCampId(campId)
+				.map(ViewCountEntity::getCount)
+				.orElse(0);
+
+		// 해당 캠핑지의 평점 계산
+		Double averageGrade = reviewRepository.calculateAverageGradeByCampId(campId);
+
+
 		// CampSpecResponse의 스태틱 팩토리 메서드를 사용하여 캠핑지 엔티티와 예약된 날짜들을 응답 객체로 변환하여 반환
-		return CampSpecResponse.fromEntity(campEntity, reservedDates);
+		return CampSpecResponse.fromEntity(campEntity, reservedDates ,viewCount, averageGrade);
 	}
 
 	/**
