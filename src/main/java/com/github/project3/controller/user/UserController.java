@@ -69,4 +69,6 @@ public class UserController {
         // 로그아웃 완료 메시지 응답 반환
         return ResponseEntity.status(HttpStatus.OK).body("로그아웃이 완료되었습니다.");
     }
+
+
 }
