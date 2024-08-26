@@ -13,6 +13,7 @@ import com.github.project3.service.exceptions.NotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -71,6 +72,8 @@ public class CampService {
 		List<CategoryEntity> categoryEntities = categoryService.findOrCreateCategories(campRequest.getCategories());
 		campEntity.addCategories(categoryEntities);
 
+
+
 		// 캠핑지 엔티티를 데이터베이스에 저장.
 		CampEntity savedCamp = campRepository.save(campEntity);
 
@@ -90,10 +93,16 @@ public class CampService {
 		Pageable pageable = PageRequest.of(page, size);
 		Page<CampEntity> campEntities = campRepository.findAll(pageable);
 
-		// CampEntity를 CampResponse로 변환하여 Page로 반환
-		Page<CampResponse> campResponses = campEntities.map(CampResponse::fromEntity);
+		Page<CampResponse> campResponses = campEntities.map(campEntity -> {
+			// 캠핑지의 평균 평점과 리뷰 수, 예약된 날짜를 조회
+			Double averageGrade = reviewRepository.calculateAverageGradeByCampId(campEntity.getId());
+			Long reviewCount = reviewRepository.countByCampId(campEntity.getId());
+			// 예약된 날짜의 수를 계산
+			Long reservedDateCount = bookDateRepository.countReservedDatesByCampId(campEntity.getId());
+			// CampResponse로 변환하여 반환
+			return CampResponse.fromEntity(campEntity, averageGrade, reviewCount, reservedDateCount);
+		});
 
-		// CampPageResponse DTO로 변환하여 반환
 		return new CampPageResponse(campResponses);
 	}
 
@@ -210,10 +219,15 @@ public class CampService {
 			throw new NotFoundException("해당 카테고리에 등록된 캠핑지가 없습니다.");
 		}
 
-		// CampEntity를 CampResponse로 변환하여 Page로 반환
-		Page<CampResponse> campResponses = campEntities.map(CampResponse::fromEntity);
+		Page<CampResponse> campResponses = campEntities.map(campEntity -> {
+			// 캠핑지의 평균 평점과 리뷰 수, 예약된 날짜를 조회
+			Double averageGrade = reviewRepository.calculateAverageGradeByCampId(campEntity.getId());
+			Long reviewCount = reviewRepository.countByCampId(campEntity.getId());
+			Long reservedDateCount = bookDateRepository.countReservedDatesByCampId(campEntity.getId());
+			// CampResponse로 변환하여 반환
+			return CampResponse.fromEntity(campEntity, averageGrade, reviewCount, reservedDateCount);
+		});
 
-		// CampPageResponse DTO로 변환하여 반환
 		return new CampPageResponse(campResponses);
 	}
 
@@ -234,15 +248,21 @@ public class CampService {
 			throw new NotFoundException("해당 지역에 등록된 캠핑지가 존재하지 않습니다: " + addr);
 		}
 
-		// CampEntity를 CampResponse로 변환하여 Page로 반환
-		Page<CampResponse> campResponses = campEntities.map(CampResponse::fromEntity);
+		Page<CampResponse> campResponses = campEntities.map(campEntity -> {
+			// 캠핑지의 평균 평점과 리뷰 수, 예약된 날짜를 조회
+			Double averageGrade = reviewRepository.calculateAverageGradeByCampId(campEntity.getId());
+			Long reviewCount = reviewRepository.countByCampId(campEntity.getId());
+			Long reservedDateCount = bookDateRepository.countReservedDatesByCampId(campEntity.getId());
+			// CampResponse로 변환하여 반환
+			return CampResponse.fromEntity(campEntity, averageGrade, reviewCount, reservedDateCount);
+		});
 
 		return new CampPageResponse(campResponses);
 	}
 
 
 	/**
-	 * 주소 기반으로 캠핑지를 검색하며 페이지네이션을 적용합니다.
+	 * 캠핑지 이름 기반으로 캠핑지를 검색하며 페이지네이션을 적용합니다.
 	 *
 	 * @param campName 검색할 캠핑지 이름
 	 * @param page 페이지 번호
@@ -258,7 +278,15 @@ public class CampService {
 			throw new NotFoundException("해당 이름을 가진 캠핑지는 아직 등록되지 않았습니다.");
 		}
 
-		Page<CampResponse> campResponses = campEntities.map(CampResponse::fromEntity);
+		Page<CampResponse> campResponses = campEntities.map(campEntity -> {
+			// 캠핑지의 평균 평점과 리뷰 수, 예약된 날짜를 조회
+			Double averageGrade = reviewRepository.calculateAverageGradeByCampId(campEntity.getId());
+			Long reviewCount = reviewRepository.countByCampId(campEntity.getId());
+			Long reservedDateCount = bookDateRepository.countReservedDatesByCampId(campEntity.getId());
+
+			// CampResponse로 변환하여 반환
+			return CampResponse.fromEntity(campEntity, averageGrade, reviewCount, reservedDateCount);
+		});
 
 		return new CampPageResponse(campResponses);
 	}

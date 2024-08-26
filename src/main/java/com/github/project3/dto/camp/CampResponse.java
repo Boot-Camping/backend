@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,9 +33,19 @@ public class CampResponse {
 	private List<String> imageUrls;
 	private String description;
 	private List<String> categories;
+	private Double averageGrade; // 평점 필드 추가
+	private Long reviewCount;  // 리뷰수 필드 추가
+
+	private Long reservedDateCount; // 예약된 날짜 수 필드 추가
+
+
+	// 기본값을 사용하는 메서드
+	public static CampResponse fromEntity(CampEntity campEntity) {
+		return fromEntity(campEntity, 0.0, 0L, 0L);
+	}
 
 	// 스태틱 팩토리 메서드를 사용해 엔티티를 DTO로 변환
-	public static CampResponse fromEntity(CampEntity campEntity) {
+	public static CampResponse fromEntity(CampEntity campEntity, Double averageGrade, Long reviewCount, Long reservedDateCount) {
 		return CampResponse.builder()
 				.id(campEntity.getId())
 				.name(campEntity.getName())
@@ -52,6 +64,9 @@ public class CampResponse {
 				.categories(campEntity.getCampCategories().stream()
 						.map(campCategory -> campCategory.getCategory().getName())
 						.collect(Collectors.toList()))
+				.averageGrade(averageGrade != null ? averageGrade : 0.0) // 평점이 없는 경우 0.0 반환
+				.reviewCount(reviewCount != null ? reviewCount : 0L) // 리뷰수가 없는 경우 0L 반환
+				.reservedDateCount(reservedDateCount != null ? reservedDateCount : 0L) // 예약된 날짜 수 추가
 				.build();
 	}
 }
