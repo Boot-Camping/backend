@@ -5,9 +5,11 @@ import com.github.project3.entity.book.enums.Status;
 import com.github.project3.entity.camp.CampEntity;
 import com.github.project3.entity.user.UserEntity;
 import com.github.project3.entity.user.UserImageEntity;
+import com.github.project3.repository.admin.CreatedAtRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,7 +18,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface BookRepository extends JpaRepository<BookEntity, Integer> {
+public interface BookRepository extends JpaRepository<BookEntity, Integer>, CreatedAtRepository {
 
     boolean existsByCampAndStartDateLessThanEqualAndEndDateGreaterThanEqualAndStatusIn(
             CampEntity camp,
@@ -32,4 +34,12 @@ public interface BookRepository extends JpaRepository<BookEntity, Integer> {
     @Transactional
     @Query("UPDATE BookEntity b SET b.status = 'DECIDE' WHERE b.endDate <= CURRENT_TIMESTAMP AND b.status = 'BOOKING'")
     void updateStatusIfEndDatePassed();
+
+    List<BookEntity> findAllByStartDateBeforeAndStatus(LocalDateTime StartDate, Status status);
+
+    @Query("SELECT SUM(b.totalPrice) FROM BookEntity b WHERE b.createdAt BETWEEN :start AND :end AND b.status = 'DECIDE' ")
+    long sumTotalPriceByCreatedAtBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Query("SELECT SUM(b.totalPrice) FROM BookEntity b WHERE b.status = 'DECIDE' ")
+    long sumTotalPrice();
 }

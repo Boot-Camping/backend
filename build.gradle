@@ -64,6 +64,11 @@ dependencies {
     // MariaDB JDBC Driver
     implementation 'org.mariadb.jdbc:mariadb-java-client'
 
+    // Mail 발송
+//    implementation 'org.springframework.boot:spring-boot-starter-mail'
+//    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+//    implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect'
+
     // valid 유효성 검증
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
