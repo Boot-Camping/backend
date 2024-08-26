@@ -18,6 +18,7 @@ public class CampResponse {
 	private String name;
 	private Integer price;
 	private String addr;
+	private String tel; // 추가된 전화번호 필드
 	private Integer maxNum;
 	private Integer standardNum;
 	private Integer overCharge;
@@ -38,6 +39,7 @@ public class CampResponse {
 				.name(campEntity.getName())
 				.price(campEntity.getPrice())
 				.addr(campEntity.getAddr())
+				.tel(campEntity.getTel()) // 전화번호 필드 추가
 				.maxNum(campEntity.getMaxNum())
 				.standardNum(campEntity.getStandardNum())
 				.overCharge(campEntity.getOverCharge())
