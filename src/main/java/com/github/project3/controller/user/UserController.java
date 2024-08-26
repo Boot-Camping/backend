@@ -70,5 +70,12 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body("로그아웃이 완료되었습니다.");
     }
 
+    @DeleteMapping("/delete")
+    public ResponseEntity<String> deleteUser(@RequestBody LoginRequest loginRequest) {
+
+        userService.deleteUser(loginRequest);
+        return ResponseEntity.ok("회원 탈퇴 성공");
+    }
+
 
 }

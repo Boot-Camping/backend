@@ -8,16 +8,19 @@ import com.github.project3.dto.user.response.LoginResponse;
 import com.github.project3.dto.user.response.SignupResponse;
 import com.github.project3.entity.user.RefreshEntity;
 import com.github.project3.entity.user.UserEntity;
+import com.github.project3.entity.user.enums.Status;
 import com.github.project3.entity.user.enums.TransactionType;
 import com.github.project3.jwt.JwtTokenProvider;
 import com.github.project3.repository.user.RefreshRepository;
 import com.github.project3.repository.user.UserRepository;
 import com.github.project3.service.cash.CashService;
 import com.github.project3.service.exceptions.JwtTokenException;
+import com.github.project3.service.exceptions.NotAcceptException;
 import com.github.project3.service.exceptions.NotFoundException;
 import com.github.project3.service.exceptions.InvalidValueException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -29,6 +32,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -45,17 +49,25 @@ public class UserService {
 
     public SignupResponse signup(SignupRequest signupRequest) {
 
+
+
         // loginId 중복 확인
         if (userRepository.existsByLoginId(signupRequest.getLoginId())) {
             throw new InvalidValueException("이미 존재하는 loginID입니다.");
+        }
+
+        if(!isValidEmail(signupRequest.getEmail())){
+
+            throw new InvalidValueException("이메일형식이 잘못되었습니다");
         }
 
         if (!isValidPassword(signupRequest.getPassword())) {
             throw new InvalidValueException("비밀번호는 영문자, 숫자, 특수문자의 조합으로 8자 이상 20자 이하로 설정해주세요.");
         }
 
-
-
+        if(!isValidLoginId(signupRequest.getLoginId())) {
+            throw new InvalidValueException("ID는 특수문자를 제외한 2~10자리여야 합니다");
+        }
 
 
 
@@ -77,6 +89,19 @@ public class UserService {
         return password != null && password.matches("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-={}|\\[\\]:'\";,.<>?/])[A-Za-z\\d!@#$%^&*()_+\\-={}|\\[\\]:'\";,.<>?/]{8,20}$");
     }
 
+    private boolean isValidLoginId(String LoginId) {
+
+        return LoginId != null && LoginId.matches("^[a-zA-Z0-9_-]{3,15}$");
+    }
+
+    private boolean isValidEmail(String email) {
+        if (email == null) {
+            return false;
+        }
+        email = email.trim(); // 앞뒤 공백 제거
+        return email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$");
+    }
+
     public LoginResponse login(LoginRequest loginRequest, HttpServletResponse response) {
         // UserEntity를 loginId로 조회
         UserEntity foundedUser = userRepository.findByLoginId(loginRequest.getLoginId())
@@ -85,6 +110,10 @@ public class UserService {
         // 비밀번호 비교 (PasswordEncoder 사용)
         if (!passwordEncoder.matches(loginRequest.getPassword(), foundedUser.getPassword())) {
             throw new InvalidValueException("비밀번호가 일치하지 않습니다.");
+        }
+
+        if (foundedUser.getStatus() == Status.DELETE) {
+            throw new InvalidValueException("삭제된 회원으로 로그인 할 수 없습니다.");
         }
 
         // 인증 토큰 생성 및 인증 설정
@@ -158,6 +187,22 @@ public class UserService {
         cookie.setPath("/");
 
         return cookie;
+    }
+
+    public void deleteUser(LoginRequest loginRequest) {
+        UserEntity foundedUser = userRepository.findByLoginId(loginRequest.getLoginId())
+                .orElseThrow(() -> new NotFoundException("loginId를 찾을 수 없습니다."));
+
+        // 비밀번호 비교 (PasswordEncoder 사용)
+        if (!passwordEncoder.matches(loginRequest.getPassword(), foundedUser.getPassword())) {
+            throw new InvalidValueException("비밀번호가 일치하지 않습니다.");
+        }
+
+        if (foundedUser.getStatus() == Status.DELETE) {
+            throw new NotAcceptException("이미 삭제 된 회원입니다.");
+        }
+        foundedUser.setStatus(Status.DELETE);
+        userRepository.save(foundedUser);
     }
 
 
