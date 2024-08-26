@@ -13,6 +13,7 @@ public class CampRequest {
 	private String name;
 	private Integer price;
 	private String addr;
+	private String tel; // 추가된 전화번호 필드
 	private Integer maxNum;
 	private Integer standardNum;
 	private Integer overCharge;
@@ -25,6 +26,7 @@ public class CampRequest {
 				.name(request.getName())
 				.price(request.getPrice())
 				.addr(request.getAddr())
+				.tel(request.getTel()) // 전화번호 필드 추가
 				.maxNum(request.getMaxNum())
 				.standardNum(request.getStandardNum())
 				.overCharge(request.getOverCharge())

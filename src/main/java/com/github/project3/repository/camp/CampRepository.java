@@ -17,4 +17,12 @@ public interface CampRepository extends JpaRepository <CampEntity, Integer> {
 	// 카테고리 이름으로 캠핑지를 조회하며, 페이지네이션을 적용
 	@Query("SELECT c FROM CampEntity c JOIN c.campCategories cc WHERE cc.category.name = :categoryName")
 	Page<CampEntity> findByCategoryName(@Param("categoryName") String categoryName, Pageable pageable);
+
+	// 주소 필드에서 주소를 포함하는 캠핑지를 검색하며, 페이지네이션 적용
+	@Query("SELECT c FROM CampEntity c WHERE c.addr LIKE %:addr%")
+	Page<CampEntity> findByAddrContainingRegion(@Param("addr") String addr, Pageable pageable);
+
+	// 캠핑지이름 필드에서 캠핑지이름을 포함하는 캠핑지를 검색하며, 페이지네이션 적용
+	@Query("SELECT c FROM CampEntity c WHERE c.name LIKE %:campName%")
+	Page<CampEntity> findByCampNameContainingName(String campName, Pageable pageable);
 }

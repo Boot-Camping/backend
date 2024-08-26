@@ -16,4 +16,6 @@ public interface BookDateRepository extends JpaRepository<BookDateEntity, Intege
 	@Query("SELECT bd.date FROM BookDateEntity bd WHERE bd.book.camp.id = :campId")
 	List<LocalDateTime> findReservedDatesByCampId(@Param("campId") Integer campId);
 
+	@Query("SELECT COUNT(bd) FROM BookDateEntity bd WHERE bd.book.camp.id = :campId")
+	Long countReservedDatesByCampId(@Param("campId") Integer campId);
 }

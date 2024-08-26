@@ -8,7 +8,6 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
-
 logging:
   config: classpath:logback-spring.xml
   level:
@@ -16,6 +15,18 @@ logging:
       hibernate:
         SQL: DEBUG
 
+#  mail:       # 메일
+#    host: smtp.gmail.com
+#    port: 587
+#    username: ${MAIL.USERNAME}
+#    password: ${MAIL.PASSWORD}
+#    properties:
+#      mail:
+#        smtp:
+#          auth: true
+#          timeout: 5000
+#          starttls:
+#            enable: true
 #aws
 cloud:
   aws:
