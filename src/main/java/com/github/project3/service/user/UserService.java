@@ -6,6 +6,7 @@ import com.github.project3.dto.user.request.LoginRequest;
 import com.github.project3.dto.user.request.SignupRequest;
 import com.github.project3.dto.user.response.LoginResponse;
 import com.github.project3.dto.user.response.SignupResponse;
+import com.github.project3.entity.user.CustomUserDetails;
 import com.github.project3.entity.user.RefreshEntity;
 import com.github.project3.entity.user.UserEntity;
 import com.github.project3.entity.user.enums.Status;
@@ -29,6 +30,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -207,6 +209,17 @@ public class UserService {
         }
         foundedUser.setStatus(Status.DELETE);
         userRepository.save(foundedUser);
+    }
+
+    // 인증이 완료되어 SecurityContextHolder 저장된 user 의 id로 검색
+    public UserEntity findAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof UserDetails) {
+            Integer userId = ((CustomUserDetails) authentication.getPrincipal()).getId();
+            return userRepository.findById(userId)
+                    .orElseThrow(() -> new NotFoundException("해당하는 ID의 유저는 존재하지 않습니다."));
+        }
+        throw new NotFoundException("인증된 유저를 찾을 수 없습니다.");
     }
 
 

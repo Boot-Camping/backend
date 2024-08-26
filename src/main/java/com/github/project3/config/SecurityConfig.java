@@ -67,7 +67,8 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of( "http://localhost:5173"));
         configuration.setAllowCredentials(true); // token을 주고받을 때 필요
         configuration.addExposedHeader("Authorization"); // token
-        configuration.addAllowedHeader("*");
+        configuration.addAllowedHeader("Content-Type");
+        configuration.addAllowedHeader("Authorization");
         configuration.setAllowedMethods(Arrays.asList("GET", "PUT", "POST", "PATCH", "DELETE", "OPTIONS"));
         configuration.setMaxAge(3600L);
 
