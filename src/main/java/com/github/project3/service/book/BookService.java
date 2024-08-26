@@ -19,6 +19,8 @@ import com.github.project3.service.exceptions.NotFoundException;
 import com.github.project3.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,8 +54,9 @@ public class BookService {
      * @throws NotAcceptException   요청된 날짜에 이미 예약이 존재할 경우 발생
      */
     @Transactional
-    public void registerBook(Integer campId, Integer userId, BookRegisterRequest bookRegisterRequest) {
-        UserEntity user = userRepository.findById(userId).orElseThrow(()-> new NotFoundException("해당 ID의 사용자가 존재하지 않습니다."));
+    public void registerBook(Integer campId, BookRegisterRequest bookRegisterRequest) {
+        UserEntity user = userService.findAuthenticatedUser();
+        log.info("Authenticated User ID: {}", user.getId());
 
         CampEntity camp = campRepository.findById(campId).orElseThrow(()-> new NotFoundException("해당하는 캠핑지가 존재하지 않습니다."));
 
