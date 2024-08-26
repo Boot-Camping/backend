@@ -4,33 +4,40 @@ package com.github.project3.service.user;
 import com.github.project3.dto.cash.CashRequest;
 import com.github.project3.dto.user.request.LoginRequest;
 import com.github.project3.dto.user.request.SignupRequest;
-import com.github.project3.dto.user.request.TokenRequest;
 import com.github.project3.dto.user.response.LoginResponse;
 import com.github.project3.dto.user.response.SignupResponse;
 import com.github.project3.entity.user.RefreshEntity;
 import com.github.project3.entity.user.UserEntity;
+import com.github.project3.entity.user.enums.Status;
 import com.github.project3.entity.user.enums.TransactionType;
 import com.github.project3.jwt.JwtTokenProvider;
 import com.github.project3.repository.user.RefreshRepository;
 import com.github.project3.repository.user.UserRepository;
+import com.github.project3.service.admin.AuthService;
 import com.github.project3.service.cash.CashService;
+import com.github.project3.service.exceptions.JwtTokenException;
+import com.github.project3.service.exceptions.NotAcceptException;
 import com.github.project3.service.exceptions.NotFoundException;
+import com.github.project3.service.exceptions.InvalidValueException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
@@ -39,14 +46,32 @@ public class UserService {
     private final RefreshRepository refreshRepository;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final CashService cashService;
+    private final AuthService authService;
 
 
     public SignupResponse signup(SignupRequest signupRequest) {
 
-        if (userRepository.findByLoginId(signupRequest.getLoginId()).isPresent()) {
-            // 중복된 loginId가 있으면 예외 발생
-            throw new IllegalArgumentException("중복된 loginId가 있습니다.");
+
+
+        // loginId 중복 확인
+        if (userRepository.existsByLoginId(signupRequest.getLoginId())) {
+            throw new InvalidValueException("이미 존재하는 loginID입니다.");
         }
+
+        if(!isValidEmail(signupRequest.getEmail())){
+
+            throw new InvalidValueException("이메일형식이 잘못되었습니다");
+        }
+
+        if (!isValidPassword(signupRequest.getPassword())) {
+            throw new InvalidValueException("비밀번호는 영문자, 숫자, 특수문자의 조합으로 8자 이상 20자 이하로 설정해주세요.");
+        }
+
+        if(!isValidLoginId(signupRequest.getLoginId())) {
+            throw new InvalidValueException("ID는 특수문자를 제외한 2~10자리여야 합니다");
+        }
+
+
 
         UserEntity user = userRepository.findByLoginId(signupRequest.getLoginId())
                 .orElseGet(() -> userRepository.save(UserEntity.builder()
@@ -61,29 +86,63 @@ public class UserService {
         return new SignupResponse("회원가입에 성공했습니다");
     }
 
+    private boolean isValidPassword(String password) {
+        // 비밀번호 패턴 검증 (정규식을 직접 사용할 수도 있음)
+        return password != null && password.matches("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-={}|\\[\\]:'\";,.<>?/])[A-Za-z\\d!@#$%^&*()_+\\-={}|\\[\\]:'\";,.<>?/]{8,20}$");
+    }
+
+    private boolean isValidLoginId(String LoginId) {
+
+        return LoginId != null && LoginId.matches("^[a-zA-Z0-9_-]{3,15}$");
+    }
+
+    private boolean isValidEmail(String email) {
+        if (email == null) {
+            return false;
+        }
+        email = email.trim(); // 앞뒤 공백 제거
+        return email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$");
+    }
+
     public LoginResponse login(LoginRequest loginRequest, HttpServletResponse response) {
+        // UserEntity를 loginId로 조회
+        UserEntity foundedUser = userRepository.findByLoginId(loginRequest.getLoginId())
+                .orElseThrow(() -> new NotFoundException("loginId를 찾을 수 없습니다."));
+
+        // 비밀번호 비교 (PasswordEncoder 사용)
+        if (!passwordEncoder.matches(loginRequest.getPassword(), foundedUser.getPassword())) {
+            throw new InvalidValueException("비밀번호가 일치하지 않습니다.");
+        }
+
+        if (foundedUser.getStatus() == Status.DELETE) {
+            throw new InvalidValueException("삭제된 회원으로 로그인 할 수 없습니다.");
+        }
+
+        // 인증 토큰 생성 및 인증 설정
         UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(loginRequest.getLoginId(), loginRequest.getPassword());
+                new UsernamePasswordAuthenticationToken(foundedUser.getLoginId(), loginRequest.getPassword());
 
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        UserEntity user = userRepository.findByLoginId(loginRequest.getLoginId())
-                .orElseThrow(() -> new UsernameNotFoundException("loginId 해당하는 유저가 없습니다: " + loginRequest.getLoginId()));
+        authService.verifyNotBlacklisted(foundedUser);
 
-        String accessToken = jwtTokenProvider.createToken("access", user.getLoginId(), user.getId(), 3600000L);
-        String refreshToken = jwtTokenProvider.createToken("refresh", user.getLoginId(), user.getId(), 86400000L);
+        // JWT 토큰 생성
+        String accessToken = jwtTokenProvider.createToken("access", foundedUser.getLoginId(), foundedUser.getId(), 3600000L);
+        String refreshToken = jwtTokenProvider.createToken("refresh", foundedUser.getLoginId(), foundedUser.getId(), 86400000L);
+        String bearerToken = "Bearer " + accessToken;
+        // RefreshToken 저장
+        addRefreshEntity(foundedUser.getLoginId(), refreshToken, 86400000L);
 
-        addRefreshEntity(user.getLoginId(),refreshToken, 86400000L );
-
-        response.setHeader("access", accessToken);
+        // HTTP 응답에 토큰 설정
+        response.setHeader("access", bearerToken);
         response.addCookie(createCookie("refresh", refreshToken));
         response.setStatus(HttpStatus.OK.value());
 
-        TokenRequest tokenRequest = new TokenRequest(accessToken, refreshToken);
 
-        return new LoginResponse("로그인에 성공했습니다", tokenRequest);
+
+        return new LoginResponse("로그인에 성공했습니다");
     }
 
     private Cookie createCookie(String key, String value) {
@@ -114,4 +173,42 @@ public class UserService {
 
         return cashService.processTransaction(user, cashRequest.getCash(), TransactionType.DEPOSIT);
     }
-}
+
+    public Cookie logout(String refreshToken) {
+        if (refreshToken == null) {
+            throw new JwtTokenException("리프레시 토큰이 null값입니다");
+        }
+
+        Boolean isExist = refreshRepository.existsByRefresh(refreshToken);
+        if (!isExist) {
+            throw new JwtTokenException("리프레시토큰을 찾을 수 없습니다.");
+        }
+
+        refreshRepository.deleteByRefresh(refreshToken);
+
+        Cookie cookie = new Cookie("refresh", null);
+        cookie.setMaxAge(0);
+        cookie.setPath("/");
+
+        return cookie;
+    }
+
+    public void deleteUser(LoginRequest loginRequest) {
+        UserEntity foundedUser = userRepository.findByLoginId(loginRequest.getLoginId())
+                .orElseThrow(() -> new NotFoundException("loginId를 찾을 수 없습니다."));
+
+        // 비밀번호 비교 (PasswordEncoder 사용)
+        if (!passwordEncoder.matches(loginRequest.getPassword(), foundedUser.getPassword())) {
+            throw new InvalidValueException("비밀번호가 일치하지 않습니다.");
+        }
+
+        if (foundedUser.getStatus() == Status.DELETE) {
+            throw new NotAcceptException("이미 삭제 된 회원입니다.");
+        }
+        foundedUser.setStatus(Status.DELETE);
+        userRepository.save(foundedUser);
+    }
+
+
+    }
+
