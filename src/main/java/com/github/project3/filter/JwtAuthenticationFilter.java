@@ -35,6 +35,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String requestURI = request.getRequestURI();
+        String method = request.getMethod();
         log.info("Request URI: {}", requestURI);
 
         // Swagger 관련 경로 필터 통과
@@ -45,7 +46,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || "/api/user/login".equals(requestURI)
                 || "/api/user/signup".equals(requestURI)
                 || "/api/user/logout".equals(requestURI)
-                || "/api/camp".equals(requestURI)
                 || requestURI.startsWith("/api/camp/campName")
                 || requestURI.startsWith("/api/camp/addr")
                 || requestURI.startsWith("/api/camp/category")
@@ -59,15 +59,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
+        // 캠핑지 전체 조회는 허용
+        if (requestURI.equals("/api/camp") && method.equalsIgnoreCase("GET")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
 
+        // 이 외의 모든 요청에 대해 JWT 인증 필요
         String jwtToken = jwtTokenProvider.resolveToken(request);
-        log.info("Extracted JWT Token: " + jwtToken);
+        log.info("Extracted JWT Token: {}", jwtToken);
 
-
-        if (jwtToken == null) {
-            log.warn("JWT Token is missing");
-            throw new JwtTokenException("TOKEN IS NULL");
+        if (jwtToken == null || !jwtTokenProvider.validateToken(jwtToken)) {
+            log.warn("Access denied for URL: {} with method: {} due to missing or invalid token", requestURI, method);
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied");
+            return;
         }
 
         String tokenLoginId = jwtTokenProvider.getLoginid(jwtToken);
@@ -112,19 +118,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             } catch (JwtTokenException e) {
                 log.error("Token validation failed: ", e);
-                throw new JwtTokenException("Token validation falied");
-
+                throw new JwtTokenException("Token validation failed");
             }
         }
 
+        // JWT 인증을 통과한 경우 요청을 계속 진행
         filterChain.doFilter(request, response);
     }
 
+}
 
 
 
 
-    }
+
+
+
+
 
 
 
