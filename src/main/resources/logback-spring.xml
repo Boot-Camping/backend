@@ -7,10 +7,10 @@
         </encoder>
     </appender>
 
-    <!-- Spring WebSocket 관련 로그를 DEBUG로 설정 -->
-    <logger name="org.springframework.web.socket" level="DEBUG" />
-    <logger name="org.springframework.messaging.simp" level="DEBUG" />
-    <logger name="org.springframework.web" level="DEBUG" />
+<!--    &lt;!&ndash; Spring WebSocket 관련 로그를 DEBUG로 설정 &ndash;&gt;-->
+<!--    <logger name="org.springframework.web.socket" level="DEBUG" />-->
+<!--    <logger name="org.springframework.messaging.simp" level="DEBUG" />-->
+<!--    <logger name="org.springframework.web" level="DEBUG" />-->
 
     <!-- 루트 로거 설정 -->
     <root level="info">
