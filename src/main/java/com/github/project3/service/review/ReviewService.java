@@ -38,6 +38,15 @@ public class ReviewService {
     private final S3Service s3Service;
     private final JwtTokenProvider jwtTokenProvider;
 
+    /**
+     * 새로운 리뷰를 생성합니다.
+     *
+     * @param userId        리뷰를 작성한 사용자의 ID
+     * @param campId        리뷰가 작성된 캠핑장의 ID
+     * @param reviewRequest 리뷰 작성 요청 정보를 담고 있는 DTO 객체
+     * @param reviewImages  리뷰와 함께 업로드된 이미지 파일 리스트
+     * @return 생성된 리뷰의 정보를 담고 있는 ReviewResponse 객체
+     */
     @Transactional
     public ReviewResponse createReview(Integer userId, Integer campId, ReviewRequest reviewRequest, List<MultipartFile> reviewImages) {
         // 사용자와 캠핑장 정보 가져오기
@@ -118,7 +127,11 @@ public class ReviewService {
         );
     }
 
-    // 모든 리뷰 조회
+    /**
+     * 모든 리뷰를 조회합니다.
+     *
+     * @return 모든 리뷰의 요약 정보를 담고 있는 ReviewSummaryResponse 리스트
+     */
     @Transactional(readOnly = true)
     public List<ReviewSummaryResponse> getAllReviews(){
         return reviewRepository.findAll().stream()
@@ -133,7 +146,12 @@ public class ReviewService {
                 .collect(Collectors.toList());
     }
 
-    // 캠프별 리뷰 조회
+    /**
+     * 특정 캠핑장에 대한 리뷰들을 조회합니다.
+     *
+     * @param campId  조회할 캠핑장의 ID
+     * @return 해당 캠핑장에 작성된 리뷰의 상세 정보를 담고 있는 ReviewResponse 리스트
+     */
     @Transactional(readOnly = true)
     public List<ReviewResponse> getReviewsByCampId(Integer campId) {
         List<ReviewEntity> reviews = reviewRepository.findByCampId(campId);
@@ -153,7 +171,12 @@ public class ReviewService {
                 .collect(Collectors.toList());
     }
 
-    // 유저별 리뷰 조회
+    /**
+     * 특정 사용자가 작성한 리뷰들을 조회합니다.
+     *
+     * @param userId  조회할 사용자의 ID
+     * @return 해당 사용자가 작성한 리뷰의 요약 정보를 담고 있는 ReviewSummaryResponse 리스트
+     */
     @Transactional(readOnly = true)
     public List<ReviewSummaryResponse> getReviewsByUserId(Integer userId){
         return reviewRepository.findByUserId(userId).stream()
@@ -167,6 +190,17 @@ public class ReviewService {
                 ))
                 .collect(Collectors.toList());
     }
+
+    /**
+     * 기존 리뷰를 수정합니다.
+     *
+     * @param userId          리뷰를 작성한 사용자의 ID
+     * @param reviewId        수정할 리뷰의 ID
+     * @param access          수정 권한을 확인하기 위한 액세스 키
+     * @param reviewRequest   수정할 리뷰의 내용을 담고 있는 DTO 객체
+     * @param newReviewImages 수정할 리뷰에 새롭게 추가할 이미지 파일 리스트
+     * @return 수정된 리뷰의 정보를 담고 있는 ReviewResponse 객체
+     */
     @Transactional
     public ReviewResponse updateReview(Integer userId, Integer reviewId, String access, ReviewRequest reviewRequest, List<MultipartFile> newReviewImages){
         // 리뷰 엔티티 가져오기
@@ -242,6 +276,13 @@ public class ReviewService {
         );
     }
 
+    /**
+     * 기존 리뷰를 삭제합니다.
+     *
+     * @param userId   리뷰를 작성한 사용자의 ID
+     * @param reviewId 삭제할 리뷰의 ID
+     * @param access   삭제 권한을 확인하기 위한 액세스 키
+     */
     @Transactional
     public void deleteReview(Integer userId, Integer reviewId, String access) {
         // 리뷰 엔티티 가져오기

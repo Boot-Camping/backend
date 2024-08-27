@@ -109,7 +109,7 @@ public class MypageController {
      */
     @Operation(summary = "찜 목록 조회", description = "주어진 유저 ID에 대한 찜 목록을 조회합니다.")
     @GetMapping("/wishlist/{userId}")
-    public ResponseEntity<List<MypageCampResponse>> getWishList(
+    public ResponseEntity <List<MypageCampResponse>> getWishList(
             @PathVariable Integer userId){
         List<MypageCampResponse> wishlist = mypageService.getWishList(userId);
         return ResponseEntity.ok(wishlist);

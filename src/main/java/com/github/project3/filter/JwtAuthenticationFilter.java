@@ -53,7 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || requestURI.startsWith("/api/admin/notice/all")
                 || requestURI.matches("/api/admin/notice/\\d+")
                 || "/api/review/all".equals(requestURI)
-                || requestURI.matches("/api/review/camp/\\d+")
+                || requestURI.matches("/api/review/camps/\\d+")
                 || requestURI.matches("/api/review/user/\\d+")
                 || requestURI.matches("/api/reply/review/\\d+")) {
             filterChain.doFilter(request, response);

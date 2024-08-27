@@ -30,7 +30,6 @@ public class AdminNoticeController {
 
     private final AdminNoticeService adminNoticeService;
     private final ObjectMapper objectMapper;
-    private final JwtTokenProvider jwtTokenProvider;
 
     /**
      * 새로운 공지사항을 등록합니다.
@@ -49,7 +48,12 @@ public class AdminNoticeController {
             @RequestPart(value = "images", required = false) List<MultipartFile> images) throws JsonProcessingException {
 
         AdminNoticeRegisterRequest noticeRequest = objectMapper.readValue(noticeRequestJson, AdminNoticeRegisterRequest.class);
-        adminNoticeService.registerNotice(noticeRequest, images, token);
+        String subToken = token;
+        if (token.startsWith("Bearer ")) {
+            // "Bearer "가 포함되어 있다면 "Bearer "를 제거한 부분을 subToken에 저장
+            subToken = token.substring(7);
+        }
+        adminNoticeService.registerNotice(noticeRequest, images, subToken);
         return ResponseEntity.ok("공지사항 등록 완료.");
     }
 
@@ -101,7 +105,12 @@ public class AdminNoticeController {
             @RequestPart(value = "images", required = false) List<MultipartFile> images) throws JsonProcessingException {
 
         AdminNoticeUpdateRequest noticeUpdateRequest = objectMapper.readValue(noticeRequestJson, AdminNoticeUpdateRequest.class);
-        adminNoticeService.getUpdateNotice(id, noticeUpdateRequest, images, token);
+        String subToken = token;
+        if (token.startsWith("Bearer ")) {
+            // "Bearer "가 포함되어 있다면 "Bearer "를 제거한 부분을 subToken에 저장
+            subToken = token.substring(7);
+        }
+        adminNoticeService.getUpdateNotice(id, noticeUpdateRequest, images, subToken);
         return ResponseEntity.ok("공지사항 수정 완료");
     }
 
@@ -117,8 +126,27 @@ public class AdminNoticeController {
     public ResponseEntity<String> removeNotice(
             @PathVariable Integer id,
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-        adminNoticeService.removeNotice(id, token);
+        String subToken = token;
+        if (token.startsWith("Bearer ")) {
+            // "Bearer "가 포함되어 있다면 "Bearer "를 제거한 부분을 subToken에 저장
+            subToken = token.substring(7);
+        }
+        adminNoticeService.removeNotice(id, subToken);
         return ResponseEntity.ok("공지사항 삭제 완료.");
+    }
+
+    // 사이트 통계 (매출추이, 유저추이, 예약수, (카테고리별 예약자수))
+    @ApiOperation(value = "사이트 통계", notes = "유저추이, 예약추이")
+    @GetMapping("/stats")
+    public ResponseEntity <AdminDataResponse> getAllData(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token){
+        String subToken = token;
+        if (token.startsWith("Bearer ")) {
+            // "Bearer "가 포함되어 있다면 "Bearer "를 제거한 부분을 subToken에 저장
+            subToken = token.substring(7);
+        }
+        AdminDataResponse dataResponse = adminNoticeService.getAllData(subToken);
+        return ResponseEntity.ok(dataResponse);
     }
 
     /**
@@ -130,7 +158,12 @@ public class AdminNoticeController {
     @ApiOperation(value = "회원 전체 조회", notes = "모든 회원 정보를 조회합니다.")
     @GetMapping("/user/all")
     public ResponseEntity<List<AdminUserCheckResponse>> getUserAll(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-        List<AdminUserCheckResponse> userResponse = adminNoticeService.getUserAll(token);
+        String subToken = token;
+        if (token.startsWith("Bearer ")) {
+            // "Bearer "가 포함되어 있다면 "Bearer "를 제거한 부분을 subToken에 저장
+            subToken = token.substring(7);
+        }
+        List<AdminUserCheckResponse> userResponse = adminNoticeService.getUserAll(subToken);
         return ResponseEntity.ok(userResponse);
     }
 
@@ -146,7 +179,19 @@ public class AdminNoticeController {
     public ResponseEntity<String> getBlacklist(
             @PathVariable Integer id,
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-        adminNoticeService.getBlacklist(id, token);
+        String subToken = token;
+        if (token.startsWith("Bearer ")) {
+            // "Bearer "가 포함되어 있다면 "Bearer "를 제거한 부분을 subToken에 저장
+            subToken = token.substring(7);
+        }
+        adminNoticeService.getBlacklist(id, subToken);
         return ResponseEntity.ok("블랙리스트 등록 완료.");
+    }
+
+    // 관리자 통장 업데이트(수동작업)
+    @PutMapping("/update-balance")
+    public ResponseEntity<String> updateAdminBalance(){
+        adminNoticeService.updateAdminBalance();
+        return ResponseEntity.ok("관리자 잔고 업데이트 완료.");
     }
 }
