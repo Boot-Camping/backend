@@ -15,6 +15,7 @@ public class ChatRoomController {
 
     private final ChatRoomService chatRoomService;
 
+    // 채팅방 개설
     @PostMapping("/{userId}")
     public ResponseEntity<String> createChatRoom(@RequestParam String chatRoomName, @PathVariable Integer userId) {
         chatRoomService.createChatRoom(chatRoomName, userId);
