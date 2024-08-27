@@ -25,6 +25,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -138,7 +139,7 @@ public class UserService {
         addRefreshEntity(foundedUser.getLoginId(), refreshToken, 86400000L);
 
         // HTTP 응답에 토큰 설정
-        response.setHeader("access", bearerToken);
+        response.setHeader(HttpHeaders.AUTHORIZATION, bearerToken);
         response.addCookie(createCookie("refresh", refreshToken));
         response.setStatus(HttpStatus.OK.value());
 
