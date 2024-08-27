@@ -28,12 +28,14 @@ public class ChatRoomController {
         return ResponseEntity.ok(chatRooms);
     }
 
-//    @GetMapping("/{id}")
-//    public ResponseEntity<ChatRoomDTO> getChatRoom(@PathVariable Long id) {
-//        ChatRoomDTO chatRoom = chatRoomService.getChatRoom(id);
-//        if (chatRoom == null) {
-//            throw new NotFoundException("채팅방이 존재하지 않습니다.");
-//        }
-//        return ResponseEntity.ok(chatRoom);
-//    }
+    // 채팅방 입장
+    @PostMapping("/join/{chatRoomId}/user/{userId}")
+    public ResponseEntity<String> joinChatRoom(@PathVariable Integer chatRoomId, @PathVariable Integer userId) {
+        boolean joined = chatRoomService.joinChatRoom(chatRoomId, userId);
+        if (joined) {
+            return ResponseEntity.ok("채팅방에 입장했습니다.");
+        } else {
+            return ResponseEntity.badRequest().body("채팅방 입장에 실패했습니다.");
+        }
+    }
 }

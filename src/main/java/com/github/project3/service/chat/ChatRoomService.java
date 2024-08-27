@@ -5,6 +5,7 @@ import com.github.project3.entity.chat.ChatRoomEntity;
 import com.github.project3.entity.user.UserEntity;
 import com.github.project3.repository.chat.ChatRoomRepository;
 import com.github.project3.repository.user.UserRepository;
+import com.github.project3.service.exceptions.NotAcceptException;
 import com.github.project3.service.exceptions.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -43,6 +44,19 @@ public class ChatRoomService {
         return response;
     }
 
-//    public ChatRoomDTO getChatRoom(Long id) {
-//    }
+    public boolean joinChatRoom(Integer chatRoomId, Integer userId) {
+        ChatRoomEntity chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(()->new NotFoundException("해당하는 채팅방은 존재하지 않습니다."));
+        UserEntity user = userRepository.findById(userId).orElseThrow(()->new NotFoundException("해당 ID의 유저가 존재하지 않습니다."));
+
+        // 1:1 채팅방에서 이미 사용자가 입장해 있는지 확인
+        if (chatRoom.getJoinedBy() != null) {
+            throw new NotAcceptException("이미 다른 사용자가 채팅방에 입장해 있습니다.");
+        }
+
+        chatRoom.setJoinedBy(user);
+
+        chatRoomRepository.save(chatRoom);
+
+        return true;
+    }
 }
