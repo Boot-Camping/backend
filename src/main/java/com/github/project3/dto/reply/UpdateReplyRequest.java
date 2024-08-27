@@ -10,10 +10,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateReplyRequest {
+    private Integer userId;
     private String comment;
 
-    public static UpdateReplyRequest of(String comment) {
+    public static UpdateReplyRequest of(Integer userId, String comment) {
         return UpdateReplyRequest.builder()
+                .userId(userId)
                 .comment(comment)
                 .build();
     }
