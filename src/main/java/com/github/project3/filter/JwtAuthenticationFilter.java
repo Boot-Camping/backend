@@ -49,7 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || requestURI.startsWith("/api/camp/campName")
                 || requestURI.startsWith("/api/camp/addr")
                 || requestURI.startsWith("/api/camp/category")
-                || requestURI.matches("/api/camp/\\d+")
+                || requestURI.matches("/api/camps/\\d+")
                 || requestURI.startsWith("/api/admin/notice/all")
                 || requestURI.matches("/api/admin/notice/\\d+")
                 || "/api/review/all".equals(requestURI)
@@ -60,7 +60,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
         // 캠핑지 전체 조회는 허용
-        if (requestURI.equals("/api/camp") && method.equalsIgnoreCase("GET")) {
+        if (requestURI.equals("/api/camps") && method.equalsIgnoreCase("GET")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -70,11 +70,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String jwtToken = jwtTokenProvider.resolveToken(request);
         log.info("Extracted JWT Token: {}", jwtToken);
 
-        if (jwtToken == null || !jwtTokenProvider.validateToken(jwtToken)) {
-            log.warn("Access denied for URL: {} with method: {} due to missing or invalid token", requestURI, method);
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied");
+
+        if (jwtToken == null) {
+            log.warn("Access denied due to missing JWT token");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "JWT token is null");
             return;
         }
+
+        if (!jwtTokenProvider.validateToken(jwtToken)) {
+            log.warn("Access denied due to invalid JWT token");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT token");
+            return;
+        }
+
 
         String tokenLoginId = jwtTokenProvider.getLoginid(jwtToken);
         log.info("Extracted loginId from Token: {}", tokenLoginId);
