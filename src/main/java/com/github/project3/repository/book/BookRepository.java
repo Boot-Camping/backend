@@ -38,7 +38,7 @@ public interface BookRepository extends JpaRepository<BookEntity, Integer>, Crea
     List<BookEntity> findAllByStartDateBeforeAndStatus(LocalDateTime StartDate, Status status);
 
     @Query("SELECT SUM(b.totalPrice) FROM BookEntity b WHERE b.startDate BETWEEN :start AND :end AND b.status = 'DECIDE' ")
-    long sumTotalPriceByStartDateBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+    Long sumTotalPriceByStartDateBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     @Query("SELECT SUM(b.totalPrice) FROM BookEntity b WHERE b.status = 'DECIDE' ")
     long sumTotalPrice();
