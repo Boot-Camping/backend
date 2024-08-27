@@ -47,6 +47,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || "/api/user/signup".equals(requestURI)
                 || "/api/user/logout".equals(requestURI)
                 || requestURI.startsWith("/api/camp/campName")
+                || "/api/camps".equals(requestURI) && "GET".equals(request.getMethod())
                 || requestURI.startsWith("/api/camp/addr")
                 || requestURI.startsWith("/api/camp/category")
                 || requestURI.matches("/api/camps/\\d+")
@@ -54,12 +55,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || requestURI.matches("/api/admin/notice/\\d+")
                 || "/api/reviews".equals(requestURI) && "GET".equals(request.getMethod())
                 || requestURI.matches("/api/reviews/camp/\\d+")
-                || requestURI.matches("/api/reviews/\\d+/replies")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-        // 캠핑지 전체 조회는 허용
-        if (requestURI.equals("/api/camps") && method.equalsIgnoreCase("GET")) {
+                || requestURI.matches("/api/reviews/\\d+/replies") && "GET".equals(request.getMethod()))
+        {
             filterChain.doFilter(request, response);
             return;
         }
@@ -72,13 +69,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (jwtToken == null) {
             log.warn("Access denied due to missing JWT token");
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "JWT token is null");
+            sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "JWT token is null");
             return;
+
         }
 
         if (!jwtTokenProvider.validateToken(jwtToken)) {
             log.warn("Access denied due to invalid JWT token");
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT token");
+            sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "Invalid Token");
             return;
         }
 
@@ -88,7 +86,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (tokenLoginId == null || tokenLoginId.isEmpty()) {
             log.warn("loginId is missing in the token");
-            throw new JwtTokenException("로그인ID가 토큰에 없습니다.");
+            sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "로그인ID가 토큰에 없습니다.");
+            return;
         }
 
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -105,7 +104,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     // loginId가 토큰에 포함된 ID와 일치하는지 확인
                     if (!customUserDetail.getUsername().equals(tokenLoginId)) {
                         log.warn("Token loginId does not match the user loginId");
-                        throw new JwtTokenException("로그인ID와 토큰ID가 일치하지 않습니다.");
+                        sendErrorResponse(response, HttpStatus.UNAUTHORIZED, "로그인ID와 토큰ID가 일치하지 않습니다.");
+                        return;
                     }
                 }
 
@@ -125,12 +125,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             } catch (JwtTokenException e) {
                 log.error("Token validation failed: ", e);
-                throw new JwtTokenException("Token validation failed");
+                sendErrorResponse(response, HttpStatus.UNAUTHORIZED, e.getMessage());
+                return;
             }
         }
 
         // JWT 인증을 통과한 경우 요청을 계속 진행
         filterChain.doFilter(request, response);
+    }
+
+    private void sendErrorResponse(HttpServletResponse response, HttpStatus status, String message) throws IOException {
+        response.setStatus(status.value());
+        response.setContentType("application/json");
+        response.getWriter().write("{\"error\":\"" + message + "\"}");
     }
 
 }
