@@ -31,30 +31,30 @@ public class CampController {
 		return ResponseEntity.ok(response);
 	}
 
-	/**
-	 * 캠핑지 검색 및 전체 조회를 처리합니다.
-	 *
-	 * - 카테고리, 주소, 이름을 기준으로 검색할 수 있습니다.
-	 * - 검색 조건이 없을 경우 전체 캠핑지를 페이지네이션으로 조회합니다.
-	 *
-	 * @param categoryName 검색할 카테고리 이름 (선택적)
-	 * @param addr 검색할 주소 (선택적)
-	 * @param name 검색할 캠핑지 이름 (선택적)
-	 * @param page 페이지 번호 (기본값 0)
-	 * @param size 페이지 크기 (기본값 10)
-	 * @return 검색된 캠핑지 정보를 페이지네이션이 적용된 CampPageResponse 객체로 반환
-	 */
-	@GetMapping
-	@Operation(summary = "캠핑지 검색 및 전체 조회", description = "등록된 캠핑지 정보를 검색하거나, 페이지네이션으로 전체 조회합니다.")
-	public ResponseEntity<CampPageResponse> searchCamps(
-			@RequestParam(required = false) String categoryName,
-			@RequestParam(required = false) String addr,
-			@RequestParam(required = false) String name,
-			@RequestParam(defaultValue = "0") int page,
-			@RequestParam(defaultValue = "10") int size) {
-		CampPageResponse response = campService.searchCamps(categoryName, addr, name, page, size);
-		return ResponseEntity.ok(response);
-	}
+//	/**
+//	 * 캠핑지 검색 및 전체 조회를 처리합니다.
+//	 *
+//	 * - 카테고리, 주소, 이름을 기준으로 검색할 수 있습니다.
+//	 * - 검색 조건이 없을 경우 전체 캠핑지를 페이지네이션으로 조회합니다.
+//	 *
+//	 * @param categoryName 검색할 카테고리 이름 (선택적)
+//	 * @param addr 검색할 주소 (선택적)
+//	 * @param name 검색할 캠핑지 이름 (선택적)
+//	 * @param page 페이지 번호 (기본값 0)
+//	 * @param size 페이지 크기 (기본값 10)
+//	 * @return 검색된 캠핑지 정보를 페이지네이션이 적용된 CampPageResponse 객체로 반환
+//	 */
+//	@GetMapping
+//	@Operation(summary = "캠핑지 검색 및 전체 조회", description = "등록된 캠핑지 정보를 검색하거나, 페이지네이션으로 전체 조회합니다.")
+//	public ResponseEntity<CampPageResponse> searchCamps(
+//			@RequestParam(required = false) String categoryName,
+//			@RequestParam(required = false) String addr,
+//			@RequestParam(required = false) String name,
+//			@RequestParam(defaultValue = "0") int page,
+//			@RequestParam(defaultValue = "10") int size) {
+//		CampPageResponse response = campService.searchCamps(categoryName, addr, name, page, size);
+//		return ResponseEntity.ok(response);
+//	}
 
 	/**
 	 * 기존 캠핑지의 정보를 수정합니다.

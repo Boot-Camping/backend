@@ -79,45 +79,45 @@ public class CampService {
 		return CampResponse.fromEntity(savedCamp);
 	}
 
-	/**
-	 * 캠핑지 검색 및 전체 조회를 처리합니다.
-	 * 카테고리, 주소, 이름을 기준으로 검색할 수 있으며, 페이지네이션이 적용됩니다.
-	 *
-	 * @param categoryName 검색할 카테고리 이름 (선택적)
-	 * @param addr         검색할 주소 (선택적)
-	 * @param name         검색할 캠핑지 이름 (선택적)
-	 * @param page         페이지 번호
-	 * @param size         페이지 크기
-	 * @return 검색된 캠핑지 정보를 페이지네이션이 적용된 CampPageResponse 객체로 반환
-	 */
-	@Transactional
-	public CampPageResponse searchCamps(String categoryName, String addr, String name, int page, int size) {
-		Pageable pageable = PageRequest.of(page, size);
-		Page<CampEntity> campEntities;
-
-		if (categoryName != null) {
-			campEntities = campRepository.findByCategoryName(categoryName, pageable);
-		} else if (addr != null) {
-			campEntities = campRepository.findByAddrContainingRegion(addr, pageable);
-		} else if (name != null) {
-			campEntities = campRepository.findByCampNameContainingName(name, pageable);
-		} else {
-			campEntities = campRepository.findAll(pageable);
-		}
-
-		if (campEntities.isEmpty()) {
-			throw new NotFoundException("검색 조건에 맞는 캠핑지가 없습니다.");
-		}
-
-		Page<CampResponse> campResponses = campEntities.map(campEntity -> {
-			Double averageGrade = reviewRepository.calculateAverageGradeByCampId(campEntity.getId());
-			Long reviewCount = reviewRepository.countByCampId(campEntity.getId());
-			Long reservedDateCount = bookDateRepository.countReservedDatesByCampId(campEntity.getId());
-			return CampResponse.fromEntity(campEntity, averageGrade, reviewCount, reservedDateCount);
-		});
-
-		return new CampPageResponse(campResponses);
-	}
+//	/**
+//	 * 캠핑지 검색 및 전체 조회를 처리합니다.
+//	 * 카테고리, 주소, 이름을 기준으로 검색할 수 있으며, 페이지네이션이 적용됩니다.
+//	 *
+//	 * @param categoryName 검색할 카테고리 이름 (선택적)
+//	 * @param addr         검색할 주소 (선택적)
+//	 * @param name         검색할 캠핑지 이름 (선택적)
+//	 * @param page         페이지 번호
+//	 * @param size         페이지 크기
+//	 * @return 검색된 캠핑지 정보를 페이지네이션이 적용된 CampPageResponse 객체로 반환
+//	 */
+//	@Transactional
+//	public CampPageResponse searchCamps(String categoryName, String addr, String name, int page, int size) {
+//		Pageable pageable = PageRequest.of(page, size);
+//		Page<CampEntity> campEntities;
+//
+//		if (categoryName != null) {
+//			campEntities = campRepository.findByCategoryName(categoryName, pageable);
+//		} else if (addr != null) {
+//			campEntities = campRepository.findByAddrContainingRegion(addr, pageable);
+//		} else if (name != null) {
+//			campEntities = campRepository.findByCampNameContainingName(name, pageable);
+//		} else {
+//			campEntities = campRepository.findAll(pageable);
+//		}
+//
+//		if (campEntities.isEmpty()) {
+//			throw new NotFoundException("검색 조건에 맞는 캠핑지가 없습니다.");
+//		}
+//
+//		Page<CampResponse> campResponses = campEntities.map(campEntity -> {
+//			Double averageGrade = reviewRepository.calculateAverageGradeByCampId(campEntity.getId());
+//			Long reviewCount = reviewRepository.countByCampId(campEntity.getId());
+//			Long reservedDateCount = bookDateRepository.countReservedDatesByCampId(campEntity.getId());
+//			return CampResponse.fromEntity(campEntity, averageGrade, reviewCount, reservedDateCount);
+//		});
+//
+//		return new CampPageResponse(campResponses);
+//	}
 
 	/**
 	 * 캠핑지 정보 수정
