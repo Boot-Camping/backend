@@ -40,6 +40,7 @@ public class SecurityConfig {
                 .sessionManagement(sessionManagement -> sessionManagement
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/chat/**").permitAll()  // WebSocket 경로 허용
                         // Swagger 관련 경로 허용
                         .requestMatchers(
                                 "/swagger-ui/**",
@@ -63,8 +64,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource(){
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of( "http://localhost:8080"));
-        configuration.setAllowedOrigins(List.of( "http://localhost:5173"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:8080", "http://localhost:63342", "http://localhost:5173"));
         configuration.setAllowCredentials(true); // token을 주고받을 때 필요
         configuration.addExposedHeader("Authorization"); // token
         configuration.addAllowedHeader("Content-Type");
