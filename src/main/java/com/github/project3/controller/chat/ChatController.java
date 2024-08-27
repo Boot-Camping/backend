@@ -1,18 +1,32 @@
-//package com.github.project3.controller.chat;
-//
-//import lombok.extern.slf4j.Slf4j;
-//import org.springframework.messaging.handler.annotation.MessageMapping;
-//import org.springframework.messaging.handler.annotation.SendTo;
-//import org.springframework.stereotype.Controller;
-//
-//@Controller
-//@Slf4j
-//public class ChatController {
-//
-//    @MessageMapping("/chat.sendMessage")
-//    @SendTo("/topic/messages")
-//    public ChatMessage sendMessage(ChatMessage message) {
-//        log.info("서버에서 수신한 메시지: " + message.getContent()); // 메시지 로그 출력
-//        return message; // 이 메시지를 모든 구독자에게 브로드캐스트
-//    }
-//}
+package com.github.project3.controller.chat;
+
+import com.github.project3.service.chat.ChatRoomService;
+import com.github.project3.service.exceptions.NotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Set;
+
+@RestController
+@RequestMapping("/api/chatRooms")
+@RequiredArgsConstructor
+public class ChatRoomController {
+
+    private final ChatRoomService chatRoomService;
+
+    @PostMapping
+    public ResponseEntity<ChatRoomDTO> createChatRoom(@RequestParam String name, @RequestParam Set<Long> userIds) {
+        ChatRoomDTO chatRoom = chatRoomService.createChatRoom(name, userIds);
+        return ResponseEntity.ok(chatRoom);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ChatRoomDTO> getChatRoom(@PathVariable Long id) {
+        ChatRoomDTO chatRoom = chatRoomService.getChatRoom(id);
+        if (chatRoom == null) {
+            throw new NotFoundException("채팅방이 존재하지 않습니다.");
+        }
+        return ResponseEntity.ok(chatRoom);
+    }
+}
