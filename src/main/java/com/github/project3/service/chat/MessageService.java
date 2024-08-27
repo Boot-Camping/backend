@@ -27,9 +27,9 @@ public class MessageService {
     // 메세지 전송
     public MessageResponse sendMessage(MessageRequest messageRequest, Integer userId) {
         ChatRoomEntity chatRoom = chatRoomRepository.findById(messageRequest.getChatRoomId())
-                .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다."));
+                .orElseThrow(() -> new NotFoundException("채팅방을 찾을 수 없습니다."));
         UserEntity sender = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
+                .orElseThrow(() -> new NotFoundException("유저를 찾을 수 없습니다."));
 
         MessageEntity message = new MessageEntity();
         message.setChatRoom(chatRoom);
