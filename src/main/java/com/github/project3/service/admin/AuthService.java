@@ -36,14 +36,14 @@ public class AuthService {
             throw new NotAcceptException("블랙리스트 회원입니다. 로그인이 불가능합니다.");
         }
     }
-    // 기간별 데이터(1일, 1주일, 1달)
+    // CreateAt 기준 Count수 / StartDate기준 전체 매출액
     public <T extends CreatedAtRepository> long countEntityCreatedBetween(T repository, LocalDateTime start, LocalDateTime end) {
         return repository.countByCreatedAtBetween(start, end);
     }
-    public <B extends BookRepository> long sumTotalPriceByCreatedAtBetween(B repository, LocalDateTime start, LocalDateTime end){
-        return repository.sumTotalPriceByCreatedAtBetween(start, end);
+    public <B extends BookRepository> long sumTotalPriceByStartDateBetween(B repository, LocalDateTime start, LocalDateTime end){
+        return repository.sumTotalPriceByStartDateBetween(start, end);
     }
-
+    // + 기간별 데이터(1일, 1주일, 1달, 전체)
     public long getLastDayCount(CreatedAtRepository createdAtRepository){
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime oneDayAgo = now.minusDays(1);
@@ -62,17 +62,17 @@ public class AuthService {
     public long getLastDayBalance(BookRepository bookRepository){
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime oneDayAgo = now.minusDays(1);
-        return sumTotalPriceByCreatedAtBetween(bookRepository, oneDayAgo, now);
+        return sumTotalPriceByStartDateBetween(bookRepository, oneDayAgo, now);
     }
     public long getLastWeekBalance(BookRepository bookRepository){
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime oneWeekAgo = now.minusWeeks(1);
-        return sumTotalPriceByCreatedAtBetween(bookRepository, oneWeekAgo, now);
+        return sumTotalPriceByStartDateBetween(bookRepository, oneWeekAgo, now);
     }
     public long getLastMonthBalance(BookRepository bookRepository){
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime oneMonthAgo = now.minusMonths(1);
-        return sumTotalPriceByCreatedAtBetween(bookRepository, oneMonthAgo, now);
+        return sumTotalPriceByStartDateBetween(bookRepository, oneMonthAgo, now);
     }
 
     public long getTotalUserCount(UserRepository userRepository){

@@ -91,18 +91,18 @@ public class AdminNoticeService {
         return noticePage.map(AdminNoticeCheckResponse::from);
     }
     // 공지사항 상세조회
-    public AdminNoticeDetailCheckResponse getNoticeDetail(Integer id){
-        NoticeEntity notice = adminNoticeRepository.findById(id).orElseThrow(() -> new NotFoundException("해당 공지사항을 찾을 수 없습니다."));
+    public AdminNoticeDetailCheckResponse getNoticeDetail(Integer noticeId){
+        NoticeEntity notice = adminNoticeRepository.findById(noticeId).orElseThrow(() -> new NotFoundException("해당 공지사항을 찾을 수 없습니다."));
 
         return AdminNoticeDetailCheckResponse.from(notice);
     }
 
     // 공지사항 수정
     @Transactional
-    public AdminNoticeUpdateResponse getUpdateNotice(Integer id, AdminNoticeUpdateRequest noticeUpdateRequest, List<MultipartFile> images, String token){
+    public AdminNoticeUpdateResponse getUpdateNotice(Integer noticeId, AdminNoticeUpdateRequest noticeUpdateRequest, List<MultipartFile> images, String token){
         authService.verifyAdmin(token);
 
-        NoticeEntity notice = adminNoticeRepository.findById(id).orElseThrow(() -> new NotFoundException("해당 공지사항을 찾을 수 없습니다."));
+        NoticeEntity notice = adminNoticeRepository.findById(noticeId).orElseThrow(() -> new NotFoundException("해당 공지사항을 찾을 수 없습니다."));
         if (noticeUpdateRequest.getTitle() == null && noticeUpdateRequest.getDescription() == null){
             throw new NotFoundException("수정사항을 입력해 주세요.");
         }
@@ -143,10 +143,10 @@ public class AdminNoticeService {
 
     // 공지사항 삭제
     @Transactional
-    public void removeNotice(Integer id, String token){
+    public void removeNotice(Integer noticeId, String token){
         authService.verifyAdmin(token);
 
-        NoticeEntity notice = adminNoticeRepository.findById(id).orElseThrow(() -> new NotFoundException("존재하지 않는 공지사항 입니다."));
+        NoticeEntity notice = adminNoticeRepository.findById(noticeId).orElseThrow(() -> new NotFoundException("존재하지 않는 공지사항 입니다."));
 
         adminNoticeRepository.delete(notice);
     }
@@ -190,10 +190,10 @@ public class AdminNoticeService {
 
     // 회원 블랙리스트 등록
     @Transactional
-    public void getBlacklist(Integer id, String token){
+    public void getBlacklist(Integer userId, String token){
         authService.verifyAdmin(token);
 
-        UserEntity user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("해당 유저를 찾을 수 없습니다."));
+        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("해당 유저를 찾을 수 없습니다."));
 
         if (user.getStatus() == Status.BLACKLIST){
             throw new NotAcceptException("이미 등록된 블랙리스트 입니다.");
