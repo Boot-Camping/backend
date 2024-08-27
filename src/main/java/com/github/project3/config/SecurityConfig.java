@@ -68,6 +68,7 @@ public class SecurityConfig {
         configuration.setAllowCredentials(true); // token을 주고받을 때 필요
         configuration.addExposedHeader("Authorization"); // token
         configuration.addAllowedHeader("Content-Type");
+        configuration.addAllowedHeader("Authorization");
         configuration.setAllowedMethods(Arrays.asList("GET", "PUT", "POST", "PATCH", "DELETE", "OPTIONS"));
         configuration.setMaxAge(3600L);
 
