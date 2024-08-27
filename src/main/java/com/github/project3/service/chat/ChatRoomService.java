@@ -6,7 +6,7 @@ import java.util.Set;
 
 @Service
 public class ChatRoomService {
-    public ChatRoomDTO createChatRoom(String name, Set<Long> userIds) {
+    public ChatRoomDTO createChatRoom(String chatRoomName) {
     }
 
     public ChatRoomDTO getChatRoom(Long id) {
