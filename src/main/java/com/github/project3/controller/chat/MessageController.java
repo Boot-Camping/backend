@@ -23,4 +23,11 @@ public class MessageController {
         return ResponseEntity.ok(messageResponse);
     }
 
+    // 채팅방의 메시지 조회
+    @GetMapping("/chatRoom/{chatRoomId}")
+    public ResponseEntity<List<MessageResponse>> getMessagesByChatRoom(@PathVariable Integer chatRoomId) {
+        List<MessageResponse> messages = messageService.getMessagesByChatRoom(chatRoomId);
+        return ResponseEntity.ok(messages);
+    }
+
 }
