@@ -1,14 +1,21 @@
 package com.github.project3.service.chat;
 
+import com.github.project3.entity.chat.ChatRoomEntity;
+import com.github.project3.repository.chat.ChatRoomRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Set;
-
+@RequiredArgsConstructor
 @Service
 public class ChatRoomService {
-    public ChatRoomDTO createChatRoom(String chatRoomName) {
+    private final ChatRoomRepository chatRoomRepository;
+
+    public void createChatRoom(String chatRoomName) {
+        ChatRoomEntity chatRoom = new ChatRoomEntity();
+        chatRoom.setName(chatRoomName);
+        chatRoomRepository.save(chatRoom);
     }
 
-    public ChatRoomDTO getChatRoom(Long id) {
-    }
+//    public ChatRoomDTO getChatRoom(Long id) {
+//    }
 }
