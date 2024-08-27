@@ -26,7 +26,7 @@ public class MypageController {
     /**
      * 유저의 마이페이지 정보를 조회합니다.
      *
-     * @param id 조회할 유저의 ID
+     * @param userId 조회할 유저의 ID
      * @return 유저 마이페이지 정보 목록
      */
     @Operation(summary = "유저 마이페이지 정보 조회", description = "주어진 유저 ID에 대한 마이페이지 정보를 조회합니다.")
@@ -39,7 +39,6 @@ public class MypageController {
     /**
      * 유저의 기본 정보를 수정합니다.
      *
-     * @param id 수정할 유저의 ID
      * @param tel 수정할 전화번호 (선택 사항)
      * @param addr 수정할 주소 (선택 사항)
      * @return 수정 완료 메시지
@@ -56,7 +55,6 @@ public class MypageController {
     /**
      * 유저의 프로필 이미지를 생성하거나 수정합니다.
      *
-     * @param id 수정할 유저의 ID
      * @param images 업로드할 이미지 파일
      * @return 이미지 수정 완료 메시지
      */
@@ -71,7 +69,6 @@ public class MypageController {
     /**
      * 유저의 비밀번호를 수정합니다.
      *
-     * @param id 비밀번호를 수정할 유저의 ID
      * @param UpdatePasswordRequest 비밀번호 수정 요청 정보
      * @return 비밀번호 변경 완료 메시지
      */
@@ -87,7 +84,6 @@ public class MypageController {
      * 유저의 찜 목록에 캠핑을 등록하거나 등록된 캠핑을 삭제합니다.
      *
      * @param campId 등록할 캠핑의 ID
-     * @param userId 찜을 등록할 유저의 ID
      * @return 찜 등록 또는 삭제 완료 메시지
      */
     @Operation(summary = "찜 등록", description = "주어진 캠핑 ID와 유저 ID로 찜을 등록하거나 등록된 찜을 삭제합니다.")
@@ -101,7 +97,6 @@ public class MypageController {
     /**
      * 유저의 찜 목록을 조회합니다.
      *
-     * @param userId 찜 목록을 조회할 유저의 ID
      * @return 유저의 찜 목록
      */
     @Operation(summary = "찜 목록 조회", description = "주어진 유저 ID에 대한 찜 목록을 조회합니다.")
