@@ -9,6 +9,7 @@ import com.github.project3.entity.user.UserEntity;
 import com.github.project3.repository.chat.ChatRoomRepository;
 import com.github.project3.repository.chat.MessageRepository;
 import com.github.project3.repository.user.UserRepository;
+import com.github.project3.service.exceptions.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -45,6 +46,26 @@ public class MessageService {
                 savedMessage.getContent(),
                 savedMessage.getSentAt()
         );
+
+        return response;
+    }
+
+    public List<MessageResponse> getMessagesByChatRoom(Integer chatRoomId) {
+
+        ChatRoomEntity chatRoom = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new NotFoundException("채팅방을 찾을 수 없습니다."));
+
+        List<MessageEntity> messages = messageRepository.findByChatRoom(chatRoom);
+
+        List<MessageResponse> response = messages.stream()
+                .map(message -> MessageResponse.of(
+                        message.getId(),
+                        message.getChatRoom().getId(),
+                        message.getSender().getId(),
+                        message.getSender().getLoginId(),
+                        message.getContent(),
+                        message.getSentAt()
+                )).collect(Collectors.toList());
 
         return response;
     }
