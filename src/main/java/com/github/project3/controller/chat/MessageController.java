@@ -17,9 +17,9 @@ public class MessageController {
     private final MessageService messageService;
 
     // 메시지 전송
-    @PostMapping("/send")
-    public ResponseEntity<MessageResponse> sendMessage(@RequestBody MessageRequest messageRequest) {
-        MessageResponse messageResponse = messageService.sendMessage(messageRequest);
+    @PostMapping("/send/user/{userId}")
+    public ResponseEntity<MessageResponse> sendMessage(@RequestBody MessageRequest messageRequest, @PathVariable Integer userId) {
+        MessageResponse messageResponse = messageService.sendMessage(messageRequest, userId);
         return ResponseEntity.ok(messageResponse);
     }
 

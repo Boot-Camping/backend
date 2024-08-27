@@ -9,6 +9,5 @@ import java.time.LocalDateTime;
 @Data
 public class MessageRequest {
     private Integer chatRoomId;
-    private Integer senderId;
     private String content;
 }
