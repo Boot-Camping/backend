@@ -20,12 +20,17 @@ import java.util.Optional;
 @Repository
 public interface BookRepository extends JpaRepository<BookEntity, Integer>, CreatedAtRepository {
 
-    boolean existsByCampAndStartDateLessThanEqualAndEndDateGreaterThanEqualAndStatusIn(
-            CampEntity camp,
-            LocalDateTime checkIn,
-            LocalDateTime checkOut,
-            List<Status> statuses
-    );
+    @Query("SELECT CASE WHEN COUNT(b) > 0 THEN TRUE ELSE FALSE END FROM BookEntity b " +
+            "WHERE b.camp = :camp " +
+            "AND b.status IN :statuses " +
+            "AND ((b.startDate <= :checkOut AND b.endDate >= :checkIn) " +
+            "OR (b.startDate >= :checkIn AND b.startDate <= :checkOut))")
+    boolean existsByCampAndDateRangeOverlap(@Param("camp") CampEntity camp,
+                                            @Param("checkIn") LocalDateTime checkIn,
+                                            @Param("checkOut") LocalDateTime checkOut,
+                                            @Param("statuses") List<Status> statuses);
+
+
 
     List<BookEntity> findByUserId(Integer userId);
 

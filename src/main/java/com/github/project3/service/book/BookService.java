@@ -61,8 +61,7 @@ public class BookService {
         List<Status> statuses = Arrays.asList(Status.BOOKING, Status.DECIDE);
 
         // 예약 날짜 중복 확인
-        if (bookRepository.existsByCampAndStartDateLessThanEqualAndEndDateGreaterThanEqualAndStatusIn(
-                camp, requestCheckIn, requestCheckOut, statuses)) {
+        if (isDateConflict(camp, requestCheckIn, requestCheckOut, statuses)) {
             throw new NotAcceptException("해당 날짜에 이미 예약이 존재합니다. 다른 날짜를 선택해주세요.");
         }
 
@@ -84,6 +83,7 @@ public class BookService {
 
         BookEntity savedBook = bookRepository.save(book);
 
+        // CheckIn 부터 CheckOut 까지의 날짜를 모두 저장
         saveBookDates(savedBook, requestCheckIn, requestCheckOut);
     }
 
@@ -165,6 +165,11 @@ public class BookService {
                     );
                 })
                 .collect(Collectors.toList());
+    }
+
+    // 예약 날짜 중복 확인 메서드
+    private boolean isDateConflict(CampEntity camp, LocalDateTime checkIn, LocalDateTime checkOut, List<Status> statuses) {
+        return bookRepository.existsByCampAndDateRangeOverlap(camp, checkIn, checkOut, statuses);
     }
 
     // 할인 금액 계산 메서드
