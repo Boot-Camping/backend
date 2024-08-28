@@ -1,9 +1,12 @@
 package com.github.project3.service.admin;
 
+import com.github.project3.entity.admin.AdminEntity;
 import com.github.project3.entity.user.UserEntity;
 import com.github.project3.entity.user.enums.Role;
 import com.github.project3.entity.user.enums.Status;
 import com.github.project3.jwt.JwtTokenProvider;
+import com.github.project3.repository.admin.AdminNoticeRepository;
+import com.github.project3.repository.admin.AdminRepository;
 import com.github.project3.repository.admin.CreatedAtRepository;
 import com.github.project3.repository.book.BookRepository;
 import com.github.project3.repository.user.UserRepository;
@@ -19,6 +22,7 @@ import java.time.LocalDateTime;
 public class AuthService {
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final AdminRepository adminRepository;
 
     // 관리자 인증
     public void verifyAdmin(String token){
@@ -35,6 +39,12 @@ public class AuthService {
         if (user.getStatus() == Status.BLACKLIST) {
             throw new NotAcceptException("블랙리스트 회원입니다. 로그인이 불가능합니다.");
         }
+    }
+    // 관리자 잔액조회
+    public Integer getSales(UserEntity user) {
+            return adminRepository.findByUser(user)
+                    .map(AdminEntity::getSales)
+                    .orElse(0); // 매출액이 없는 경우 0 반환
     }
     // CreateAt 기준 Count수 / StartDate기준 전체 매출액
     public <T extends CreatedAtRepository> long countEntityCreatedBetween(T repository, LocalDateTime start, LocalDateTime end) {

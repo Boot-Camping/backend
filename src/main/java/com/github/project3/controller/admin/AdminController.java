@@ -3,16 +3,16 @@ package com.github.project3.controller.admin;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.project3.dto.admin.*;
-import com.github.project3.jwt.JwtTokenProvider;
-import com.github.project3.service.admin.AdminNoticeService;
+import com.github.project3.entity.user.UserEntity;
+import com.github.project3.service.admin.AdminService;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,9 +27,9 @@ import java.util.List;
 @RequestMapping("/api/admin")
 @Slf4j
 @Api(tags = "관리자 공지사항 관리") // Swagger Tag (한국어)
-public class AdminNoticeController {
+public class AdminController {
 
-    private final AdminNoticeService adminNoticeService;
+    private final AdminService adminService;
     private final ObjectMapper objectMapper;
 
     /**
@@ -54,7 +54,7 @@ public class AdminNoticeController {
             // "Bearer "가 포함되어 있다면 "Bearer "를 제거한 부분을 subToken에 저장
             subToken = token.substring(7);
         }
-        adminNoticeService.registerNotice(noticeRequest, images, subToken);
+        adminService.registerNotice(noticeRequest, images, subToken);
         return ResponseEntity.ok("공지사항 등록 완료.");
     }
 
@@ -70,7 +70,7 @@ public class AdminNoticeController {
     public ResponseEntity<Page<AdminNoticeCheckResponse>> getNoticeAll(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "3") int size) {
-        Page<AdminNoticeCheckResponse> noticePage = adminNoticeService.getNoticeAll(page, size);
+        Page<AdminNoticeCheckResponse> noticePage = adminService.getNoticeAll(page, size);
         return ResponseEntity.ok(noticePage);
     }
 
@@ -83,7 +83,7 @@ public class AdminNoticeController {
     @Operation(summary = "공지사항 상세 조회", description = "특정 공지사항의 상세 정보를 조회합니다.")
     @GetMapping("/notice/{noticeId}")
     public ResponseEntity<AdminNoticeDetailCheckResponse> getNoticeDetail(@PathVariable Integer noticeId) {
-        AdminNoticeDetailCheckResponse noticeDetailResponse = adminNoticeService.getNoticeDetail(noticeId);
+        AdminNoticeDetailCheckResponse noticeDetailResponse = adminService.getNoticeDetail(noticeId);
         return ResponseEntity.ok(noticeDetailResponse);
     }
 
@@ -111,7 +111,7 @@ public class AdminNoticeController {
             // "Bearer "가 포함되어 있다면 "Bearer "를 제거한 부분을 subToken에 저장
             subToken = token.substring(7);
         }
-        adminNoticeService.getUpdateNotice(noticeId, noticeUpdateRequest, images, subToken);
+        adminService.getUpdateNotice(noticeId, noticeUpdateRequest, images, subToken);
         return ResponseEntity.ok("공지사항 수정 완료");
     }
 
@@ -132,7 +132,7 @@ public class AdminNoticeController {
             // "Bearer "가 포함되어 있다면 "Bearer "를 제거한 부분을 subToken에 저장
             subToken = token.substring(7);
         }
-        adminNoticeService.removeNotice(noticeId, subToken);
+        adminService.removeNotice(noticeId, subToken);
         return ResponseEntity.ok("공지사항 삭제 완료.");
     }
 
@@ -146,7 +146,7 @@ public class AdminNoticeController {
             // "Bearer "가 포함되어 있다면 "Bearer "를 제거한 부분을 subToken에 저장
             subToken = token.substring(7);
         }
-        AdminDataResponse dataResponse = adminNoticeService.getAllData(subToken);
+        AdminDataResponse dataResponse = adminService.getAllData(subToken);
         return ResponseEntity.ok(dataResponse);
     }
 
@@ -164,7 +164,7 @@ public class AdminNoticeController {
             // "Bearer "가 포함되어 있다면 "Bearer "를 제거한 부분을 subToken에 저장
             subToken = token.substring(7);
         }
-        List<AdminUserCheckResponse> userResponse = adminNoticeService.getUserAll(subToken);
+        List<AdminUserCheckResponse> userResponse = adminService.getUserAll(subToken);
         return ResponseEntity.ok(userResponse);
     }
 
@@ -185,7 +185,7 @@ public class AdminNoticeController {
             // "Bearer "가 포함되어 있다면 "Bearer "를 제거한 부분을 subToken에 저장
             subToken = token.substring(7);
         }
-        adminNoticeService.getBlacklist(userId, subToken);
+        adminService.getBlacklist(userId, subToken);
         return ResponseEntity.ok("블랙리스트 등록 완료.");
     }
 
@@ -193,7 +193,7 @@ public class AdminNoticeController {
     @Operation(summary = "관리자 매출액 업데이트", description = "관리자 매출액을 업데이트 합니다.")
     @PutMapping("/update-balance")
     public ResponseEntity<String> updateAdminBalance(){
-        adminNoticeService.updateAdminBalance();
+        adminService.updateAdminBalance();
         return ResponseEntity.ok("관리자 잔고 업데이트 완료.");
     }
 }
