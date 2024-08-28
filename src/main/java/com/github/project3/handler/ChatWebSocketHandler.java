@@ -18,36 +18,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-//@Slf4j
-//@Component
-//public class ChatWebSocketHandler extends TextWebSocketHandler {
-//
-//    private List<WebSocketSession> sessions = new ArrayList<>();
-//
-//    @Override
-//    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-//        sessions.add(session);
-//        log.info("WebSocket 연결이 설정되었습니다. 세션 ID: " + session.getId());
-//    }
-//
-//    @Override
-//    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-//        // 수신한 메시지를 로그로 출력
-//        log.info("메시지를 수신했습니다: " + message.getPayload());
-//        for (WebSocketSession webSocketSession : sessions) {
-//            if (webSocketSession.isOpen()) {
-//                webSocketSession.sendMessage(message);
-//            }
-//        }
-//    }
-//
-//    @Override
-//    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-//        sessions.remove(session);
-//        log.info("WebSocket 연결이 닫혔습니다. 세션 ID: " + session.getId());
-//    }
-//}
-
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -76,7 +46,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             return;
         }
 
-        // 쿼리 파라미터에서 userId를 가져와서 Integer로 변환
+        // 쿼리 파라미터에서 userId를 가져와서 Integer 로 변환
         Integer userId = Integer.valueOf(queryParams.get("userId"));
 
         // 세션과 userId 매핑
@@ -99,7 +69,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                 return;
             }
 
-            // 2. 메시지 저장 (MessageService 이용)
+            // 2. 메시지 저장
             MessageResponse messageResponse = messageService.sendMessage(messageRequest, senderId);
 
             // 3. 세션 등록
@@ -139,7 +109,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     }
 
     private void broadcastMessageToChatRoom(Integer chatRoomId, MessageResponse messageResponse) {
-        // 특정 채팅방에 속한 모든 세션에 메시지를 브로드캐스트합니다.
+        // 특정 채팅방에 속한 모든 세션에 메시지를 브로드캐스트
         List<WebSocketSession> sessions = chatRoomSessions.get(chatRoomId);
         if (sessions != null) {
             sessions.forEach(session -> {
@@ -152,6 +122,8 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             });
         }
     }
+
+    // 쿼리 파라미터로 받은 문자열 분리
     private Map<String, String> splitQuery(String query) {
         Map<String, String> queryPairs = new HashMap<>();
         String[] pairs = query.split("&");
