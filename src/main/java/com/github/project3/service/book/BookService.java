@@ -108,24 +108,13 @@ public class BookService {
         book.setStatus(Status.CANCEL);
         bookRepository.save(book);
 
-        UserEntity user = userService.findAuthenticatedUser();
-
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime startDate = book.getStartDate();
         LocalDateTime threeDaysBeforeStartDate = startDate.minusDays(3);
 
-        // 환불 금액 계산
-        int refundAmount;
-        if (now.isAfter(threeDaysBeforeStartDate) && now.isBefore(startDate)) {
-            // 현재 시간이 start_date 3일 전 ~ start_date 사이면 절반만 환불
-            refundAmount = book.getTotalPrice() / 2;
-        } else {
-            refundAmount = book.getTotalPrice();
-        }
-
         // user 의 cash 변동사항 저장
-        return cashService.processTransaction(user, refundAmount, TransactionType.REFUND);
-
+        UserEntity user = userService.findAuthenticatedUser();
+        return cashService.processTransaction(user, calculateRefundAmount(book), TransactionType.REFUND);
     }
 
     /**
@@ -196,5 +185,18 @@ public class BookService {
             requestCheckIn = requestCheckIn.plusDays(1);
         }
         bookDateRepository.saveAll(bookDates);
+    }
+
+    // 예약 취소 시 환불 금액 차감 메서드
+    private int calculateRefundAmount(BookEntity book) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startDate = book.getStartDate();
+        LocalDateTime threeDaysBeforeStartDate = startDate.minusDays(3);
+
+        if (now.isAfter(threeDaysBeforeStartDate) && now.isBefore(startDate)) {
+            return book.getTotalPrice() / 2; // 3일 이내 취소 시 50% 환불
+        } else {
+            return book.getTotalPrice();
+        }
     }
 }
