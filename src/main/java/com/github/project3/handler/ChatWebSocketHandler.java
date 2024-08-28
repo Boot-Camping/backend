@@ -56,10 +56,10 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage textMessage) throws Exception {
         String payload = textMessage.getPayload();
-        log.info("메시지를 수신했습니다: " + payload);
+        log.info("메세지를 수신했습니다: " + payload);
 
         try {
-            // 1. 메시지 파싱
+            // 1. 메세지 파싱
             MessageRequest messageRequest = objectMapper.readValue(payload, MessageRequest.class);
             Integer chatRoomId = messageRequest.getChatRoomId();
 
@@ -69,18 +69,18 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                 return;
             }
 
-            // 2. 메시지 저장
+            // 2. 메세지 저장
             MessageResponse messageResponse = messageService.sendMessage(messageRequest, senderId);
 
             // 3. 세션 등록
             registerSession(chatRoomId, session, senderId);
 
-            // 4. 메시지 브로드캐스트
+            // 4. 메세지 브로드캐스트
             broadcastMessageToChatRoom(chatRoomId, messageResponse);
 
         } catch (Exception e) {
-            log.error("메시지 처리 중 오류가 발생했습니다.", e);
-            session.sendMessage(new TextMessage("오류가 발생했습니다. 메시지를 처리할 수 없습니다."));
+            log.error("메세지 처리 중 오류가 발생했습니다.", e);
+            session.sendMessage(new TextMessage("오류가 발생했습니다. 메세지를 처리할 수 없습니다."));
         }
     }
 
@@ -109,7 +109,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     }
 
     private void broadcastMessageToChatRoom(Integer chatRoomId, MessageResponse messageResponse) {
-        // 특정 채팅방에 속한 모든 세션에 메시지를 브로드캐스트
+        // 특정 채팅방에 속한 모든 세션에 메세지를 브로드캐스트
         List<WebSocketSession> sessions = chatRoomSessions.get(chatRoomId);
         if (sessions != null) {
             sessions.forEach(session -> {
@@ -117,7 +117,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                     String messageJson = objectMapper.writeValueAsString(messageResponse);
                     session.sendMessage(new TextMessage(messageJson));
                 } catch (Exception e) {
-                    log.error("메시지 전송 중 오류 발생: ", e);
+                    log.error("메세지 전송 중 오류 발생: ", e);
                 }
             });
         }
