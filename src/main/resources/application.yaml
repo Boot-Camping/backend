@@ -5,6 +5,15 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
+# Auto Configuration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+        physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+
 logging:
   config: classpath:logback-spring.xml
   level:
@@ -24,6 +33,7 @@ logging:
 #          timeout: 5000
 #          starttls:
 #            enable: true
+
 #aws
 cloud:
   aws:
