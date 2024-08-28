@@ -20,7 +20,7 @@ import java.util.Map;
         basePackages = {"com.github.project3.repository.user", "com.github.project3.repository.mypage"
         , "com.github.project3.repository.book", "com.github.project3.repository.bookDate", "com.github.project3.repository.camp"
         , "com.github.project3.repository.cash", "com.github.project3.repository.review","com.github.project3.repository.admin"
-        , "com.github.project3.repository.reply"},
+        , "com.github.project3.repository.reply", "com.github.project3.repository.chat"},
         entityManagerFactoryRef = "entityManagerFactoryBean1"
 )
 public class JpaConfig {
@@ -38,7 +38,8 @@ public class JpaConfig {
                 "com.github.project3.entity.notice",
                 "com.github.project3.entity.review",
                 "com.github.project3.entity.wishlist",
-                "com.github.project3.entity.reply"
+                "com.github.project3.entity.reply",
+                "com.github.project3.entity.chat"
         );
 
         JpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
