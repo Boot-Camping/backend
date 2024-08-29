@@ -42,9 +42,11 @@ public class AuthService {
     }
     // 관리자 잔액조회
     public Integer getSales(UserEntity user) {
-            return adminRepository.findByUser(user)
-                    .map(AdminEntity::getSales)
-                    .orElse(0); // 매출액이 없는 경우 0 반환
+        adminRepository.deleteAll();
+
+        return adminRepository.findByUser(user)
+                .map(AdminEntity::getSales)
+                .orElse(0); // 매출액이 없는 경우 0 반환
     }
     // CreateAt 기준 Count수 / StartDate기준 전체 매출액
     public <T extends CreatedAtRepository> long countEntityCreatedBetween(T repository, LocalDateTime start, LocalDateTime end) {
@@ -69,17 +71,17 @@ public class AuthService {
         LocalDateTime oneMonthAgo = now.minusMonths(1);
         return countEntityCreatedBetween(createdAtRepository, oneMonthAgo, now);
     }
-    public long getLastDayBalance(BookRepository bookRepository){
+    public long getLastDaySales(BookRepository bookRepository){
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime oneDayAgo = now.minusDays(1);
         return sumTotalPriceByStartDateBetween(bookRepository, oneDayAgo, now);
     }
-    public long getLastWeekBalance(BookRepository bookRepository){
+    public long getLastWeekSales(BookRepository bookRepository){
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime oneWeekAgo = now.minusWeeks(1);
         return sumTotalPriceByStartDateBetween(bookRepository, oneWeekAgo, now);
     }
-    public long getLastMonthBalance(BookRepository bookRepository){
+    public long getLastMonthSales(BookRepository bookRepository){
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime oneMonthAgo = now.minusMonths(1);
         return sumTotalPriceByStartDateBetween(bookRepository, oneMonthAgo, now);
@@ -91,7 +93,7 @@ public class AuthService {
     public long getTotalBookCount(BookRepository bookRepository){
         return bookRepository.count();
     }
-    public long getTotalBalance(BookRepository bookRepository){
+    public long getTotalSales(BookRepository bookRepository){
         return bookRepository.sumTotalPrice();
     }
 

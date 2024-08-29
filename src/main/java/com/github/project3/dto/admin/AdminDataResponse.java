@@ -21,20 +21,20 @@ public class AdminDataResponse {
     private Integer lastMonthBookCount;
     private Integer totalBookCount;
 
-    private Integer lastDayAdminBalance;
-    private Integer lastWeekAdminBalance;
-    private Integer lastMonthAdminBalance;
-    private Integer totalAdminBalance;
+    private Integer lastDayAdminSales;
+    private Integer lastWeekAdminSales;
+    private Integer lastMonthAdminSales;
+    private Integer totalAdminSales;
 
     public static AdminDataResponse from(
             long lastDayUserCount, long lastWeekUserCount, long lastMonthUserCount, long totalUserCount,
             long lastDayBookCount, long lastWeekBookCount, long lastMonthBookCount, long totalBookCount,
-            long lastDayAdminBalance, long lastWeekAdminBalance, long lastMonthAdminBalance, long totalAdminBalance
+            long lastDayAdminSales, long lastWeekAdminSales, long lastMonthAdminSales, long totalAdminSales
     ) {
         return new AdminDataResponse(
                 (int) lastDayUserCount, (int) lastWeekUserCount, (int) lastMonthUserCount, (int) totalUserCount,
                 (int) lastDayBookCount, (int) lastWeekBookCount, (int) lastMonthBookCount, (int) totalBookCount,
-                (int) lastDayAdminBalance, (int) lastWeekAdminBalance, (int) lastMonthAdminBalance, (int) totalAdminBalance
+                (int) lastDayAdminSales, (int) lastWeekAdminSales, (int) lastMonthAdminSales, (int) totalAdminSales
         );
     }
 }

@@ -166,15 +166,15 @@ public class AdminService {
         long lastMonthBookCount = authService.getLastMonthCount(bookRepository);
         long totalBookCount = authService.getTotalBookCount(bookRepository);
         // 매출액
-        long lastDayAdminBalance = authService.getLastDayBalance(bookRepository);
-        long lastWeekAdminBalance = authService.getLastWeekBalance(bookRepository);
-        long lastMonthAdminBalance = authService.getLastMonthBalance(bookRepository);
-        long totalAdminBalance = authService.getTotalBalance(bookRepository);
+        long lastDayAdminSales = authService.getLastDaySales(bookRepository);
+        long lastWeekAdminSales = authService.getLastWeekSales(bookRepository);
+        long lastMonthAdminSales = authService.getLastMonthSales(bookRepository);
+        long totalAdminSales = authService.getTotalSales(bookRepository);
 
         return AdminDataResponse.from(
                 lastDayUserCount, lastWeekUserCount, lastMonthUserCount, totalUserCount,
                 lastDayBookCount, lastWeekBookCount, lastMonthBookCount, totalBookCount,
-                lastDayAdminBalance, lastWeekAdminBalance, lastMonthAdminBalance, totalAdminBalance);
+                lastDayAdminSales, lastWeekAdminSales, lastMonthAdminSales, totalAdminSales);
 
     }
 
@@ -208,7 +208,7 @@ public class AdminService {
     public void updateAdminBalance(){
         LocalDateTime now = LocalDateTime.now();
         // decide 조회
-        List<BookEntity> decideBook = bookRepository.findAllByStartDateBeforeAndStatus(now, com.github.project3.entity.book.enums.Status.BOOKING);
+        List<BookEntity> decideBook = bookRepository.findAllByStartDateBeforeAndStatus(now, com.github.project3.entity.book.enums.Status.DECIDE);
 
         if (!decideBook.isEmpty()){
             UserEntity adminUser = userRepository.findByRole(Role.ADMIN).orElseThrow(() -> new NotFoundException("관리자 유저가 존재하지 않습니다."));
