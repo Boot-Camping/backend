@@ -126,7 +126,7 @@ public class MypageController {
      * @return 유저의 현금 사용내역 목록
      */
     @Operation(summary = "현금 사용내역 조회", description = "인증된 유저의 현금 사용내역을 조회합니다.")
-    @GetMapping("/cashTransaction")
+    @GetMapping("/cashTransaction/{userId}")
     public ResponseEntity<List<CashTransactionResponse>> getUserCashTransactions(@PathVariable Integer userId){
         List<CashTransactionResponse> response = mypageService.getUserCashTransactions(userId);
         return ResponseEntity.ok(response);
