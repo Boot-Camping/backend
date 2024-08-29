@@ -89,7 +89,7 @@ public class ReviewController {
      * @return 수정된 리뷰에 대한 응답 정보를 포함한 ResponseEntity 객체
      */
     @Operation(summary = "리뷰 수정", description = "사용자가 작성한 리뷰를 수정합니다.")
-    @PutMapping("/{reviewId}")
+    @PutMapping(value = "/{reviewId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ReviewResponse> updateReview(
             @PathVariable Integer reviewId,
             @RequestParam Integer userId,
