@@ -3,8 +3,6 @@ package com.github.project3.repository.book;
 import com.github.project3.entity.book.BookEntity;
 import com.github.project3.entity.book.enums.Status;
 import com.github.project3.entity.camp.CampEntity;
-import com.github.project3.entity.user.UserEntity;
-import com.github.project3.entity.user.UserImageEntity;
 import com.github.project3.repository.admin.CreatedAtRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -20,12 +18,15 @@ import java.util.Optional;
 @Repository
 public interface BookRepository extends JpaRepository<BookEntity, Integer>, CreatedAtRepository {
 
-    boolean existsByCampAndStartDateLessThanEqualAndEndDateGreaterThanEqualAndStatusIn(
-            CampEntity camp,
-            LocalDateTime checkIn,
-            LocalDateTime checkOut,
-            List<Status> statuses
-    );
+    @Query("SELECT CASE WHEN COUNT(b) > 0 THEN TRUE ELSE FALSE END FROM BookEntity b " +
+            "WHERE b.camp = :camp " +
+            "AND b.status IN :statuses " +
+            "AND ((b.startDate <= :checkOut AND b.endDate >= :checkIn) " +
+            "OR (b.startDate >= :checkIn AND b.startDate <= :checkOut))")
+    boolean existsByCampAndDateRangeOverlap(@Param("camp") CampEntity camp,
+                                            @Param("checkIn") LocalDateTime checkIn,
+                                            @Param("checkOut") LocalDateTime checkOut,
+                                            @Param("statuses") List<Status> statuses);
 
     List<BookEntity> findByUserId(Integer userId);
 

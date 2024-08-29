@@ -11,16 +11,12 @@ import com.github.project3.entity.user.enums.TransactionType;
 import com.github.project3.repository.book.BookRepository;
 import com.github.project3.repository.bookDate.BookDateRepository;
 import com.github.project3.repository.camp.CampRepository;
-import com.github.project3.repository.cash.CashRepository;
-import com.github.project3.repository.user.UserRepository;
 import com.github.project3.service.cash.CashService;
 import com.github.project3.service.exceptions.NotAcceptException;
 import com.github.project3.service.exceptions.NotFoundException;
 import com.github.project3.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,10 +34,8 @@ public class BookService {
 
     private final UserService userService;
     private final CashService cashService;
-    private final UserRepository userRepository;
     private final BookRepository bookRepository;
     private final BookDateRepository bookDateRepository;
-    private final CashRepository cashRepository;
     private final CampRepository campRepository;
 
     /**
@@ -67,35 +61,19 @@ public class BookService {
         List<Status> statuses = Arrays.asList(Status.BOOKING, Status.DECIDE);
 
         // 예약 날짜 중복 확인
-        boolean isDateConflict = bookRepository.existsByCampAndStartDateLessThanEqualAndEndDateGreaterThanEqualAndStatusIn(
-                camp,
-                requestCheckIn,
-                requestCheckOut,
-                statuses
-        );
-
-        if (isDateConflict) {
+        if (isDateConflict(camp, requestCheckIn, requestCheckOut, statuses)) {
             throw new NotAcceptException("해당 날짜에 이미 예약이 존재합니다. 다른 날짜를 선택해주세요.");
         }
 
-        // 예약 날짜와 요청 시간의 차이 계산
-        LocalDateTime now = LocalDateTime.now();
-        long daysUntilCheckIn = ChronoUnit.DAYS.between(now, requestCheckIn);
-
-        // 예약 날짜에 임박하면(2일 이내) 예약금 10,000원 할인
-        int totalPrice = bookRegisterRequest.getTotalPrice();
-        if (daysUntilCheckIn <= 2) {
-            totalPrice -= 10000;
-        }
-
         // user 의 cash 변동사항 저장
+        int totalPrice = calculateTotalPrice(bookRegisterRequest.getTotalPrice(), requestCheckIn);
         cashService.processTransaction(user, totalPrice, TransactionType.PAYMENT);
 
         // 예약 정보 등록
         BookEntity book = BookEntity.of(
                 user,
                 camp,
-                bookRegisterRequest.getTotalPrice(),
+                totalPrice,
                 bookRegisterRequest.getCheckIn(),
                 bookRegisterRequest.getCheckOut(),
                 bookRegisterRequest.getBookRequest(),
@@ -105,19 +83,8 @@ public class BookService {
 
         BookEntity savedBook = bookRepository.save(book);
 
-        // 예약 날짜 등록
-        List<BookDateEntity> bookDates = new ArrayList<>();
-
-        // 반복문으로 체크인날짜, 체크아웃날짜, 중간에 있는 날짜들도 DB에 저장
-        while (!requestCheckIn.isAfter(requestCheckOut)) {
-            BookDateEntity bookDate = new BookDateEntity();
-            bookDate.setBook(savedBook);  // savedBook ID 사용
-            bookDate.setDate(requestCheckIn);
-            bookDates.add(bookDate);
-
-            requestCheckIn = requestCheckIn.plusDays(1);
-        }
-        bookDateRepository.saveAll(bookDates);
+        // CheckIn 부터 CheckOut 까지의 날짜를 모두 저장
+        saveBookDates(savedBook, requestCheckIn, requestCheckOut);
     }
 
     /**
@@ -141,24 +108,9 @@ public class BookService {
         book.setStatus(Status.CANCEL);
         bookRepository.save(book);
 
-        UserEntity user = userService.findAuthenticatedUser();
-
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime startDate = book.getStartDate();
-        LocalDateTime threeDaysBeforeStartDate = startDate.minusDays(3);
-
-        // 환불 금액 계산
-        int refundAmount;
-        if (now.isAfter(threeDaysBeforeStartDate) && now.isBefore(startDate)) {
-            // 현재 시간이 start_date 3일 전 ~ start_date 사이면 절반만 환불
-            refundAmount = book.getTotalPrice() / 2;
-        } else {
-            refundAmount = book.getTotalPrice();
-        }
-
         // user 의 cash 변동사항 저장
-        return cashService.processTransaction(user, refundAmount, TransactionType.REFUND);
-
+        UserEntity user = userService.findAuthenticatedUser();
+        return cashService.processTransaction(user, calculateRefundAmount(book), TransactionType.REFUND);
     }
 
     /**
@@ -198,5 +150,74 @@ public class BookService {
                     );
                 })
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 예약 날짜가 중복되는지 확인하는 메서드입니다.
+     *
+     * @param camp      예약하려는 캠핑장 엔티티
+     * @param checkIn   예약 시작 날짜
+     * @param checkOut  예약 종료 날짜
+     * @param statuses  예약 상태 리스트
+     * @return 예약 날짜가 중복되는 경우 true, 그렇지 않으면 false
+     */
+    private boolean isDateConflict(CampEntity camp, LocalDateTime checkIn, LocalDateTime checkOut, List<Status> statuses) {
+        return bookRepository.existsByCampAndDateRangeOverlap(camp, checkIn, checkOut, statuses);
+    }
+
+    /**
+     * 예약 등록 시 할인 금액을 계산하는 메서드입니다.
+     *
+     * @param totalPrice    예약 총 금액
+     * @param requestCheckIn 예약 시작 날짜
+     * @return 할인 적용 후의 총 금액
+     */
+    private int calculateTotalPrice(Integer totalPrice, LocalDateTime requestCheckIn) {
+
+        // 예약 날짜에 임박하면(2일 이내) 예약금 10,000원 할인
+        if (ChronoUnit.DAYS.between(LocalDateTime.now(), requestCheckIn) <= 2) {
+            totalPrice -= 10000;
+        }
+        return totalPrice;
+    }
+
+    /**
+     * 예약된 날짜를 저장하는 메서드입니다.
+     *
+     * @param savedBook       저장된 예약 엔티티
+     * @param requestCheckIn  예약 시작 날짜
+     * @param requestCheckOut 예약 종료 날짜
+     */
+    private void saveBookDates(BookEntity savedBook, LocalDateTime requestCheckIn, LocalDateTime requestCheckOut) {
+
+        List<BookDateEntity> bookDates = new ArrayList<>();
+
+        // 반복문으로 체크인날짜, 체크아웃날짜, 중간에 있는 날짜들도 DB에 저장
+        while (!requestCheckIn.isAfter(requestCheckOut)) {
+            BookDateEntity bookDate = new BookDateEntity();
+            bookDate.setBook(savedBook);
+            bookDate.setDate(requestCheckIn);
+            bookDates.add(bookDate);
+            requestCheckIn = requestCheckIn.plusDays(1);
+        }
+        bookDateRepository.saveAll(bookDates);
+    }
+
+    /**
+     * 예약 취소 시 환불 금액을 계산하는 메서드입니다.
+     *
+     * @param book 예약 엔티티
+     * @return 계산된 환불 금액
+     */
+    private int calculateRefundAmount(BookEntity book) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startDate = book.getStartDate();
+        LocalDateTime threeDaysBeforeStartDate = startDate.minusDays(3);
+
+        if (now.isAfter(threeDaysBeforeStartDate) && now.isBefore(startDate)) {
+            return book.getTotalPrice() / 2; // 3일 이내 취소 시 50% 환불
+        } else {
+            return book.getTotalPrice();
+        }
     }
 }
