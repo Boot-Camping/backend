@@ -152,6 +152,8 @@ public class UserService {
         Cookie cookie = new Cookie(key, value);
         cookie.setMaxAge(24*60*60);
         cookie.setHttpOnly(true);
+        cookie.setSecure(false); // HTTPS에서만 전송 (로컬 개발 시 false)
+        cookie.setPath("/");
 
         return cookie;
     }
