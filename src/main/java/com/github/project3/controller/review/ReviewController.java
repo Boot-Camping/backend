@@ -7,6 +7,7 @@ import com.github.project3.dto.review.ReviewSummaryResponse;
 import com.github.project3.service.review.ReviewService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,7 +32,7 @@ public class ReviewController {
      * @return 작성된 리뷰에 대한 응답 정보를 포함한 ResponseEntity 객체
      */
     @Operation(summary = "리뷰 작성", description = "사용자가 특정 캠프에 대한 리뷰를 작성합니다.")
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ReviewResponse> createReview(
             @RequestParam Integer campId,
             @RequestParam Integer userId,

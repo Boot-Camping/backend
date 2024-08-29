@@ -52,7 +52,7 @@ public class AuthService {
     public <T extends CreatedAtRepository> long countEntityCreatedBetween(T repository, LocalDateTime start, LocalDateTime end) {
         return repository.countByCreatedAtBetween(start, end);
     }
-    public <B extends BookRepository> Long sumTotalPriceByStartDateBetween(B repository, LocalDateTime start, LocalDateTime end){
+    public Long sumTotalPriceByStartDateBetween(BookRepository repository, LocalDateTime start, LocalDateTime end){
         return repository.sumTotalPriceByStartDateBetween(start, end);
     }
     // + 기간별 데이터(1일, 1주일, 1달, 전체)
