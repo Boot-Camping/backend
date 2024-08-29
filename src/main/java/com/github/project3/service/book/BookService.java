@@ -152,12 +152,26 @@ public class BookService {
                 .collect(Collectors.toList());
     }
 
-    // 예약 날짜 중복 확인 메서드
+    /**
+     * 예약 날짜가 중복되는지 확인하는 메서드입니다.
+     *
+     * @param camp      예약하려는 캠핑장 엔티티
+     * @param checkIn   예약 시작 날짜
+     * @param checkOut  예약 종료 날짜
+     * @param statuses  예약 상태 리스트
+     * @return 예약 날짜가 중복되는 경우 true, 그렇지 않으면 false
+     */
     private boolean isDateConflict(CampEntity camp, LocalDateTime checkIn, LocalDateTime checkOut, List<Status> statuses) {
         return bookRepository.existsByCampAndDateRangeOverlap(camp, checkIn, checkOut, statuses);
     }
 
-    // 할인 금액 계산 메서드
+    /**
+     * 예약 등록 시 할인 금액을 계산하는 메서드입니다.
+     *
+     * @param totalPrice    예약 총 금액
+     * @param requestCheckIn 예약 시작 날짜
+     * @return 할인 적용 후의 총 금액
+     */
     private int calculateTotalPrice(Integer totalPrice, LocalDateTime requestCheckIn) {
 
         // 예약 날짜에 임박하면(2일 이내) 예약금 10,000원 할인
@@ -167,7 +181,13 @@ public class BookService {
         return totalPrice;
     }
 
-    // 예약 날짜 등록 메서드
+    /**
+     * 예약된 날짜를 저장하는 메서드입니다.
+     *
+     * @param savedBook       저장된 예약 엔티티
+     * @param requestCheckIn  예약 시작 날짜
+     * @param requestCheckOut 예약 종료 날짜
+     */
     private void saveBookDates(BookEntity savedBook, LocalDateTime requestCheckIn, LocalDateTime requestCheckOut) {
 
         List<BookDateEntity> bookDates = new ArrayList<>();
@@ -183,7 +203,12 @@ public class BookService {
         bookDateRepository.saveAll(bookDates);
     }
 
-    // 예약 취소 시 환불 금액 차감 메서드
+    /**
+     * 예약 취소 시 환불 금액을 계산하는 메서드입니다.
+     *
+     * @param book 예약 엔티티
+     * @return 계산된 환불 금액
+     */
     private int calculateRefundAmount(BookEntity book) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime startDate = book.getStartDate();
