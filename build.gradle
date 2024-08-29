@@ -31,6 +31,8 @@ dependencies {
     implementation 'io.springfox:springfox-swagger-ui:2.9.2'
     implementation 'io.springfox:springfox-swagger2:2.9.2'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
+    // OpenAPI documentation
+    implementation 'org.springdoc:springdoc-openapi-ui:1.6.14'
 
     // Jwt
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
@@ -42,12 +44,11 @@ dependencies {
     implementation 'com.sun.xml.bind:jaxb-core:2.3.0.1'
     implementation 'com.sun.xml.bind:jaxb-impl:2.3.2'
 
-    implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
-
     // Spring Security
     implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // WebSocket
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
@@ -57,20 +58,23 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-    // cart 관련 의존성
-    // Spring Boot Starters
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
     // MariaDB JDBC Driver
     implementation 'org.mariadb.jdbc:mariadb-java-client'
-    // OpenAPI documentation
-    implementation 'org.springdoc:springdoc-openapi-ui:1.6.14'
 
+    // Mail 발송
+//    implementation 'org.springframework.boot:spring-boot-starter-mail'
+//    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+//    implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect'
+
+    //    implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
 
     // valid 유효성 검증
     implementation 'org.springframework.boot:spring-boot-starter-validation'
-
 
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
     implementation 'com.fasterxml.jackson.core:jackson-databind'

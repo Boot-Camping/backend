@@ -19,6 +19,7 @@ import com.github.project3.service.S3Service;
 import com.github.project3.service.exceptions.InvalidValueException;
 import com.github.project3.service.exceptions.NotAcceptException;
 import com.github.project3.service.exceptions.NotFoundException;
+import com.github.project3.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.weaver.ast.Not;
 import org.springframework.http.ResponseEntity;
@@ -48,10 +49,11 @@ public class MypageService {
     private final WishlistRepository wishlistRepository;
     private final S3Service s3Service;
     private final CashRepository cashRepository;
+    private final UserService userService;
 
     // 유저 정보조회
-    public List<MypageResponse> getUserMyPage(Integer id){
-        Optional<UserEntity> user = mypageRepository.findById(id);
+    public List<MypageResponse> getUserMyPage(Integer userId){
+        Optional<UserEntity> user = userRepository.findById(userId);
         return user.stream().map(this::convertToUserProfileResponse).collect(Collectors.toList());
     }
     private MypageResponse convertToUserProfileResponse(UserEntity userEntity){
@@ -69,8 +71,8 @@ public class MypageService {
 
     // 유저 정보 수정
     @Transactional
-    public MypageUpdateResponse getUpdateUser(Integer id, String tel, String addr){
-        UserEntity user = mypageRepository.findById(id).orElseThrow(() -> new NotFoundException("등록된 사용자를 찾을 수 없습니다."));
+    public MypageUpdateResponse getUpdateUser(String tel, String addr){
+        UserEntity user = userService.findAuthenticatedUser();
 
         if (tel != null){
             user.setTel(tel);
@@ -86,9 +88,8 @@ public class MypageService {
 
     // 유저 이미지 수정
     @Transactional
-    public MypageUpdateImageResponse getUpdateImage(Integer id, MultipartFile images){
-        UserEntity user = mypageRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("등록된 사용자를 찾을 수 없습니다."));
+    public MypageUpdateImageResponse getUpdateImage(MultipartFile images){
+        UserEntity user = userService.findAuthenticatedUser();
 
         UserImageEntity userImage = mypageImageRepository.findByUserId(user)
                 // 값을 갖고있지 않은경우
@@ -113,9 +114,9 @@ public class MypageService {
     }
 
     // 유저 비밀번호 수정
-    public MypageUpdatePasswordResponse getUpdatePasswordUser(Integer id, MypageUpdatePasswordRequest PasswordRequest) {
-        UserEntity user = mypageRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("등록된 사용자를 찾을 수 없습니다."));
+    @Transactional
+    public MypageUpdatePasswordResponse getUpdatePasswordUser(MypageUpdatePasswordRequest PasswordRequest) {
+        UserEntity user = userService.findAuthenticatedUser();
 
         // 비밀번호 패턴 검증 추가
         String passwordPattern = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d@#$%^&*!+=]{8,20}$";
@@ -141,8 +142,9 @@ public class MypageService {
     }
 
     // 찜 등록
-    public String registerWishlist(Integer campId, Integer userId){
-        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("등록된 사용자를 찾을 수 없습니다."));
+    @Transactional
+    public String registerWishlist(Integer campId){
+        UserEntity user = userService.findAuthenticatedUser();
 
         CampEntity camp = campRepository.findById(campId).orElseThrow(() -> new NotFoundException("등록된 캠프를 찾을 수 없습니다."));
 
@@ -160,8 +162,8 @@ public class MypageService {
         }
     }
     // 찜 조회
-    public List<MypageCampResponse> getWishList(Integer userId){
-        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("등록된 사용자를 찾을 수 없습니다."));
+    public List<MypageCampResponse> getWishList(){
+        UserEntity user = userService.findAuthenticatedUser();
 
         List<WishlistEntity> wishlist = wishlistRepository.findByUser(user);
 
@@ -170,17 +172,17 @@ public class MypageService {
         }
 
         return wishlist.stream()
-                .map(wishlistEntity -> MypageCampResponse.from(wishlistEntity.getCamp()))
-                .collect(Collectors.toList());
+                .map(MypageCampResponse::from).collect(Collectors.toList());
     }
     // 찜 삭제
+    @Transactional
     public void removeWishList(Integer wishId){
         WishlistEntity wishlist = wishlistRepository.findById(wishId)
                 .orElseThrow(() -> new NotFoundException("등록된 찜 내역이 존재하지 않습니다."));
 
         wishlistRepository.delete(wishlist);
     }
-
+    // cash 사용내역 조회
     public List<CashTransactionResponse> getUserCashTransactions(Integer userId) {
         UserEntity user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("등록된 사용자를 찾을 수 없습니다."));
 

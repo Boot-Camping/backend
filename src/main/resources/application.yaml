@@ -5,6 +5,14 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
+# Auto Configuration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+        physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 
 logging:
   config: classpath:logback-spring.xml
@@ -12,6 +20,19 @@ logging:
     org:
       hibernate:
         SQL: DEBUG
+
+#  mail:       # 메일
+#    host: smtp.gmail.com
+#    port: 587
+#    username: ${MAIL.USERNAME}
+#    password: ${MAIL.PASSWORD}
+#    properties:
+#      mail:
+#        smtp:
+#          auth: true
+#          timeout: 5000
+#          starttls:
+#            enable: true
 
 #aws
 cloud:
@@ -23,8 +44,6 @@ cloud:
       static: ap-northeast-2
     s3:
       bucket: ${CLOUD_AWS_S3_BUCKET}
-
-
 
 jwt:
  secret-key-source: ${JWT_SECRET_KEY}
