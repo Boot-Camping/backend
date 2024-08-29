@@ -108,10 +108,6 @@ public class BookService {
         book.setStatus(Status.CANCEL);
         bookRepository.save(book);
 
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime startDate = book.getStartDate();
-        LocalDateTime threeDaysBeforeStartDate = startDate.minusDays(3);
-
         // user 의 cash 변동사항 저장
         UserEntity user = userService.findAuthenticatedUser();
         return cashService.processTransaction(user, calculateRefundAmount(book), TransactionType.REFUND);
