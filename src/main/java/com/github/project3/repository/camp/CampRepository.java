@@ -8,13 +8,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 
 @Repository
 public interface CampRepository extends JpaRepository<CampEntity, Integer> {
-
-	List<CampEntity> findAll();
-
 
 	@Query("SELECT new com.github.project3.dto.camp.CampDataDTO(c, AVG(r.grade), COUNT(r), COUNT(bd)) " +
 			"FROM CampEntity c " +
