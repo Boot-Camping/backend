@@ -22,6 +22,8 @@ import com.github.project3.service.cash.CashService;
 import com.github.project3.service.exceptions.NotAcceptException;
 import com.github.project3.service.exceptions.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -50,6 +52,7 @@ public class AdminService {
 
     // 공지사항 등록
     @Transactional
+    @CacheEvict(value = "notice", allEntries = true)
     public AdminNoticeRegisterResponse registerNotice(AdminNoticeRegisterRequest registerRequest, List<MultipartFile> images, String token){
         authService.verifyAdmin(token);
 
@@ -82,6 +85,7 @@ public class AdminService {
         return AdminNoticeRegisterResponse.from(notice);
     }
     // 공지사항 전체조회
+    @Cacheable(value = "notice", key = "#root.methodName")
     public Page<AdminNoticeCheckResponse> getNoticeAll(Integer page,Integer size){
         Pageable pageable = PageRequest.of(page, size);
         Page<NoticeEntity> noticePage = adminNoticeRepository.findAllByOrderByCreatedAtDesc(pageable);
@@ -92,6 +96,7 @@ public class AdminService {
         return noticePage.map(AdminNoticeCheckResponse::from);
     }
     // 공지사항 상세조회
+    @Cacheable(value = "notice", key = "#noticeId")
     public AdminNoticeDetailCheckResponse getNoticeDetail(Integer noticeId){
         NoticeEntity notice = adminNoticeRepository.findById(noticeId).orElseThrow(() -> new NotFoundException("해당 공지사항을 찾을 수 없습니다."));
 
@@ -100,6 +105,7 @@ public class AdminService {
 
     // 공지사항 수정
     @Transactional
+    @CacheEvict(value = "notice", allEntries = true)
     public AdminNoticeUpdateResponse getUpdateNotice(Integer noticeId, AdminNoticeUpdateRequest noticeUpdateRequest, List<MultipartFile> images, String token){
         authService.verifyAdmin(token);
 
@@ -144,6 +150,7 @@ public class AdminService {
 
     // 공지사항 삭제
     @Transactional
+    @CacheEvict(value = "notice", allEntries = true)
     public void removeNotice(Integer noticeId, String token){
         authService.verifyAdmin(token);
 
