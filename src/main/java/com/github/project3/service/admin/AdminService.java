@@ -46,9 +46,9 @@ public class AdminService {
     private final S3Service s3Service;
     private final AuthService authService;
     private final BookRepository bookRepository;
-    private final CashService cashService;
-    private final CashRepository cashRepository;
     private final AdminRepository adminRepository;
+    private final SalesService salesService;
+    private final CountService countService;
 
     // 공지사항 등록
     @Transactional
@@ -163,20 +163,20 @@ public class AdminService {
     public AdminDataResponse getAllData(String token){
         authService.verifyAdmin(token);
         // 유저수
-        long lastDayUserCount = authService.getLastDayCount(userRepository);
-        long lastWeekUserCount = authService.getLastWeekCount(userRepository);
-        long lastMonthUserCount = authService.getLastMonthCount(userRepository);
-        long totalUserCount = authService.getTotalUserCount(userRepository);
+        long lastDayUserCount = countService.getLastDayCount(userRepository);
+        long lastWeekUserCount = countService.getLastWeekCount(userRepository);
+        long lastMonthUserCount = countService.getLastMonthCount(userRepository);
+        long totalUserCount = countService.getTotalUserCount(userRepository);
         // 예약수
-        long lastDayBookCount = authService.getLastDayCount(bookRepository);
-        long lastWeekBookCount = authService.getLastWeekCount(bookRepository);
-        long lastMonthBookCount = authService.getLastMonthCount(bookRepository);
-        long totalBookCount = authService.getTotalBookCount(bookRepository);
+        long lastDayBookCount = countService.getLastDayCount(bookRepository);
+        long lastWeekBookCount = countService.getLastWeekCount(bookRepository);
+        long lastMonthBookCount = countService.getLastMonthCount(bookRepository);
+        long totalBookCount = countService.getTotalBookCount(bookRepository);
         // 매출액
-        long lastDayAdminSales = authService.getLastDaySales(bookRepository);
-        long lastWeekAdminSales = authService.getLastWeekSales(bookRepository);
-        long lastMonthAdminSales = authService.getLastMonthSales(bookRepository);
-        long totalAdminSales = authService.getTotalSales(bookRepository);
+        long lastDayAdminSales = salesService.getLastDaySales(bookRepository);
+        long lastWeekAdminSales = salesService.getLastWeekSales(bookRepository);
+        long lastMonthAdminSales = salesService.getLastMonthSales(bookRepository);
+        long totalAdminSales = salesService.getTotalSales(adminRepository);
 
         return AdminDataResponse.from(
                 lastDayUserCount, lastWeekUserCount, lastMonthUserCount, totalUserCount,
@@ -211,34 +211,34 @@ public class AdminService {
     }
 
     // 관리자 통장 업데이트(자동 업데이트-매일 자정)
-    @Transactional
-    public void updateAdminBalance(){
-        LocalDateTime now = LocalDateTime.now();
-        // decide 조회
-        List<BookEntity> decideBook = bookRepository.findAllByStartDateBeforeAndStatus(now, com.github.project3.entity.book.enums.Status.DECIDE);
+        @Transactional
+        public void updateAdminBalance(){
+            LocalDateTime now = LocalDateTime.now();
+            // decide 조회
+            List<BookEntity> decideBook = bookRepository.findAllByStartDateBeforeAndStatus(now, com.github.project3.entity.book.enums.Status.DECIDE);
 
-        if (!decideBook.isEmpty()){
-            UserEntity adminUser = userRepository.findByRole(Role.ADMIN).orElseThrow(() -> new NotFoundException("관리자 유저가 존재하지 않습니다."));
+            if (!decideBook.isEmpty()){
+                UserEntity adminUser = userRepository.findByRole(Role.ADMIN).orElseThrow(() -> new NotFoundException("관리자 유저가 존재하지 않습니다."));
 
-            Integer currentSales = authService.getSales(adminUser);
-            // decide 상태의 캠프 총합계
-            int totalPrice = decideBook.stream().mapToInt(BookEntity::getTotalPrice).sum();
+                Integer currentSales = authService.getSales(adminUser);
+                // decide 상태의 캠프 총합계
+                int totalPrice = decideBook.stream().mapToInt(BookEntity::getTotalPrice).sum();
 
-            Integer newBalance = currentSales + totalPrice;
-            // cash 업데이트
-            AdminEntity adminTransaction = AdminEntity.of(
-                    adminUser,
-                    newBalance
-            );
-            adminRepository.save(adminTransaction);
-            // 관리자 cash 업데이트
-            adminUser.setAdmin(adminTransaction);
+                Integer newBalance = currentSales + totalPrice;
+                // cash 업데이트
+                AdminEntity adminTransaction = AdminEntity.of(
+                        adminUser,
+                        newBalance
+                );
+                adminRepository.save(adminTransaction);
+                // 관리자 cash 업데이트
+                adminUser.setAdmin(adminTransaction);
 
-            userRepository.save(adminUser);
-        }else {
-            throw new NotFoundException("조회된 결제내역이 없습니다.");
+                userRepository.save(adminUser);
+            }else {
+                throw new NotFoundException("조회된 결제내역이 없습니다.");
+            }
         }
-    }
 
 
 }
