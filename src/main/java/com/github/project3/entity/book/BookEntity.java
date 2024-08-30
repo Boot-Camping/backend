@@ -51,6 +51,10 @@ public class BookEntity {
     @Column(name = "status", nullable = false)
     private Status status;
 
+    @Version
+    @Column(name = "version")
+    private Integer version;
+
     // 스태틱 팩토리 메소드
     public static BookEntity of(UserEntity user, CampEntity camp, Integer totalPrice, LocalDateTime startDate, LocalDateTime endDate, String request, Integer num, Status status) {
         return BookEntity.builder()
