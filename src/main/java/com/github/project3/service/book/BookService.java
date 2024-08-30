@@ -15,8 +15,12 @@ import com.github.project3.service.cash.CashService;
 import com.github.project3.service.exceptions.NotAcceptException;
 import com.github.project3.service.exceptions.NotFoundException;
 import com.github.project3.service.user.UserService;
+import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,44 +51,56 @@ public class BookService {
      * @throws NotAcceptException   요청된 날짜에 이미 예약이 존재할 경우 발생
      */
     @Transactional
+    @Retryable(
+            value = OptimisticLockException.class, // 재시도할 예외
+            maxAttempts = 3, // 최대 재시도 횟수
+            backoff = @Backoff(delay = 1000) // 재시도 간격(1초)
+    )
     public void registerBook(Integer campId, BookRegisterRequest bookRegisterRequest) {
 
-        // 인증이 완료되어 SecurityContextHolder 저장된 user 의 id로 검색
-        UserEntity user = userService.findAuthenticatedUser();
-        log.info("인증된 유저의 ID : {}", user.getId());
+            // 인증이 완료되어 SecurityContextHolder 저장된 user 의 id로 검색
+            UserEntity user = userService.findAuthenticatedUser();
+            log.info("인증된 유저의 ID : {}", user.getId());
 
-        CampEntity camp = campRepository.findById(campId).orElseThrow(()-> new NotFoundException("해당하는 캠핑지가 존재하지 않습니다."));
+            CampEntity camp = campRepository.findById(campId).orElseThrow(() -> new NotFoundException("해당하는 캠핑지가 존재하지 않습니다."));
 
-        LocalDateTime requestCheckIn = bookRegisterRequest.getCheckIn();
-        LocalDateTime requestCheckOut = bookRegisterRequest.getCheckOut();
+            LocalDateTime requestCheckIn = bookRegisterRequest.getCheckIn();
+            LocalDateTime requestCheckOut = bookRegisterRequest.getCheckOut();
 
-        List<Status> statuses = Arrays.asList(Status.BOOKING, Status.DECIDE);
+            List<Status> statuses = Arrays.asList(Status.BOOKING, Status.DECIDE);
 
-        // 예약 날짜 중복 확인
-        if (isDateConflict(camp, requestCheckIn, requestCheckOut, statuses)) {
-            throw new NotAcceptException("해당 날짜에 이미 예약이 존재합니다. 다른 날짜를 선택해주세요.");
-        }
+            // 예약 날짜 중복 확인
+            if (isDateConflict(camp, requestCheckIn, requestCheckOut, statuses)) {
+                throw new NotAcceptException("해당 날짜에 이미 예약이 존재합니다. 다른 날짜를 선택해주세요.");
+            }
 
-        // user 의 cash 변동사항 저장
-        int totalPrice = calculateTotalPrice(bookRegisterRequest.getTotalPrice(), requestCheckIn);
-        cashService.processTransaction(user, totalPrice, TransactionType.PAYMENT);
+            // user 의 cash 변동사항 저장
+            int totalPrice = calculateTotalPrice(bookRegisterRequest.getTotalPrice(), requestCheckIn);
+            cashService.processTransaction(user, totalPrice, TransactionType.PAYMENT);
 
-        // 예약 정보 등록
-        BookEntity book = BookEntity.of(
-                user,
-                camp,
-                totalPrice,
-                bookRegisterRequest.getCheckIn(),
-                bookRegisterRequest.getCheckOut(),
-                bookRegisterRequest.getBookRequest(),
-                bookRegisterRequest.getBookNum(),
-                Status.BOOKING
-        );
+            // 예약 정보 등록
+            BookEntity book = BookEntity.of(
+                    user,
+                    camp,
+                    totalPrice,
+                    bookRegisterRequest.getCheckIn(),
+                    bookRegisterRequest.getCheckOut(),
+                    bookRegisterRequest.getBookRequest(),
+                    bookRegisterRequest.getBookNum(),
+                    Status.BOOKING
+            );
 
-        BookEntity savedBook = bookRepository.save(book);
+            BookEntity savedBook = bookRepository.save(book);
 
-        // CheckIn 부터 CheckOut 까지의 날짜를 모두 저장
-        saveBookDates(savedBook, requestCheckIn, requestCheckOut);
+            // CheckIn 부터 CheckOut 까지의 날짜를 모두 저장
+            saveBookDates(savedBook, requestCheckIn, requestCheckOut);
+    }
+
+    // Retry 요청(3번) 실행 후 정상적으로 등록이 안되면 실행되는 메서드
+    @Recover
+    public void recover(OptimisticLockException e, Integer campId, BookRegisterRequest bookRegisterRequest) {
+        log.error("예약 등록 중 지속적으로 등록 실패 한 campId: {}", campId, e);
+        throw new NotAcceptException("다른 사용자가 동일한 캠핑장을 예약하고 있습니다. 다시 시도해 주세요.");
     }
 
     /**
