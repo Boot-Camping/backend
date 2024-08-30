@@ -17,6 +17,7 @@ import com.github.project3.repository.cash.CashRepository;
 import com.github.project3.repository.review.ReviewRepository;
 import com.github.project3.repository.user.UserRepository;
 import com.github.project3.service.S3Service;
+import com.github.project3.service.cash.CashService;
 import com.github.project3.service.exceptions.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -36,7 +37,7 @@ public class ReviewService {
     private final CampRepository campRepository;
     private final CashRepository cashRepository;
     private final S3Service s3Service;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final CashService cashService;
 
     /**
      * 새로운 리뷰를 생성합니다.
@@ -98,17 +99,8 @@ public class ReviewService {
         // 리뷰엔티티를 데이터베이스에 저장
         reviewRepository.save(review);
 
-        // 리뷰 작성 후 500원 적립
-        int rewardAmount = 500;
-        int currentBalance = user.getCash().stream()
-                .max((c1,c2) -> c1.getTransactionDate().compareTo(c2.getTransactionDate()))
-                .map(CashEntity::getBalanceAfterTransaction)
-                .orElse(0);
-        int newBalance = currentBalance + rewardAmount;
-
-        // 적립 거래 내역 생성 및 저장
-        CashEntity cashTransaction = CashEntity.of(user, rewardAmount, TransactionType.REWARD, newBalance);
-        cashRepository.save(cashTransaction);
+        // 리뷰 작성 시 500원 적립
+        cashService.processTransaction(user, 500, TransactionType.REWARD);
 
         // 해당 캠핑장 리뷰 개수 계산
         long reviewCount = reviewRepository.countByCampId(camp.getId());
