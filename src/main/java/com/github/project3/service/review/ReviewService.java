@@ -8,12 +8,9 @@ import com.github.project3.entity.review.ReviewEntity;
 import com.github.project3.entity.review.ReviewImageEntity;
 import com.github.project3.entity.review.ReviewTagEntity;
 import com.github.project3.entity.review.enums.Tag;
-import com.github.project3.entity.user.CashEntity;
 import com.github.project3.entity.user.UserEntity;
 import com.github.project3.entity.user.enums.TransactionType;
-import com.github.project3.jwt.JwtTokenProvider;
 import com.github.project3.repository.camp.CampRepository;
-import com.github.project3.repository.cash.CashRepository;
 import com.github.project3.repository.review.ReviewRepository;
 import com.github.project3.repository.user.UserRepository;
 import com.github.project3.service.S3Service;
@@ -45,10 +42,9 @@ public class ReviewService {
      * @param campId        리뷰가 작성된 캠핑장의 ID
      * @param reviewRequest 리뷰 작성 요청 정보를 담고 있는 DTO 객체
      * @param reviewImages  리뷰와 함께 업로드된 이미지 파일 리스트
-     * @return 생성된 리뷰의 정보를 담고 있는 ReviewResponse 객체
      */
     @Transactional
-    public ReviewResponse createReview(Integer userId, Integer campId, ReviewRequest reviewRequest, List<MultipartFile> reviewImages) {
+    public void createReview(Integer userId, Integer campId, ReviewRequest reviewRequest, List<MultipartFile> reviewImages) {
         // 사용자와 캠핑장 정보 가져오기
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("유저 정보가 없습니다."));
@@ -103,8 +99,6 @@ public class ReviewService {
 
         // 해당 캠핑장 리뷰 개수 계산
         long reviewCount = reviewRepository.countByCampId(camp.getId());
-
-        return ReviewResponse.from(review, user.getLoginId(), camp.getName(), reviewCount);
     }
 
     /**
@@ -173,10 +167,9 @@ public class ReviewService {
      * @param access          수정 권한을 확인하기 위한 액세스 키
      * @param reviewRequest   수정할 리뷰의 내용을 담고 있는 DTO 객체
      * @param newReviewImages 수정할 리뷰에 새롭게 추가할 이미지 파일 리스트
-     * @return 수정된 리뷰의 정보를 담고 있는 ReviewResponse 객체
      */
     @Transactional
-    public ReviewResponse updateReview(Integer userId, Integer reviewId, String access, ReviewRequest reviewRequest, List<MultipartFile> newReviewImages){
+    public void updateReview(Integer userId, Integer reviewId, String access, ReviewRequest reviewRequest, List<MultipartFile> newReviewImages){
         // 리뷰 엔티티 가져오기
         ReviewEntity existingReview = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new NotFoundException("리뷰를 찾을 수 없습니다."));
@@ -235,8 +228,6 @@ public class ReviewService {
 
         // 해당 캠핑장 리뷰 개수 계산
         long reviewCount = reviewRepository.countByCampId(updatedReview.getCamp().getId());
-
-        return ReviewResponse.from(updatedReview, updatedReview.getUser().getLoginId(), updatedReview.getCamp().getName(), reviewCount);
     }
 
     /**

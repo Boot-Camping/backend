@@ -3,7 +3,6 @@ package com.github.project3.dto.review;
 import com.github.project3.entity.review.enums.Tag;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.util.List;
 

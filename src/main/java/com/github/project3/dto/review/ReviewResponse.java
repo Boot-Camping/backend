@@ -4,7 +4,6 @@ import com.github.project3.entity.review.ReviewEntity;
 import com.github.project3.entity.review.enums.Tag;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.List;

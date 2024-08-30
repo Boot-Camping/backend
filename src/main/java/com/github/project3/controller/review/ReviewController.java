@@ -29,19 +29,19 @@ public class ReviewController {
      * @param userId 사용자의 고유 ID
      * @param reviewRequestJson 리뷰 작성 요청 정보가 담긴 JSON 문자열
      * @param reviewImages 리뷰와 함께 업로드할 이미지 리스트 (선택사항)
-     * @return 작성된 리뷰에 대한 응답 정보를 포함한 ResponseEntity 객체
+     * @return 작성 완료 메시지 응답
      */
     @Operation(summary = "리뷰 작성", description = "사용자가 특정 캠프에 대한 리뷰를 작성합니다.")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ReviewResponse> createReview(
+    public ResponseEntity<String> createReview(
             @RequestParam Integer campId,
             @RequestParam Integer userId,
             @RequestPart("reviewRequest") String reviewRequestJson,
             @RequestPart(value = "reviewImages", required = false) List<MultipartFile> reviewImages) throws IOException {
 
         ReviewRequest reviewRequest = objectMapper.readValue(reviewRequestJson, ReviewRequest.class);
-        ReviewResponse reviewResponse = reviewService.createReview(userId, campId, reviewRequest, reviewImages);
-        return ResponseEntity.status(201).body(reviewResponse);
+        reviewService.createReview(userId, campId, reviewRequest, reviewImages);
+        return ResponseEntity.status(201).body("리뷰 작성이 성공적으로 완료되었습니다.");
     }
 
     /**
@@ -86,11 +86,11 @@ public class ReviewController {
      * @param accessKey 수정 권한을 확인하기 위한 액세스 키
      * @param reviewRequestJson 리뷰 수정 요청 정보가 담긴 JSON 문자열
      * @param reviewImages 수정된 리뷰와 함께 업로드할 이미지 리스트 (선택사항)
-     * @return 수정된 리뷰에 대한 응답 정보를 포함한 ResponseEntity 객체
+     * @return 수정완료 메시지 응답
      */
     @Operation(summary = "리뷰 수정", description = "사용자가 작성한 리뷰를 수정합니다.")
     @PutMapping(value = "/{reviewId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ReviewResponse> updateReview(
+    public ResponseEntity<String> updateReview(
             @PathVariable Integer reviewId,
             @RequestParam Integer userId,
             @RequestHeader("Authorization") String accessKey,
@@ -98,8 +98,8 @@ public class ReviewController {
             @RequestPart(value = "reviewImages", required = false) List<MultipartFile> reviewImages) throws IOException {
 
         ReviewRequest reviewRequest = objectMapper.readValue(reviewRequestJson, ReviewRequest.class);
-        ReviewResponse reviewResponse = reviewService.updateReview(userId, reviewId, accessKey, reviewRequest, reviewImages);
-        return ResponseEntity.ok(reviewResponse);
+        reviewService.updateReview(userId, reviewId, accessKey, reviewRequest, reviewImages);
+        return ResponseEntity.ok("리뷰 수정이 성공적으로 완료되었습니다.");
     }
 
     /**
@@ -107,16 +107,16 @@ public class ReviewController {
      * @param reviewId 삭제하려는 리뷰의 고유 ID
      * @param userId 사용자의 고유 ID
      * @param accessKey 삭제 권한을 확인하기 위한 액세스 키
-     * @return 성공적으로 삭제된 경우 HTTP 상태 204(no content)를 반환
+     * @return 성공적으로 삭제된 경우 리뷰 삭제가 성공적으로 완료되었다는 메시지 반환
      */
     @Operation(summary = "리뷰 삭제", description = "사용자가 작성한 리뷰를 삭제합니다.")
     @DeleteMapping("/{reviewId}")
-    public ResponseEntity<Void> deleteReview(
+    public ResponseEntity<String> deleteReview(
             @PathVariable Integer reviewId,
             @RequestParam Integer userId,
             @RequestHeader("Authorization") String accessKey) {
 
         reviewService.deleteReview(userId, reviewId, accessKey);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok("리뷰 삭제가 성공적으로 완료되었습니다.");
     }
 }
