@@ -1,5 +1,6 @@
 package com.github.project3.dto.review;
 
+import com.github.project3.entity.review.ReviewEntity;
 import com.github.project3.entity.review.enums.Tag;
 import lombok.Builder;
 import lombok.Getter;
@@ -7,6 +8,7 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Builder
 @Getter
@@ -22,16 +24,16 @@ public class ReviewResponse {
     private long reviewCount;
 
     // 정적 팩토리 메서드로 객체 생성
-    public static ReviewResponse of(Integer id, String loginId, String campName, Integer grade, String reviewContent, LocalDateTime createdAt, List<Tag> reviewTags, List<String> reviewImages, long reviewCount) {
+    public static ReviewResponse from(ReviewEntity reviewEntity, String loginId, String campName, long reviewCount) {
         return ReviewResponse.builder()
-                .id(id)
+                .id(reviewEntity.getId())
                 .loginId(loginId)
                 .campName(campName)
-                .grade(grade)
-                .reviewContent(reviewContent)
-                .createdAt(createdAt)
-                .reviewTags(reviewTags)
-                .reviewImages(reviewImages)
+                .grade(reviewEntity.getGrade())
+                .reviewContent(reviewEntity.getContent())
+                .createdAt(reviewEntity.getCreatedAt())
+                .reviewTags(reviewEntity.getTags().stream().map(tag -> tag.getTag()).collect(Collectors.toList()))
+                .reviewImages(reviewEntity.getImages().stream().map(image -> image.getImageUrl()).collect(Collectors.toList()))
                 .reviewCount(reviewCount)
                 .build();
     }

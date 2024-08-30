@@ -35,7 +35,6 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
     private final CampRepository campRepository;
-    private final CashRepository cashRepository;
     private final S3Service s3Service;
     private final CashService cashService;
 
@@ -105,18 +104,7 @@ public class ReviewService {
         // 해당 캠핑장 리뷰 개수 계산
         long reviewCount = reviewRepository.countByCampId(camp.getId());
 
-        // 응답 DTO 생성
-        return ReviewResponse.of(
-                review.getId(),
-                user.getLoginId(),
-                camp.getName(),
-                review.getGrade(),
-                review.getContent(),
-                review.getCreatedAt(),
-                review.getTags().stream().map(ReviewTagEntity::getTag).collect(Collectors.toList()),
-                review.getImages().stream().map(ReviewImageEntity::getImageUrl).collect(Collectors.toList()),
-                reviewCount
-        );
+        return ReviewResponse.from(review, user.getLoginId(), camp.getName(), reviewCount);
     }
 
     /**
@@ -149,15 +137,10 @@ public class ReviewService {
         List<ReviewEntity> reviews = reviewRepository.findByCampId(campId);
         long reviewCount = reviewRepository.countByCampId(campId);
         return reviews.stream()
-                .map(review -> ReviewResponse.of(
-                        review.getId(),
+                .map(review -> ReviewResponse.from(
+                        review,
                         review.getUser().getLoginId(),
                         review.getCamp().getName(),
-                        review.getGrade(),
-                        review.getContent(),
-                        review.getCreatedAt(),
-                        review.getTags().stream().map(tag -> tag.getTag()).collect(Collectors.toList()),
-                        review.getImages().stream().map(image -> image.getImageUrl()).collect(Collectors.toList()),
                         reviewCount
                 ))
                 .collect(Collectors.toList());
@@ -173,16 +156,11 @@ public class ReviewService {
     public List<ReviewResponse> getReviewsByUserId(Integer userId){
         List<ReviewEntity> reviews = reviewRepository.findByUserId(userId); // 태그와 이미지를 포함한 리뷰 조회
         return reviews.stream()
-                .map(review -> ReviewResponse.of(
-                        review.getId(),
+                .map(review -> ReviewResponse.from(
+                        review,
                         review.getUser().getLoginId(),
                         review.getCamp().getName(),
-                        review.getGrade(),
-                        review.getContent(),
-                        review.getCreatedAt(),
-                        review.getTags().stream().map(tag -> tag.getTag()).collect(Collectors.toList()), // 태그 추가
-                        review.getImages().stream().map(image -> image.getImageUrl()).collect(Collectors.toList()), // 이미지 추가
-                        reviews.size() // 리뷰 개수 추가
+                        reviews.size()
                 ))
                 .collect(Collectors.toList());
     }
@@ -258,18 +236,7 @@ public class ReviewService {
         // 해당 캠핑장 리뷰 개수 계산
         long reviewCount = reviewRepository.countByCampId(updatedReview.getCamp().getId());
 
-        // 응답 DTO 생성
-        return ReviewResponse.of(
-                updatedReview.getId(),
-                updatedReview.getUser().getLoginId(),
-                updatedReview.getCamp().getName(),
-                updatedReview.getGrade(),
-                updatedReview.getContent(),
-                updatedReview.getCreatedAt(),
-                updatedReview.getTags().stream().map(ReviewTagEntity::getTag).collect(Collectors.toList()),
-                updatedReview.getImages().stream().map(ReviewImageEntity::getImageUrl).collect(Collectors.toList()),
-                reviewCount
-        );
+        return ReviewResponse.from(updatedReview, updatedReview.getUser().getLoginId(), updatedReview.getCamp().getName(), reviewCount);
     }
 
     /**
