@@ -74,8 +74,8 @@ public class ReviewController {
      */
     @Operation(summary = "사용자별 리뷰 조회", description = "특정 사용자의 리뷰를 조회합니다.")
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<ReviewSummaryResponse>> getReviewsByUserId(@PathVariable Integer userId) {
-        List<ReviewSummaryResponse> reviews = reviewService.getReviewsByUserId(userId);
+    public ResponseEntity<List<ReviewResponse>> getReviewsByUserId(@PathVariable Integer userId) {
+        List<ReviewResponse> reviews = reviewService.getReviewsByUserId(userId);
         return ResponseEntity.ok(reviews);
     }
 

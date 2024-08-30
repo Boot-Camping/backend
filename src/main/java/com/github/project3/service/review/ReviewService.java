@@ -170,15 +170,19 @@ public class ReviewService {
      * @return 해당 사용자가 작성한 리뷰의 요약 정보를 담고 있는 ReviewSummaryResponse 리스트
      */
     @Transactional(readOnly = true)
-    public List<ReviewSummaryResponse> getReviewsByUserId(Integer userId){
-        return reviewRepository.findByUserId(userId).stream()
-                .map(review -> ReviewSummaryResponse.of(
+    public List<ReviewResponse> getReviewsByUserId(Integer userId){
+        List<ReviewEntity> reviews = reviewRepository.findByUserId(userId); // 태그와 이미지를 포함한 리뷰 조회
+        return reviews.stream()
+                .map(review -> ReviewResponse.of(
                         review.getId(),
                         review.getUser().getLoginId(),
                         review.getCamp().getName(),
+                        review.getGrade(),
                         review.getContent(),
-                        review.getImages().isEmpty() ? null : review.getImages().get(0).getImageUrl(),
-                        review.getCreatedAt()
+                        review.getCreatedAt(),
+                        review.getTags().stream().map(tag -> tag.getTag()).collect(Collectors.toList()), // 태그 추가
+                        review.getImages().stream().map(image -> image.getImageUrl()).collect(Collectors.toList()), // 이미지 추가
+                        reviews.size() // 리뷰 개수 추가
                 ))
                 .collect(Collectors.toList());
     }
