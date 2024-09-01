@@ -50,7 +50,7 @@ public class CampEntity {
     private LocalDateTime updatedAt;
 
 
-    @OneToOne(mappedBy = "camp", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "camp", cascade = CascadeType.ALL, orphanRemoval = true)
     private CampDescriptionEntity description;
 
     @Builder.Default
