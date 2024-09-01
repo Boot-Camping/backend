@@ -33,24 +33,51 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        // WebSocket 연결이 설정되었을 때
         log.info("WebSocket 연결이 설정되었습니다. 세션 ID: " + session.getId());
-        // 쿼리 파라미터에서 userId 가져오기
+
+        // 쿼리 파라미터에서 userId와 chatRoomId 가져오기
         String query = session.getUri().getQuery();
         Map<String, String> queryParams = splitQuery(query);
 
-        // 쿼리 파라미터에서 userId가 없다면 에러 처리
-        if (!queryParams.containsKey("userId")) {
-            log.error("userId가 쿼리 파라미터에 포함되어 있지 않습니다.");
+        // 쿼리 파라미터에서 userId와 chatRoomId가 없다면 에러 처리
+        if (!queryParams.containsKey("userId") || !queryParams.containsKey("chatId")) {
+            log.error("userId 또는 chatId가 쿼리 파라미터에 포함되어 있지 않습니다.");
             session.close(CloseStatus.BAD_DATA);
             return;
         }
 
-        // 쿼리 파라미터에서 userId를 가져와서 Integer 로 변환
+        // userId와 chatRoomId를 Integer로 변환
         Integer userId = Integer.valueOf(queryParams.get("userId"));
+        Integer chatRoomId = Integer.valueOf(queryParams.get("chatId"));
 
         // 세션과 userId 매핑
         sessionToUserId.put(session.getId(), userId);
+
+        // 채팅방에 세션 등록
+        registerSession(chatRoomId, session, userId);
+
+        // 기존 메시지 로드 및 전송
+        loadAndSendPreviousMessages(session, chatRoomId);
+    }
+
+    private void loadAndSendPreviousMessages(WebSocketSession session, Integer chatRoomId) {
+        try {
+            // 채팅방의 기존 메시지 로드
+            List<MessageResponse> previousMessages = messageService.getMessagesByChatRoom(chatRoomId);
+
+            for (MessageResponse message : previousMessages) {
+                String messageJson = objectMapper.writeValueAsString(message);
+                session.sendMessage(new TextMessage(messageJson));
+            }
+
+        } catch (Exception e) {
+            log.error("기존 메시지를 로드하는 중 오류가 발생했습니다.", e);
+            try {
+                session.sendMessage(new TextMessage("기존 메시지를 로드하는 중 오류가 발생했습니다."));
+            } catch (Exception sendException) {
+                log.error("오류 메시지를 전송하는 중 오류가 발생했습니다.", sendException);
+            }
+        }
     }
 
     @Override
