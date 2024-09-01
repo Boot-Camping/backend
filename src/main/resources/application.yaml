@@ -21,18 +21,18 @@ logging:
       hibernate:
         SQL: DEBUG
 
-#  mail:       # 메일
-#    host: smtp.gmail.com
-#    port: 587
-#    username: ${MAIL.USERNAME}
-#    password: ${MAIL.PASSWORD}
-#    properties:
-#      mail:
-#        smtp:
-#          auth: true
-#          timeout: 5000
-#          starttls:
-#            enable: true
+  mail:       # 메일
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL.USERNAME}
+    password: ${MAIL.PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          timeout: 5000
+          starttls:
+            enable: true
 
 #aws
 cloud:

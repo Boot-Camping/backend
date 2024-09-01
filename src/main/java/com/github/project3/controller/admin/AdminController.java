@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -42,7 +43,7 @@ public class AdminController {
      * @throws JsonProcessingException JSON 처리 실패 시 발생
      */
     @Operation(summary = "공지사항 등록", description = "새로운 공지사항을 등록합니다. 이미지를 함께 업로드할 수 있습니다.")
-    @PostMapping("/notice")
+    @PostMapping(value = "/notice", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> registerNotice(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @RequestPart(value = "request") String noticeRequestJson,
@@ -98,7 +99,7 @@ public class AdminController {
      * @throws JsonProcessingException JSON 처리 실패 시 발생
      */
     @Operation(summary = "공지사항 수정", description = "기존 공지사항을 수정합니다. 이미지를 업데이트할 수 있습니다.")
-    @PutMapping("/notice/{noticeId}")
+    @PutMapping(value = "/notice/{noticeId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> updateNotice(
             @PathVariable Integer noticeId,
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
@@ -136,19 +137,19 @@ public class AdminController {
         return ResponseEntity.ok("공지사항 삭제 완료.");
     }
 
-    // 사이트 통계 (매출추이, 유저추이, 예약수, (카테고리별 예약자수))
-    @Operation(summary = "사이트 통계", description = "유저추이, 예약추이")
-    @GetMapping("/stats")
-    public ResponseEntity <AdminDataResponse> getAllData(
-            @RequestHeader(HttpHeaders.AUTHORIZATION) String token){
-        String subToken = token;
-        if (token.startsWith("Bearer ")) {
-            // "Bearer "가 포함되어 있다면 "Bearer "를 제거한 부분을 subToken에 저장
-            subToken = token.substring(7);
+        // 사이트 통계 (매출추이, 유저추이, 예약수, (카테고리별 예약자수))
+        @Operation(summary = "사이트 통계", description = "유저수,예약수,매출액 통계")
+        @GetMapping("/stats")
+        public ResponseEntity <AdminDataResponse> getAllData(
+                @RequestHeader(HttpHeaders.AUTHORIZATION) String token){
+            String subToken = token;
+            if (token.startsWith("Bearer ")) {
+                // "Bearer "가 포함되어 있다면 "Bearer "를 제거한 부분을 subToken에 저장
+                subToken = token.substring(7);
+            }
+            AdminDataResponse dataResponse = adminService.getAllData(subToken);
+            return ResponseEntity.ok(dataResponse);
         }
-        AdminDataResponse dataResponse = adminService.getAllData(subToken);
-        return ResponseEntity.ok(dataResponse);
-    }
 
     /**
      * 모든 회원 정보를 조회합니다.
@@ -190,7 +191,7 @@ public class AdminController {
     }
 
     // 관리자 매출액 업데이트(수동작업)
-    @Operation(summary = "관리자 매출액 업데이트", description = "관리자 매출액을 업데이트 합니다.")
+    @Operation(summary = "관리자 매출액 업데이트", description = "관리자 총매출액 수동업데이트.(매일 00시 자동업데이트)")
     @PutMapping("/update-balance")
     public ResponseEntity<String> updateAdminBalance(){
         adminService.updateAdminBalance();
