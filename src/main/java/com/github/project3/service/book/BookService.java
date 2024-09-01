@@ -122,34 +122,13 @@ public class BookService {
     public List<BookInquiryResponse> inquiryBook() {
         UserEntity user = userService.findAuthenticatedUser();
 
-        List<BookEntity> books = bookRepository.findByUserId(user.getId());
+        List<BookInquiryResponse> books = bookRepository.findBookInquiriesByUserId(user.getId());
 
         if (books.isEmpty()) {
             throw new NotFoundException("해당하는 예약이 존재하지 않습니다.");
         }
 
-        // 각 BookEntity 를 BookInquiryResponse 로 변환하여 리스트로 반환
-        return books.stream()
-                .map(book -> {
-                    // camp 의 여러 image 중 첫 번째 이미지를 선택
-                    String firstImage = !book.getCamp().getImages().isEmpty()
-                            ? book.getCamp().getImages().get(0).getImageUrl()
-                            : null;
-
-                    return BookInquiryResponse.of(
-                            book.getId(),
-                            book.getCamp().getId(),
-                            book.getCamp().getName(),
-                            firstImage,
-                            book.getStartDate(),
-                            book.getEndDate(),
-                            book.getNum(),
-                            book.getTotalPrice(),
-                            book.getRequest(),
-                            book.getStatus()
-                    );
-                })
-                .collect(Collectors.toList());
+        return books;
     }
 
     /**
