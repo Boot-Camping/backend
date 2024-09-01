@@ -162,6 +162,7 @@ public class MypageService {
         }
     }
     // 찜 조회
+    @Transactional(readOnly = true)
     public List<MypageCampResponse> getWishList(){
         UserEntity user = userService.findAuthenticatedUser();
 

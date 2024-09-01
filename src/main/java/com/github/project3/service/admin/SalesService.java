@@ -34,7 +34,6 @@ public class SalesService {
         LocalDateTime oneMonthAgo = now.minusMonths(1);
         return sumTotalPriceByStartDateBetween(bookRepository, oneMonthAgo, now);
     }
-
     public long getTotalSales(AdminRepository adminRepository){
         return adminRepository.findSales();
     }

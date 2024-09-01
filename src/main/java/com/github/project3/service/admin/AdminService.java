@@ -110,17 +110,8 @@ public class AdminService {
         authService.verifyAdmin(token);
 
         NoticeEntity notice = adminNoticeRepository.findById(noticeId).orElseThrow(() -> new NotFoundException("해당 공지사항을 찾을 수 없습니다."));
-        if (noticeUpdateRequest.getTitle() == null && noticeUpdateRequest.getDescription() == null){
-            throw new NotFoundException("수정사항을 입력해 주세요.");
-        }
-        if (noticeUpdateRequest.getTitle() == null){
-            notice.setDescription(noticeUpdateRequest.getDescription());
-        } else if (noticeUpdateRequest.getDescription() == null) {
-            notice.setTitle(noticeUpdateRequest.getTitle());
-        } else {
-            notice.setDescription(noticeUpdateRequest.getDescription());
-            notice.setTitle(noticeUpdateRequest.getTitle());
-        }
+        //
+        notice.update(noticeUpdateRequest.getTitle(), noticeUpdateRequest.getDescription());
             // 기존 이미지 삭제
             List<NoticeImageEntity> removeImages = notice.getImages();
             if (removeImages != null && !removeImages.isEmpty()) {
@@ -212,7 +203,7 @@ public class AdminService {
 
     // 관리자 통장 업데이트(자동 업데이트-매일 자정)
         @Transactional
-        public void updateAdminBalance(){
+        public synchronized void updateAdminBalance(){
             LocalDateTime now = LocalDateTime.now();
             // decide 조회
             List<BookEntity> decideBook = bookRepository.findAllByStartDateBeforeAndStatus(now, com.github.project3.entity.book.enums.Status.DECIDE);
