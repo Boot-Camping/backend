@@ -55,6 +55,10 @@ dependencies {
     // Cache
     implementation 'org.springframework.boot:spring-boot-starter-cache'
 
+    // retry, aspects(동시성 관련)
+    implementation 'org.springframework.retry:spring-retry'
+    implementation 'org.springframework:spring-aspects'
+
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'com.h2database:h2'
     runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
