@@ -4,10 +4,10 @@
 //import lombok.RequiredArgsConstructor;
 //import lombok.extern.slf4j.Slf4j;
 //import org.springframework.http.ResponseEntity;
-//import org.springframework.web.bind.annotation.GetMapping;
-//import org.springframework.web.bind.annotation.RequestBody;
-//import org.springframework.web.bind.annotation.RequestMapping;
-//import org.springframework.web.bind.annotation.RestController;
+//import org.springframework.messaging.MessagingException;
+//import org.springframework.web.bind.annotation.*;
+//
+//import java.io.UnsupportedEncodingException;
 //
 //@RequestMapping("/api/email")
 //@RestController
@@ -16,14 +16,10 @@
 //public class EmailController {
 //    private final EmailService emailService;
 //
-//    // 이메일 체크
-//    @GetMapping("/check-email")
-//    public ResponseEntity checkEmail(@RequestBody EmailRequest emailRequest){
+//    @PostMapping("login/mailConfirm")
+//    public String mailConfirm(@RequestBody EmailRequest emailDto) throws MessagingException, UnsupportedEncodingException {
 //
-//        String memberEmail = emailRequest.getEmail();
-//        log.info("checkEmail 진입", memberEmail);
-//        ResponseEntity<String> exists = emailService.checkEmail(memberEmail);
-//        return ResponseEntity.ok(exists);
+//        String authCode = emailService.sendEmail(emailDto.getEmail());
+//        return authCode;
 //    }
-//
 //}
