@@ -100,7 +100,7 @@ public class AdminController {
      */
     @Operation(summary = "공지사항 수정", description = "기존 공지사항을 수정합니다. 이미지를 업데이트할 수 있습니다.")
     @PutMapping(value = "/notice/{noticeId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<AdminNoticeUpdateResponse> updateNotice(
+    public ResponseEntity<String> updateNotice(
             @PathVariable Integer noticeId,
             @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
             @RequestPart(value = "request", required = false) String noticeRequestJson,
@@ -112,8 +112,8 @@ public class AdminController {
             // "Bearer "가 포함되어 있다면 "Bearer "를 제거한 부분을 subToken에 저장
             subToken = token.substring(7);
         }
-        AdminNoticeUpdateResponse response = adminService.getUpdateNotice(noticeId, noticeUpdateRequest, images, subToken);
-        return ResponseEntity.ok(response);
+        adminService.getUpdateNotice(noticeId, noticeUpdateRequest, images, subToken);
+        return ResponseEntity.ok("공지사항 수정 완료");
     }
 
     /**

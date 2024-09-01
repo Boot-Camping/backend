@@ -113,13 +113,14 @@ public class AdminService {
         //
         notice.update(noticeUpdateRequest.getTitle(), noticeUpdateRequest.getDescription());
             // 기존 이미지 삭제
-            List<NoticeImageEntity> removeImages = notice.getImages();
-            if (removeImages != null && !removeImages.isEmpty()) {
-                adminNoticeImageRepository.deleteAll(removeImages);
-                notice.setImages(new ArrayList<>());
+            if (notice.getImages() != null && !notice.getImages().isEmpty()) {
+                adminNoticeImageRepository.deleteAll(notice.getImages());
 
+                notice.getImages().clear();
+            }
             // 이미지 추가
             if (images != null || !images.isEmpty()){
+                List<NoticeImageEntity> newImages = new ArrayList<>();
                 for (MultipartFile image: images){
                     try {
                         String imageUrl = s3Service.uploadNoticeImage(image);
@@ -127,15 +128,15 @@ public class AdminService {
                         noticeImage.setNotice(notice);
                         noticeImage.setImageUrl(imageUrl);
 
-                        adminNoticeImageRepository.save(noticeImage);
-                        notice.getImages().add(noticeImage);
+                        newImages.add(noticeImage);
                     } catch (IOException e){
                         throw new RuntimeException("이미지 업로드 실패", e);
                     }
                 }
+                notice.getImages().addAll(newImages);
             }
-            adminNoticeRepository.save(notice);
-        }
+        adminNoticeRepository.save(notice);
+
         return AdminNoticeUpdateResponse.from(notice);
     }
 
