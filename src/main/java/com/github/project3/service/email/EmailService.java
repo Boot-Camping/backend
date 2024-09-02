@@ -53,8 +53,8 @@
 //    }
 //
 //    //메일 양식 작성
-//    public MimeMessage createEmailForm(String email) throws MessagingException, UnsupportedEncodingException {
-//
+//    public MimeMessage createEmailForm(String email) throws MessagingException, UnsupportedEncodingException, jakarta.mail.MessagingException {
+//    try {
 //        authNum = createCode(); // 인증 코드 생성 및 할당
 //        String setFrom = "khg1070a@gmail.com"; // 보내는 사람 이메일 주소
 //        String toEmail = email; // 받는 사람 이메일 주소
@@ -67,17 +67,33 @@
 //        message.setText(setContext(authNum, "emailTemplate"), "utf-8", "html"); // 인증 코드 포함한 템플릿 적용
 //
 //        return message;
+//        }catch (jakarta.mail.MessagingException e) {
+//            log.error("메일 작성 중 오류 발생", e);
+//            throw e;
+//        }
 //    }
 //
 //    //실제 메일 전송
-//    public String sendEmail(String toEmail) throws MessagingException, UnsupportedEncodingException {
+//    public String sendEmail(String toEmail) throws MessagingException, UnsupportedEncodingException, jakarta.mail.MessagingException {
 //
-//        //메일전송에 필요한 정보 설정
-//        MimeMessage emailForm = createEmailForm(toEmail);
-//        //실제 메일 전송
-//        emailSender.send(emailForm);
+//        try {
+//            // 메일 전송에 필요한 정보 설정
+//            MimeMessage emailForm = createEmailForm(toEmail);
+//            // 실제 메일 전송
+//            emailSender.send(emailForm);
 //
-//        return authNum; //인증 코드 반환
+//            // 유저 엔티티를 찾고, 인증 코드 저장
+//            UserEntity user = userRepository.findByEmail(toEmail)
+//                    .orElseThrow(() -> new NotFoundException("이메일을 찾을 수 없습니다."));
+//
+//            user.setVerificationCode(authNum);
+//            userRepository.save(user);
+//
+//            return authNum; // 인증 코드 반환
+//        } catch (jakarta.mail.MessagingException e) {
+//            log.error("메일 작성 중 오류 발생", e);
+//            throw e;
+//        }
 //    }
 //
 //
