@@ -4,7 +4,6 @@ import com.github.project3.entity.camp.CampEntity;
 import com.github.project3.entity.user.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import org.checkerframework.checker.units.qual.C;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
