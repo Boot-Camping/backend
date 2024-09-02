@@ -178,14 +178,15 @@ public class AdminService {
     }
 
     // 유저 조회
+    @Transactional(readOnly = true)
     public List<AdminUserCheckResponse> getUserAll(String token){
         authService.verifyAdmin(token);
 
-        List<UserEntity> user = userRepository.findAllByOrderByCreatedAtDesc();
-        if (user == null && user.isEmpty()){
+        List<AdminUserCheckResponse> userResponse = userRepository.findAllUsersWithDetails();
+        if (userResponse == null && userResponse.isEmpty()){
             throw new NotFoundException("유저가 존재하지 않습니다.");
         }
-        return AdminUserCheckResponse.from(user);
+        return userResponse;
     }
 
     // 회원 블랙리스트 등록

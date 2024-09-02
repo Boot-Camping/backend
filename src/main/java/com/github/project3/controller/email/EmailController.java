@@ -17,7 +17,7 @@
 //    private final EmailService emailService;
 //
 //    @PostMapping("login/mailConfirm")
-//    public String mailConfirm(@RequestBody EmailRequest emailDto) throws MessagingException, UnsupportedEncodingException {
+//    public String mailConfirm(@RequestBody EmailRequest emailDto) throws MessagingException, UnsupportedEncodingException, jakarta.mail.MessagingException {
 //
 //        String authCode = emailService.sendEmail(emailDto.getEmail());
 //        return authCode;
