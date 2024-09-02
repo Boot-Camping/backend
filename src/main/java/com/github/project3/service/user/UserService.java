@@ -140,7 +140,9 @@ public class UserService {
 
         // HTTP 응답에 토큰 설정
         response.setHeader(HttpHeaders.AUTHORIZATION, bearerToken);
-        response.addCookie(createCookie("refresh", refreshToken));
+
+        Cookie refreshCookie = createCookie("refresh", refreshToken);
+        addCookieWithSameSite(response, refreshCookie, "None"); // SameSite=None
         response.setStatus(HttpStatus.OK.value());
 
 
@@ -154,8 +156,21 @@ public class UserService {
         cookie.setHttpOnly(true);
         cookie.setSecure(false); // HTTPS에서만 전송 (로컬 개발 시 false)
         cookie.setPath("/");
+        cookie.setDomain("boot-camping.netlify.app"); // 도메인 명시 (로컬 개발 시 'localhost' 사용)
 
         return cookie;
+    }
+
+    // SameSite 설정
+    private void addCookieWithSameSite(HttpServletResponse response, Cookie cookie, String sameSite) {
+        String cookieHeader = String.format("%s=%s; Max-Age=%d; Domain=%s; Path=%s; HttpOnly; SameSite=%s",
+                cookie.getName(), cookie.getValue(), cookie.getMaxAge(), cookie.getDomain(), cookie.getPath(), sameSite);
+
+        if ("None".equalsIgnoreCase(sameSite)) {
+            cookieHeader += "; Secure"; // HTTPS 환경에서만 쿠키가 전송되도록 설정
+        }
+
+        response.addHeader("Set-Cookie", cookieHeader);
     }
 
     private void addRefreshEntity(String loginId, String refresh, Long expiredMs) {
