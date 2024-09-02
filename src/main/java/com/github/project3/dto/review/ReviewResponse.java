@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 @Getter
 public class ReviewResponse {
     private Integer id;
+    private Integer campId;
     private String loginId;
     private String campName;
     private Integer grade;
@@ -26,6 +27,7 @@ public class ReviewResponse {
     public static ReviewResponse from(ReviewEntity reviewEntity, String loginId, String campName, long reviewCount) {
         return ReviewResponse.builder()
                 .id(reviewEntity.getId())
+                .campId(reviewEntity.getCamp().getId())
                 .loginId(loginId)
                 .campName(campName)
                 .grade(reviewEntity.getGrade())
