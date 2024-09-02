@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie Test Client</title>
+    <script>
+        // 서버로 로그인 요청을 보내고 쿠키가 저장되는지 확인하는 함수
+        async function loginAndCheckCookie(event) {
+            event.preventDefault(); // 폼 제출 기본 동작을 막습니다.
+
+            const loginId = document.getElementById('loginId').value;
+            const password = document.getElementById('password').value;
+
+            const requestData = {
+                loginId: loginId,
+                password: password
+            };
+
+            try {
+                const response = await fetch('http://localhost:8080/api/user/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData),
+                    credentials: 'include'  // 쿠키를 포함하여 요청
+                });
+
+                if (response.ok) {
+                    console.log('로그인 요청이 성공적으로 전송되었습니다.');
+
+                    // 브라우저에서 쿠키를 읽어옵니다.
+                    const cookies = document.cookie;
+                    console.log('저장된 쿠키:', cookies);
+
+                    // 쿠키를 화면에 표시합니다.
+                    document.getElementById('cookies').innerText = '저장된 쿠키: ' + cookies;
+                } else {
+                    console.error('서버 응답 에러:', response.status);
+                }
+            } catch (error) {
+                console.error('요청 중 오류 발생:', error);
+            }
+        }
+    </script>
+</head>
+<body>
+<h1>Cookie Test Client</h1>
+<form onsubmit="loginAndCheckCookie(event)">
+    <div>
+        <label for="loginId">아이디:</label>
+        <input type="text" id="loginId" name="loginId" required>
+    </div>
+    <div>
+        <label for="password">비밀번호:</label>
+        <input type="password" id="password" name="password" required>
+    </div>
+    <button type="submit">로그인</button>
+</form>
+<p id="cookies">저장된 쿠키 없음</p>
+</body>
+</html>
