@@ -187,7 +187,6 @@ public class BookService {
         }
     }
 
-
     // 예약 취소 시 환불 메서드
     private int processUserRefund(UserEntity user, BookEntity book) {
         int refundAmount = calculateRefundAmount(book);

@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 
 @Repository
 public interface CampRepository extends JpaRepository<CampEntity, Integer> {
@@ -47,4 +49,6 @@ public interface CampRepository extends JpaRepository<CampEntity, Integer> {
 			"LEFT JOIN BookEntity bd ON c.id = bd.camp.id " + // CampEntity와 BookEntity의 관계 조인
 			"GROUP BY c.id")
 	Page<CampDataDTO> findCampsWithStatistics(Pageable pageable);
+
+	Optional<CampEntity> findByUserId(Integer userId);
 }

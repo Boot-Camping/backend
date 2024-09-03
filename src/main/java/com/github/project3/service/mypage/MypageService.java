@@ -186,6 +186,7 @@ public class MypageService {
     // cash 사용내역 조회
     public List<CashTransactionResponse> getUserCashTransactions(Integer userId) {
         UserEntity user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("등록된 사용자를 찾을 수 없습니다."));
+        CampEntity camp = campRepository.findByUserId(userId).orElseThrow(() -> new NotFoundException("해당하는 캠핑지를 찾을 수 없습니다."));
 
         List<CashEntity> cashTransactions  = cashRepository.findByUserId(userId);
 
