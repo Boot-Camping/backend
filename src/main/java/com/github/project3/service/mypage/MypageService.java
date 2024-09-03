@@ -1,9 +1,7 @@
 package com.github.project3.service.mypage;
 
-import com.github.project3.dto.camp.CampResponse;
 import com.github.project3.dto.mypage.*;
 import com.github.project3.entity.camp.CampEntity;
-import com.github.project3.entity.notice.NoticeEntity;
 import com.github.project3.entity.user.CashEntity;
 import com.github.project3.entity.user.UserEntity;
 import com.github.project3.entity.user.UserImageEntity;
@@ -18,12 +16,9 @@ import com.github.project3.repository.mypage.WishlistRepository;
 import com.github.project3.repository.user.UserRepository;
 import com.github.project3.service.S3Service;
 import com.github.project3.service.exceptions.InvalidValueException;
-import com.github.project3.service.exceptions.NotAcceptException;
 import com.github.project3.service.exceptions.NotFoundException;
 import com.github.project3.service.user.UserService;
 import lombok.RequiredArgsConstructor;
-import org.aspectj.weaver.ast.Not;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -150,7 +145,6 @@ public class MypageService {
 
         CampEntity camp = campRepository.findById(campId).orElseThrow(() -> new NotFoundException("등록된 캠프를 찾을 수 없습니다."));
 
-
         WishlistEntity alreadyWishlist = wishlistRepository.findByCampAndUser(camp, user);
         if (alreadyWishlist != null) {
             if (alreadyWishlist.getStatus() == Status.DELETE){
@@ -203,14 +197,9 @@ public class MypageService {
                 wishlistRepository.save(wishlist);
             }
     }
+
     // cash 사용내역 조회
     public List<CashTransactionResponse> getUserCashTransactions(Integer userId) {
-        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("등록된 사용자를 찾을 수 없습니다."));
-
-        List<CashEntity> cashTransactions  = cashRepository.findByUserId(userId);
-
-        return cashTransactions.stream()
-                .map(CashTransactionResponse::from)
-                .collect(Collectors.toList());
+        return cashRepository.findCashTransactionsWithCampNameByUserId(userId);
     }
 }
