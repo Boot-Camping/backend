@@ -68,7 +68,8 @@ public class BookService {
         validateBookingDates(camp, requestCheckIn, requestCheckOut);
 
         int totalPrice = calculateTotalPriceWithDiscount(bookRegisterRequest.getTotalPrice(), requestCheckIn);
-        processUserPayment(user, totalPrice);
+
+        processTransaction(user, totalPrice, TransactionType.PAYMENT);
 
         BookEntity savedBook = saveBooking(user, camp, totalPrice, bookRegisterRequest);
 
@@ -101,7 +102,7 @@ public class BookService {
         bookRepository.save(book);
 
         UserEntity user = getAuthenticatedUser();
-        return processUserRefund(user, book);
+        return processTransaction(user, book.getTotalPrice(), TransactionType.REFUND);
     }
 
     /**
@@ -154,11 +155,6 @@ public class BookService {
         return totalPrice;
     }
 
-    // 에약 시 결제 메서드
-    private void processUserPayment(UserEntity user, int amount) {
-        cashService.processTransaction(user, amount, TransactionType.PAYMENT);
-    }
-
    // 예약 정보 저장 메서드
     private BookEntity saveBooking(UserEntity user, CampEntity camp, int totalPrice, BookRegisterRequest request) {
         BookEntity book = BookEntity.of(
@@ -187,10 +183,8 @@ public class BookService {
         }
     }
 
-    // 예약 취소 시 환불 메서드
-    private int processUserRefund(UserEntity user, BookEntity book) {
-        int refundAmount = calculateRefundAmount(book);
-        return cashService.processTransaction(user, refundAmount, TransactionType.REFUND);
+    private Integer processTransaction(UserEntity user, int amount, TransactionType transactionType) {
+        return cashService.processTransaction(user, amount, transactionType);
     }
 
     // 예약 취소 시 환불 금액 계산 메서드
