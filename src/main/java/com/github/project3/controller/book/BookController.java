@@ -58,8 +58,8 @@ public class BookController {
      */
     @Operation(summary = "예약 조회", description = "사용자의 캠핑장 예약 내역을 조회합니다.")
     @GetMapping
-    public ResponseEntity<List<BookInquiryResponse>> inquiryBook(){
-        List<BookInquiryResponse> response = bookService.inquiryBook();
+    public ResponseEntity<List<BookInquiryResponse>> getBooks(){
+        List<BookInquiryResponse> response = bookService.getBooks();
         return ResponseEntity.ok(response);
     }
 }

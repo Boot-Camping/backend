@@ -11,6 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 public class MypageResponse {
     private Integer id;
+    private String loginId;
     private String name;
     private String password;
     private String email;

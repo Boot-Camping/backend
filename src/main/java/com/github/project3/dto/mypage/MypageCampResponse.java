@@ -2,8 +2,8 @@ package com.github.project3.dto.mypage;
 
 import com.github.project3.entity.camp.CampEntity;
 import com.github.project3.entity.camp.CampImageEntity;
-import com.github.project3.entity.user.UserImageEntity;
 import com.github.project3.entity.wishlist.WishlistEntity;
+import com.github.project3.entity.wishlist.enums.Status;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 public class MypageCampResponse {
     private Integer id;
     private Integer wishId;
+    private Status wishStatus;
     private String name;
     private String addr;
     private Integer price;
@@ -29,6 +30,7 @@ public class MypageCampResponse {
 
         response.id = camp.getId();
         response.wishId = wishlistEntity.getId();
+        response.wishStatus = wishlistEntity.getStatus();
         response.name = camp.getName();
         response.addr = camp.getAddr();
         response.price = camp.getPrice();

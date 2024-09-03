@@ -2,6 +2,7 @@ package com.github.project3.entity.wishlist;
 
 import com.github.project3.entity.camp.CampEntity;
 import com.github.project3.entity.user.UserEntity;
+import com.github.project3.entity.wishlist.enums.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -27,4 +28,8 @@ public class WishlistEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "camp_id", nullable = false)
     private CampEntity camp;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private Status status;
 }
