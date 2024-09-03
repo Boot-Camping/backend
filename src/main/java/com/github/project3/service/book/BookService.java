@@ -110,7 +110,7 @@ public class BookService {
      * @return 예약 내역 리스트
      * @throws NotFoundException    해당 사용자가 존재하지 않거나 예약이 없을 경우 발생
      */
-    public List<BookInquiryResponse> inquiryBook() {
+    public List<BookInquiryResponse> getBooks() {
         UserEntity user = getAuthenticatedUser();
 
         List<BookInquiryResponse> books = bookRepository.findBookInquiriesByUserId(user.getId());
