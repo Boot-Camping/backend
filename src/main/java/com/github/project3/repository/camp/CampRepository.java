@@ -8,8 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
-
 
 @Repository
 public interface CampRepository extends JpaRepository<CampEntity, Integer> {
@@ -50,5 +48,4 @@ public interface CampRepository extends JpaRepository<CampEntity, Integer> {
 			"GROUP BY c.id")
 	Page<CampDataDTO> findCampsWithStatistics(Pageable pageable);
 
-	Optional<CampEntity> findByUserId(Integer userId);
 }

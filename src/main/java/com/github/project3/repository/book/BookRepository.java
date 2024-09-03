@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface BookRepository extends JpaRepository<BookEntity, Integer>, CreatedAtRepository {
@@ -53,4 +52,6 @@ public interface BookRepository extends JpaRepository<BookEntity, Integer>, Crea
 
     @Query("SELECT SUM(b.totalPrice) FROM BookEntity b WHERE b.status = 'DECIDE' ")
     long sumTotalPrice();
+
+    List<BookEntity> findByUserId(Integer userId);
 }

@@ -2,12 +2,15 @@ package com.github.project3.service.mypage;
 
 import com.github.project3.dto.camp.CampResponse;
 import com.github.project3.dto.mypage.*;
+import com.github.project3.entity.book.BookEntity;
 import com.github.project3.entity.camp.CampEntity;
 import com.github.project3.entity.notice.NoticeEntity;
 import com.github.project3.entity.user.CashEntity;
 import com.github.project3.entity.user.UserEntity;
 import com.github.project3.entity.user.UserImageEntity;
+import com.github.project3.entity.user.enums.TransactionType;
 import com.github.project3.entity.wishlist.WishlistEntity;
+import com.github.project3.repository.book.BookRepository;
 import com.github.project3.repository.camp.CampRepository;
 import com.github.project3.repository.cash.CashRepository;
 import com.github.project3.repository.mypage.MypageImageRepository;
@@ -50,6 +53,7 @@ public class MypageService {
     private final S3Service s3Service;
     private final CashRepository cashRepository;
     private final UserService userService;
+    private final BookRepository bookRepository;
 
     // 유저 정보조회
     public List<MypageResponse> getUserMyPage(Integer userId){
@@ -183,15 +187,9 @@ public class MypageService {
 
         wishlistRepository.delete(wishlist);
     }
+
     // cash 사용내역 조회
     public List<CashTransactionResponse> getUserCashTransactions(Integer userId) {
-        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("등록된 사용자를 찾을 수 없습니다."));
-        CampEntity camp = campRepository.findByUserId(userId).orElseThrow(() -> new NotFoundException("해당하는 캠핑지를 찾을 수 없습니다."));
-
-        List<CashEntity> cashTransactions  = cashRepository.findByUserId(userId);
-
-        return cashTransactions.stream()
-                .map(CashTransactionResponse::from)
-                .collect(Collectors.toList());
+        return cashRepository.findCashTransactionsWithCampNameByUserId(userId);
     }
 }
