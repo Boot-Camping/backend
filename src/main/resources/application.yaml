@@ -14,19 +14,6 @@ spring:
         format_sql: true
         physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 
-#  mail:       # 메일
-#    host: smtp.gmail.com
-#    port: 587
-#    username: ${MAIL.USERNAME}
-#    password: ${MAIL.PASSWORD}
-#    properties:
-#      mail:
-#        smtp:
-#          auth: true
-#          timeout: 5000
-#          starttls:
-#            enable: true
-
 logging:
   config: classpath:logback-spring.xml
   level:
