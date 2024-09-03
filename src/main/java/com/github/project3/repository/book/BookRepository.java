@@ -53,5 +53,4 @@ public interface BookRepository extends JpaRepository<BookEntity, Integer>, Crea
     @Query("SELECT SUM(b.totalPrice) FROM BookEntity b WHERE b.status = 'DECIDE' ")
     long sumTotalPrice();
 
-    List<BookEntity> findByUserId(Integer userId);
 }
