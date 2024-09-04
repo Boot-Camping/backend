@@ -1,5 +1,5 @@
 package com.github.project3.entity.review.enums;
 
 public enum Tag {
-    KIND, GOOD, BAD, EXCELLENT
+    CLEAN, KIND, ACCESSIBLE, DIRTY, UNKIND, INACCESSIBLE
 }
