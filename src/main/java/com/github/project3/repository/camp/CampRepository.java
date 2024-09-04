@@ -47,4 +47,5 @@ public interface CampRepository extends JpaRepository<CampEntity, Integer> {
 			"LEFT JOIN BookEntity bd ON c.id = bd.camp.id " + // CampEntity와 BookEntity의 관계 조인
 			"GROUP BY c.id")
 	Page<CampDataDTO> findCampsWithStatistics(Pageable pageable);
+
 }
