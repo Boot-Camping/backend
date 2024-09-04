@@ -29,13 +29,13 @@ public interface BookRepository extends JpaRepository<BookEntity, Integer>, Crea
                                             @Param("statuses") List<Status> statuses);
 
     // JPQL 을 사용해 조회 결과를 DTO 에 직접 매핑
-    @Query("SELECT new com.github.project3.dto.book.BookInquiryResponse(" +
+    @Query("SELECT DISTINCT new com.github.project3.dto.book.BookInquiryResponse(" +
             "b.id, c.id, c.name, " +
-            "(SELECT CASE WHEN COUNT(ci) > 0 THEN ci.imageUrl ELSE NULL END FROM CampImageEntity ci WHERE ci.camp = c), " + // 서브 쿼리로 첫 번째 이미지만 조회
+            "(SELECT CASE WHEN COUNT(ci) > 0 THEN ci.imageUrl ELSE NULL END FROM CampImageEntity ci WHERE ci.camp = c), " +
             "b.startDate, b.endDate, b.num, b.totalPrice, b.request, b.status) " +
             "FROM BookEntity b " +
             "JOIN b.camp c " +
-            "LEFT JOIN c.images ci " +  // FETCH JOIN 으로 이미지를 함께 로드
+            "LEFT JOIN c.images ci " +
             "WHERE b.user.id = :userId")
     List<BookInquiryResponse> findBookInquiriesByUserId(@Param("userId") Integer userId);
 
