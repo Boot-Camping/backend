@@ -138,16 +138,34 @@ public class ReviewService {
      */
     @Transactional(readOnly = true)
     public List<ReviewResponse> getReviewsByCampId(Integer campId) {
-        List<ReviewEntity> reviews = reviewRepository.findByCampId(campId);
-        long reviewCount = reviewRepository.countByCampId(campId);
-        return reviews.stream()
-                .map(review -> ReviewResponse.from(
-                        review,
-                        review.getUser().getLoginId(),
-                        review.getCamp().getName(),
-                        reviewCount
-                ))
-                .collect(Collectors.toList());
+        List<ReviewEntity> reviews = reviewRepository.findReviewsByCampId(campId);
+        long reviewCount = reviews.size();
+
+        return reviews.stream().map(review -> {
+            // 태그 리스트 생성
+            List<Tag> tags = review.getTags().stream()
+                    .map(ReviewTagEntity::getTag)
+                    .collect(Collectors.toList());
+
+            // 이미지 URL 리스트 생성
+            List<String> imageUrls = review.getImages().stream()
+                    .map(ReviewImageEntity::getImageUrl)
+                    .collect(Collectors.toList());
+
+            // ReviewResponse 생성
+            return new ReviewResponse(
+                    review.getId(),
+                    review.getCamp().getId(),
+                    review.getUser().getLoginId(),
+                    review.getCamp().getName(),
+                    review.getGrade(),
+                    review.getContent(),
+                    review.getCreatedAt(),
+                    tags,
+                    imageUrls,
+                    reviewCount
+            );
+        }).collect(Collectors.toList());
     }
 
     /**
@@ -252,11 +270,6 @@ public class ReviewService {
         // 리뷰 엔티티 가져오기
         ReviewEntity review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new NotFoundException("리뷰를 찾을 수 없습니다."));
-
-//        // 리뷰에 연결된 이미지 삭제 (S3 관련 구현해야함)
-//        for (ReviewImageEntity image : review.getImages()) {
-//            s3Service.deleteReviewImage(image.getImageUrl());
-//        }
 
         // 리뷰 엔티티 삭제
         reviewRepository.delete(review);
