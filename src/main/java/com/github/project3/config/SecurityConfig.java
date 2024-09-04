@@ -65,7 +65,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource(){
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:8080", "http://localhost:63342", "http://localhost:5173", "https://boot-camping.netlify.app"));
+        configuration.setAllowedOrigins(Arrays.asList( "http://localhost:63342", "http://localhost:5173", "https://boot-camping.netlify.app"));
         configuration.setAllowCredentials(true); // token을 주고받을 때 필요
         configuration.addExposedHeader("Authorization"); // token
         configuration.addAllowedHeader("Content-Type");
