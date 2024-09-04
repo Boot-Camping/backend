@@ -116,18 +116,18 @@ public class ReviewService {
      *
      * @return 모든 리뷰의 요약 정보를 담고 있는 ReviewSummaryResponse 리스트
      */
-    @Transactional(readOnly = true)
-    public List<ReviewSummaryResponse> getAllReviews(){
-        return reviewRepository.findAll().stream()
+    @Transactional(readOnly = true) public List<ReviewSummaryResponse> getAllReviews() {
+        List<ReviewEntity> reviews = reviewRepository.findAllReviewsWithImages();
+        return reviews.stream()
                 .map(review -> ReviewSummaryResponse.of(
                         review.getId(),
                         review.getUser().getLoginId(),
                         review.getCamp().getName(),
                         review.getContent(),
-                        review.getImages().isEmpty() ? null : review.getImages().get(0).getImageUrl(),
-                        review.getCreatedAt()
-                ))
-                .collect(Collectors.toList());
+                        review.getImages().isEmpty() ? null : review.getImages().get(0).getImageUrl(), // 첫 번째 이미지를 선택하여 매핑
+                        review.getCreatedAt() ))
+                .collect(Collectors.toList()
+                );
     }
 
     /**
