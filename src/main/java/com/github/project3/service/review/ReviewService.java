@@ -3,6 +3,8 @@ package com.github.project3.service.review;
 import com.github.project3.dto.review.ReviewRequest;
 import com.github.project3.dto.review.ReviewResponse;
 import com.github.project3.dto.review.ReviewSummaryResponse;
+import com.github.project3.entity.book.BookEntity;
+import com.github.project3.entity.book.enums.Status;
 import com.github.project3.entity.camp.CampEntity;
 import com.github.project3.entity.review.ReviewEntity;
 import com.github.project3.entity.review.ReviewImageEntity;
@@ -10,11 +12,13 @@ import com.github.project3.entity.review.ReviewTagEntity;
 import com.github.project3.entity.review.enums.Tag;
 import com.github.project3.entity.user.UserEntity;
 import com.github.project3.entity.user.enums.TransactionType;
+import com.github.project3.repository.book.BookRepository;
 import com.github.project3.repository.camp.CampRepository;
 import com.github.project3.repository.review.ReviewRepository;
 import com.github.project3.repository.user.UserRepository;
 import com.github.project3.service.S3Service;
 import com.github.project3.service.cash.CashService;
+import com.github.project3.service.exceptions.NotAcceptException;
 import com.github.project3.service.exceptions.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -34,6 +38,7 @@ public class ReviewService {
     private final CampRepository campRepository;
     private final S3Service s3Service;
     private final CashService cashService;
+    private final BookRepository bookRepository;
 
     /**
      * 새로운 리뷰를 생성합니다.
@@ -45,6 +50,11 @@ public class ReviewService {
      */
     @Transactional
     public void createReview(Integer userId, Integer campId, ReviewRequest reviewRequest, List<MultipartFile> reviewImages) {
+        // 구매 확정 여부 확인 (BookRepository 직접 사용)
+        List<BookEntity> confirmedBookings = bookRepository.findByUserIdAndCampIdAndStatus(userId, campId, Status.DECIDE);
+        if (confirmedBookings.isEmpty()) {
+            throw new NotAcceptException("구매 확정이 된 경우에만 리뷰를 작성할 수 있습니다.");
+        }
         // 사용자와 캠핑장 정보 가져오기
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("유저 정보가 없습니다."));
