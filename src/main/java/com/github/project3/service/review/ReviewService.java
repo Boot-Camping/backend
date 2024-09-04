@@ -175,16 +175,35 @@ public class ReviewService {
      * @return 해당 사용자가 작성한 리뷰의 요약 정보를 담고 있는 ReviewSummaryResponse 리스트
      */
     @Transactional(readOnly = true)
-    public List<ReviewResponse> getReviewsByUserId(Integer userId){
-        List<ReviewEntity> reviews = reviewRepository.findByUserId(userId); // 태그와 이미지를 포함한 리뷰 조회
-        return reviews.stream()
-                .map(review -> ReviewResponse.from(
-                        review,
-                        review.getUser().getLoginId(),
-                        review.getCamp().getName(),
-                        reviews.size()
-                ))
-                .collect(Collectors.toList());
+    public List<ReviewResponse> getReviewsByUserId(Integer userId) {
+        List<ReviewEntity> reviews = reviewRepository.findReviewsByUserId(userId);
+        long reviewCount = reviews.size();  // 유저가 작성한 총 리뷰 개수
+
+        return reviews.stream().map(review -> {
+            // 태그 리스트 생성
+            List<Tag> tags = review.getTags().stream()
+                    .map(ReviewTagEntity::getTag)
+                    .collect(Collectors.toList());
+
+            // 이미지 URL 리스트 생성
+            List<String> imageUrls = review.getImages().stream()
+                    .map(ReviewImageEntity::getImageUrl)
+                    .collect(Collectors.toList());
+
+            // ReviewResponse 생성
+            return new ReviewResponse(
+                    review.getId(),
+                    review.getCamp().getId(),
+                    review.getUser().getLoginId(),
+                    review.getCamp().getName(),
+                    review.getGrade(),
+                    review.getContent(),
+                    review.getCreatedAt(),
+                    tags,
+                    imageUrls,
+                    reviewCount
+            );
+        }).collect(Collectors.toList());
     }
 
     /**
