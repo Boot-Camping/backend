@@ -67,7 +67,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
 //                "http://localhost:63342",
-//                "http://localhost:5173",
+                "http://localhost:5173",
                 "https://boot-camping.netlify.app"));
         configuration.setAllowCredentials(true); // token을 주고받을 때 필요
         configuration.addExposedHeader("Authorization"); // token
