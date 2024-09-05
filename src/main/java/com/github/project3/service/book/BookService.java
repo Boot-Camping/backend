@@ -41,6 +41,14 @@ public class BookService {
     private final BookDateRepository bookDateRepository;
     private final CampRepository campRepository;
 
+    private static final int MAX_RETRY_ATTEMPTS = 3; // 최대 재시도 횟수
+    private static final long RETRY_DELAY = 1000L; // 재시도 간격 (1초)
+    private static final int DISCOUNT_AMOUNT = 10000; // 예약 시 할인 금액
+    private static final int DISCOUNT_DAYS = 2; // 할인 적용 일수
+    private static final int REFUND_PERCENTAGE = 50; // 3일 이내 취소 시 환불 비율
+    private static final int REFUND_DAYS = 3; // 환불 계산 기준 일수
+    private static final List<Status> BOOKING_STATUSES = Arrays.asList(Status.BOOKING, Status.DECIDE); // 예약 중인 상태 목록
+
     /**
      * 캠핑장 예약을 등록합니다.
      *
@@ -52,8 +60,8 @@ public class BookService {
     @Transactional
     @Retryable(
             value = OptimisticLockException.class, // 재시도할 예외
-            maxAttempts = 3, // 최대 재시도 횟수
-            backoff = @Backoff(delay = 1000) // 재시도 간격(1초)
+            maxAttempts = MAX_RETRY_ATTEMPTS, // 최대 재시도 횟수
+            backoff = @Backoff(delay = RETRY_DELAY) // 재시도 간격(1초)
     )
     public void registerBook(Integer campId, BookRegisterRequest bookRegisterRequest) {
 
@@ -136,8 +144,7 @@ public class BookService {
 
     // 예약 날짜 중복 확인 메서드
     private void validateBookingDates(CampEntity camp, LocalDateTime checkIn, LocalDateTime checkOut) {
-        List<Status> statuses = Arrays.asList(Status.BOOKING, Status.DECIDE);
-        if (isDateConflict(camp, checkIn, checkOut, statuses)) {
+        if (isDateConflict(camp, checkIn, checkOut, BOOKING_STATUSES)) {
             throw new NotAcceptException("해당 날짜에 이미 예약이 존재합니다. 다른 날짜를 선택해주세요.");
         }
     }
@@ -149,8 +156,8 @@ public class BookService {
 
     // 예약 등록 시 할인 금액 계산 메서드
     private int calculateTotalPriceWithDiscount(Integer totalPrice, LocalDateTime requestCheckIn) {
-        if (ChronoUnit.DAYS.between(LocalDateTime.now(), requestCheckIn) <= 2) {
-            totalPrice -= 10000;
+        if (ChronoUnit.DAYS.between(LocalDateTime.now(), requestCheckIn) <= DISCOUNT_DAYS) {
+            totalPrice -= DISCOUNT_AMOUNT;
         }
         return totalPrice;
     }
@@ -191,10 +198,10 @@ public class BookService {
     private int calculateRefundAmount(BookEntity book) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime startDate = book.getStartDate();
-        LocalDateTime threeDaysBeforeStartDate = startDate.minusDays(3);
+        LocalDateTime threeDaysBeforeStartDate = startDate.minusDays(REFUND_DAYS);
 
         if (now.isAfter(threeDaysBeforeStartDate) && now.isBefore(startDate)) {
-            return book.getTotalPrice() / 2; // 3일 이내 취소 시 50% 환불
+            return book.getTotalPrice() * REFUND_PERCENTAGE / 100; // 3일 이내 취소 시 50% 환불
         } else {
             return book.getTotalPrice();
         }
