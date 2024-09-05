@@ -16,8 +16,7 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AdminNoticeDetailCheckResponse implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class AdminNoticeDetailCheckResponse {
     private Integer id;
     private String title;
     private String description;

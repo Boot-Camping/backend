@@ -11,8 +11,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AdminNoticeCheckResponse implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class AdminNoticeCheckResponse {
     private Integer id;
     private String title;
     private LocalDateTime createAt;

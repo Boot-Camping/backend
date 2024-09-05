@@ -13,8 +13,7 @@ import java.util.stream.Collectors;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AdminNoticeCheckPageResponse implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class AdminNoticeCheckPageResponse {
     private List<AdminNoticeCheckResponse> content;
     private int number;
     private int size;
