@@ -35,11 +35,8 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     // 각 세션별 Pong 수신 실패 횟수
     private Map<String, Integer> pongMissCount = new HashMap<>();
 
-    // Ping 전송 간격 (30초마다 핑 전송)
-    private static final long PING_INTERVAL = 30000;
-
-    // 최대 Pong 수신 실패 허용 횟수
-    private static final int MAX_PONG_MISS_COUNT = 3;
+    private static final long PING_INTERVAL = 30000; // Ping 전송 간격 (30초마다 핑 전송)
+    private static final int MAX_PONG_MISS_COUNT = 3; // 최대 Pong 수신 실패 허용 횟수
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
