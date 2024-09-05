@@ -53,4 +53,6 @@ public interface BookRepository extends JpaRepository<BookEntity, Integer>, Crea
     @Query("SELECT SUM(b.totalPrice) FROM BookEntity b WHERE b.status = 'DECIDE' ")
     long sumTotalPrice();
 
+    // 특정 사용자와 캠핑장에 대한 구매 확정 상태의 예약을 찾는 메서드 추가
+    List<BookEntity> findByUserIdAndCampIdAndStatus(Integer userId, Integer campId, Status status);
 }

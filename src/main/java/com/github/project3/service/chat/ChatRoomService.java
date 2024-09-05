@@ -50,7 +50,12 @@ public class ChatRoomService {
 
         // 1:1 채팅방에서 이미 사용자가 입장해 있는지 확인
         if (chatRoom.getJoinedBy() != null) {
-            throw new NotAcceptException("이미 다른 사용자가 채팅방에 입장해 있습니다.");
+            if (!chatRoom.getJoinedBy().getId().equals(user.getId())) {
+                throw new NotAcceptException("이미 다른 사용자가 채팅방에 입장해 있습니다.");
+            } else {
+                // 이미 입장해 있는 사용자가 요청한 경우
+                return true; // 입장 처리 생략 가능
+            }
         }
 
         chatRoom.setJoinedBy(user);
