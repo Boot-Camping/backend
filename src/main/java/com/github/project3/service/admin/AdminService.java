@@ -86,14 +86,14 @@ public class AdminService {
     }
     // 공지사항 전체조회
     @Cacheable(value = "notice", key = "#root.methodName")
-    public Page<AdminNoticeCheckResponse> getNoticeAll(Integer page,Integer size){
+    public AdminNoticeCheckPageResponse getNoticeAll(Integer page,Integer size){
         Pageable pageable = PageRequest.of(page, size);
         Page<NoticeEntity> noticePage = adminNoticeRepository.findAllByOrderByCreatedAtDesc(pageable);
-        if (noticePage == null && noticePage.isEmpty()){
+        if (noticePage == null || noticePage.isEmpty()){
             throw new NotFoundException("등록된 공지사항이 없습니다.");
         }
 
-        return noticePage.map(AdminNoticeCheckResponse::from);
+        return AdminNoticeCheckPageResponse.from(noticePage);
     }
     // 공지사항 상세조회
     @Cacheable(value = "notice", key = "#noticeId")

@@ -7,12 +7,12 @@ import com.github.project3.dto.chat.MessageResponse;
 import com.github.project3.service.chat.MessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.CloseStatus;
-import org.springframework.web.socket.TextMessage;
-import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,8 +28,15 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     // 각 채팅방별 세션 관리 (채팅방 ID -> 세션 리스트)
     private Map<Integer, List<WebSocketSession>> chatRoomSessions = new HashMap<>();
+
     // 사용자 ID와 세션 간의 매핑
     private Map<String, Integer> sessionToUserId = new HashMap<>();
+
+    // 각 세션별 Pong 수신 실패 횟수
+    private Map<String, Integer> pongMissCount = new HashMap<>();
+
+    private static final long PING_INTERVAL = 30000; // Ping 전송 간격 (30초마다 핑 전송)
+    private static final int MAX_PONG_MISS_COUNT = 3; // 최대 Pong 수신 실패 허용 횟수
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -46,12 +53,15 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             return;
         }
 
-        // userId와 chatRoomId를 Integer로 변환
+        // userId와 chatRoomId를 Integer 로 변환
         Integer userId = Integer.valueOf(queryParams.get("userId"));
         Integer chatRoomId = Integer.valueOf(queryParams.get("chatId"));
 
         // 세션과 userId 매핑
         sessionToUserId.put(session.getId(), userId);
+
+        // 세션의 초기 Pong 수신 실패 횟수 설정
+        pongMissCount.put(session.getId(), 0);
 
         // 채팅방에 세션 등록
         registerSession(chatRoomId, session, userId);
@@ -109,6 +119,39 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             log.error("메세지 처리 중 오류가 발생했습니다.", e);
             session.sendMessage(new TextMessage("오류가 발생했습니다. 메세지를 처리할 수 없습니다."));
         }
+    }
+
+    @Override
+    protected void handlePongMessage(WebSocketSession session, PongMessage message) throws Exception {
+        log.info("Pong 메시지를 수신했습니다. 세션 ID: " + session.getId());
+
+        // Pong 메시지를 수신하면 실패 횟수를 0으로 초기화
+        pongMissCount.put(session.getId(), 0);
+    }
+
+    @Scheduled(fixedRate = PING_INTERVAL)
+    private void sendPingMessages() {
+        chatRoomSessions.values().forEach(sessions -> sessions.forEach(session -> {
+            try {
+                if (session.isOpen()) {
+                    session.sendMessage(new PingMessage(ByteBuffer.wrap("ping".getBytes())));
+                    log.info("Ping 메시지를 보냈습니다. 세션 ID: " + session.getId());
+
+                    // Ping 을 보낸 후, 일정 시간 내에 Pong 을 받지 못하면 카운트 1 증가
+                    int currentMissCount = pongMissCount.getOrDefault(session.getId(), 0);
+                    pongMissCount.put(session.getId(), currentMissCount + 1);
+
+                    // Pong 수신 실패 횟수가 MAX_PONG_MISS_COUNT 를 초과하면 세션을 닫음
+                    if (pongMissCount.get(session.getId()) >= MAX_PONG_MISS_COUNT) {
+                        log.warn("Pong 메시지를 3번 수신하지 못했습니다. 세션을 닫습니다: " + session.getId());
+                        session.close(CloseStatus.GOING_AWAY);
+                        unregisterSession(session);
+                    }
+                }
+            } catch (Exception e) {
+                log.error("Ping 메시지 전송 중 오류 발생: ", e);
+            }
+        }));
     }
 
     @Override
