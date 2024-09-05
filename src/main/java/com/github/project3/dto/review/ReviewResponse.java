@@ -1,6 +1,8 @@
 package com.github.project3.dto.review;
 
 import com.github.project3.entity.review.ReviewEntity;
+import com.github.project3.entity.review.ReviewImageEntity;
+import com.github.project3.entity.review.ReviewTagEntity;
 import com.github.project3.entity.review.enums.Tag;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,19 +25,40 @@ public class ReviewResponse {
     private List<String> reviewImages;
     private long reviewCount;
 
-    // 정적 팩토리 메서드로 객체 생성
+    public ReviewResponse(Integer id, Integer campId, String loginId, String campName, Integer grade, String reviewContent,
+                          LocalDateTime createdAt, List<Tag> reviewTags, List<String> reviewImages, long reviewCount) {
+        this.id = id;
+        this.campId = campId;
+        this.loginId = loginId;
+        this.campName = campName;
+        this.grade = grade;
+        this.reviewContent = reviewContent;
+        this.createdAt = createdAt;
+        this.reviewTags = reviewTags;
+        this.reviewImages = reviewImages;
+        this.reviewCount = reviewCount;
+    }
+
     public static ReviewResponse from(ReviewEntity reviewEntity, String loginId, String campName, long reviewCount) {
-        return ReviewResponse.builder()
-                .id(reviewEntity.getId())
-                .campId(reviewEntity.getCamp().getId())
-                .loginId(loginId)
-                .campName(campName)
-                .grade(reviewEntity.getGrade())
-                .reviewContent(reviewEntity.getContent())
-                .createdAt(reviewEntity.getCreatedAt())
-                .reviewTags(reviewEntity.getTags().stream().map(tag -> tag.getTag()).collect(Collectors.toList()))
-                .reviewImages(reviewEntity.getImages().stream().map(image -> image.getImageUrl()).collect(Collectors.toList()))
-                .reviewCount(reviewCount)
-                .build();
+        List<Tag> tags = reviewEntity.getTags().stream()
+                .map(ReviewTagEntity::getTag)
+                .collect(Collectors.toList());
+
+        List<String> imageUrls = reviewEntity.getImages().stream()
+                .map(ReviewImageEntity::getImageUrl)
+                .collect(Collectors.toList());
+
+        return new ReviewResponse(
+                reviewEntity.getId(),
+                reviewEntity.getCamp().getId(),
+                loginId,
+                campName,
+                reviewEntity.getGrade(),
+                reviewEntity.getContent(),
+                reviewEntity.getCreatedAt(),
+                tags,
+                imageUrls,
+                reviewCount
+        );
     }
 }
