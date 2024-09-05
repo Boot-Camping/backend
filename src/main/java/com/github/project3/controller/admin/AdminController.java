@@ -68,10 +68,10 @@ public class AdminController {
      */
     @Operation(summary = "공지사항 전체 조회", description = "공지사항 목록을 페이지네이션으로 조회합니다.")
     @GetMapping("/notice/all")
-    public ResponseEntity<Page<AdminNoticeCheckResponse>> getNoticeAll(
+    public ResponseEntity<AdminNoticeCheckPageResponse> getNoticeAll(
             @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "3") int size) {
-        Page<AdminNoticeCheckResponse> noticePage = adminService.getNoticeAll(page, size);
+            @RequestParam(value = "size", defaultValue = "10") int size) {
+        AdminNoticeCheckPageResponse noticePage = adminService.getNoticeAll(page, size);
         return ResponseEntity.ok(noticePage);
     }
 
