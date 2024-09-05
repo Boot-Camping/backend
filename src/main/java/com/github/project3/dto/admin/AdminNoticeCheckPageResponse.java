@@ -6,13 +6,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.domain.Page;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AdminNoticeCheckPageResponse {
+public class AdminNoticeCheckPageResponse implements Serializable {
+    private static final long serialVersionUID = 1L;
     private List<AdminNoticeCheckResponse> content;
     private int number;
     private int size;

@@ -27,6 +27,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -85,9 +86,9 @@ public class AdminService {
         return AdminNoticeRegisterResponse.from(notice);
     }
     // 공지사항 전체조회
-    @Cacheable(value = "notice", key = "#root.methodName")
+    @Cacheable(value = "notice", key = "'getNoticeAll' + #page + '-' + #size")
     public AdminNoticeCheckPageResponse getNoticeAll(Integer page,Integer size){
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<NoticeEntity> noticePage = adminNoticeRepository.findAllByOrderByCreatedAtDesc(pageable);
         if (noticePage == null || noticePage.isEmpty()){
             throw new NotFoundException("등록된 공지사항이 없습니다.");
