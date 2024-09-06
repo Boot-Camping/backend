@@ -1,6 +1,6 @@
 # ⛺ 캠핑지 예약 서비스 BOOT-CAMPING
 
-![로고](./src/main/resources/assets/campImg.png)
+![로고](./src/main/resources/assets/logo.png)
 
 - **프론트엔드 배포 URL**: [Boot-Camping](https://boot-camping.netlify.app/)
 - **백엔드 배포 URL**: 43~
@@ -24,10 +24,10 @@
 | 이름                 | 역할                    | GitHub                                         | 이메일                       |
 |--------------------|-----------------------| ---------------------------------------------- | ---------------------------- |
 | 😎 조일운(PM)         | 예약, 거래 트랜잭션 관리, 채팅 기능 | [OneCloudd](https://github.com/OneCloudd)      | whdlfdns12@gmail.com          |
-| 😊 김준영(BE, DevOps) | 마이페이지, 관리자, AWS 배포    | [junyoung22](https://github.com/junyoung22)    | wnsdud5051@naver.com          |
+| 😊 이준영(BE, DevOps) | 마이페이지, 관리자 기능, AWS 배포 | [junyoung22](https://github.com/junyoung22)    | wnsdud5051@naver.com          |
 | 😁 김상윤(BE)         | 리뷰, 대댓글 관리            | [94KSY](https://github.com/94KSY)              | -                            |
 | 🙂 김선준(BE)         | 캠핑지 관리 및 검색 기능        | [godssun](https://github.com/godssun)          | -                            |
-| 🤩 김준규(BE)         | 회원 관리, 로그인, 로그아웃      | [kjg0223](https://github.com/kjg0223)          | -                            |
+| 🤩 김준규(BE)         | 인증 및 사용자 관리           | [kjg0223](https://github.com/kjg0223)          | -                            |
 
 ---
 
@@ -103,7 +103,7 @@ project-root/
 ```
 ---
 
----
+
 # 상세 기능
 
 ### 회원 가입
