@@ -99,7 +99,7 @@ public class AdminService {
     // 공지사항 상세조회
     @Cacheable(value = "notice", key = "#noticeId")
     public AdminNoticeDetailCheckResponse getNoticeDetail(Integer noticeId){
-        NoticeEntity notice = adminNoticeRepository.findById(noticeId).orElseThrow(() -> new NotFoundException("해당 공지사항을 찾을 수 없습니다."));
+        NoticeEntity notice = authService.findNoticeById(noticeId);
 
         return AdminNoticeDetailCheckResponse.from(notice);
     }
@@ -110,7 +110,7 @@ public class AdminService {
     public AdminNoticeUpdateResponse getUpdateNotice(Integer noticeId, AdminNoticeUpdateRequest noticeUpdateRequest, List<MultipartFile> images, String token){
         authService.verifyAdmin(token);
 
-        NoticeEntity notice = adminNoticeRepository.findById(noticeId).orElseThrow(() -> new NotFoundException("해당 공지사항을 찾을 수 없습니다."));
+        NoticeEntity notice = authService.findNoticeById(noticeId);
         //
         notice.update(noticeUpdateRequest.getTitle(), noticeUpdateRequest.getDescription());
             // 기존 이미지 삭제
@@ -147,7 +147,7 @@ public class AdminService {
     public void removeNotice(Integer noticeId, String token){
         authService.verifyAdmin(token);
 
-        NoticeEntity notice = adminNoticeRepository.findById(noticeId).orElseThrow(() -> new NotFoundException("존재하지 않는 공지사항 입니다."));
+        NoticeEntity notice = authService.findNoticeById(noticeId);
 
         adminNoticeRepository.delete(notice);
     }
