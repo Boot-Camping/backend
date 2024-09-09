@@ -28,3 +28,4 @@ public class AdminNoticeUpdateResponse implements Serializable {
         return response;
     }
 }
+

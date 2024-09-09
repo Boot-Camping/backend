@@ -85,6 +85,7 @@ public class AdminService {
         }
         return AdminNoticeRegisterResponse.from(notice);
     }
+
     // 공지사항 전체조회
     @Cacheable(value = "notice", key = "'getNoticeAll' + #page + '-' + #size")
     public AdminNoticeCheckPageResponse getNoticeAll(Integer page,Integer size){
@@ -97,6 +98,7 @@ public class AdminService {
         return AdminNoticeCheckPageResponse.from(noticePage);
 
     }
+
     // 공지사항 상세조회
     @Cacheable(value = "notice", key = "#noticeId")
     public AdminNoticeDetailCheckResponse getNoticeDetail(Integer noticeId){

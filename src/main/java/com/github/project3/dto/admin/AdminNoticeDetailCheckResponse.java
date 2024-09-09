@@ -35,3 +35,4 @@ public class AdminNoticeDetailCheckResponse implements Serializable {
         return response;
     }
 }
+

@@ -22,3 +22,4 @@ public class AdminNoticeRegisterResponse implements Serializable {
         return response;
     }
 }
+

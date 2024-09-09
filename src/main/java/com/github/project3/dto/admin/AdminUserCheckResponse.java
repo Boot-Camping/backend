@@ -35,3 +35,4 @@ public class AdminUserCheckResponse {
         return user.stream().map(AdminUserCheckResponse::from).collect(Collectors.toList());
     }
 }
+

@@ -35,3 +35,4 @@ public class AdminNoticeCheckPageResponse implements Serializable {
         );
     }
 }
+

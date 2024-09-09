@@ -27,7 +27,6 @@ logging:
       hibernate:
         SQL: DEBUG
 
-
 #aws
 cloud:
   aws:

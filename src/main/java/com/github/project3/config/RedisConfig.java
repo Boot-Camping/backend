@@ -31,6 +31,7 @@ public class RedisConfig {
             config.setPassword(password);
         }
         return new LettuceConnectionFactory(config);
+
     }
 
     @Bean
