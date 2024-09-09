@@ -137,7 +137,6 @@ public class MypageService {
 
         return MypageUpdatePasswordResponse.from(user);
     }
-
     // 찜 등록
     @Transactional
     public String registerWishlist(Integer campId){
@@ -198,7 +197,6 @@ public class MypageService {
                 wishlistRepository.save(wishlist);
             }
     }
-
     // cash 사용내역 조회
     public List<CashTransactionResponse> getUserCashTransactions(Integer userId) {
         return cashRepository.findCashTransactionsWithCampNameByUserId(userId);

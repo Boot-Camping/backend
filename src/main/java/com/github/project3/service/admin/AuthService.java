@@ -56,5 +56,4 @@ public class  AuthService {
                 .orElseThrow(() -> new NotFoundException("해당 공지사항을 찾을 수 없습니다."));
     }
 
-
 }

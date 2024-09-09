@@ -30,7 +30,6 @@ public class RedisConfig {
         if (!password.isEmpty()) {
             config.setPassword(password);
         }
-
         return new LettuceConnectionFactory(config);
     }
 
