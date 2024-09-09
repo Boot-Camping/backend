@@ -163,7 +163,6 @@ public class MypageService {
         wishlist.setStatus(Status.ACTIVE);
 
         wishlistRepository.save(wishlist);
-
         return "찜 등록 완료";
         }
     }
@@ -197,6 +196,7 @@ public class MypageService {
                 wishlist.setStatus(Status.DELETE);
                 wishlistRepository.save(wishlist);
             }
+
     }
 
     // cash 사용내역 조회
