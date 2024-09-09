@@ -163,6 +163,7 @@ public class MypageService {
         wishlist.setStatus(Status.ACTIVE);
 
         wishlistRepository.save(wishlist);
+
         return "찜 등록 완료";
         }
     }
