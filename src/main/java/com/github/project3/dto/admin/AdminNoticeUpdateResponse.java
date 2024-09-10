@@ -13,7 +13,8 @@ import java.util.stream.Collectors;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AdminNoticeUpdateResponse {
+public class AdminNoticeUpdateResponse implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String title;
     private String description;
     private List<String> imageUrl;

@@ -1,6 +1,7 @@
 package com.github.project3.service.admin;
 
 import com.github.project3.entity.admin.AdminEntity;
+import com.github.project3.entity.notice.NoticeEntity;
 import com.github.project3.entity.user.UserEntity;
 import com.github.project3.entity.user.enums.Role;
 import com.github.project3.entity.user.enums.Status;
@@ -23,6 +24,7 @@ public class  AuthService {
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final AdminRepository adminRepository;
+    private final AdminNoticeRepository adminNoticeRepository;
 
     // 관리자 인증
     public void verifyAdmin(String token){
@@ -47,6 +49,11 @@ public class  AuthService {
         return adminRepository.findByUser(user)
                 .map(AdminEntity::getSales)
                 .orElse(0); // 매출액이 없는 경우 0 반환
+    }
+    // 공지사항 찾기
+    public NoticeEntity findNoticeById(Integer noticeId){
+        return adminNoticeRepository.findById(noticeId)
+                .orElseThrow(() -> new NotFoundException("해당 공지사항을 찾을 수 없습니다."));
     }
 
 }

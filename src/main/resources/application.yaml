@@ -14,6 +14,11 @@ spring:
         format_sql: true
         physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 
+  data:
+    redis:
+      port: ${SPRING_REDIS_PORT}
+      password: ${SPRING_REDIS_PASSWORD:}
+      host: ${SPRING_REDIS_HOST}
 
 logging:
   config: classpath:logback-spring.xml
