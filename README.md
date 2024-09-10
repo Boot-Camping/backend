@@ -1211,4 +1211,3 @@ Cookie: {refreshToken}
     "sentAt": "2024-09-09T16:11:37.407799"
 }
 ```
-
