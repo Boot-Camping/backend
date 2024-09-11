@@ -86,7 +86,7 @@ public class AdminService {
         return AdminNoticeRegisterResponse.from(notice);
     }
     // 공지사항 전체조회
-    @Cacheable(value = "notice", key = "#root.methodName")
+    @Cacheable(value = "notice", key = "'getNoticeAll' + #page + '-' + #size")
     public AdminNoticeCheckPageResponse getNoticeAll(Integer page,Integer size){
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<NoticeEntity> noticePage = adminNoticeRepository.findAllByOrderByCreatedAtDesc(pageable);

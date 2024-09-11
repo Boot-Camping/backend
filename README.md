@@ -178,6 +178,7 @@ Cookie: {refreshToken}
 - **URL**: `/api/user/delete`
 - **Method**: `DELETE`
 - **Content-Type**: `application/json`
+- **Authorization**: Token 필요
 - **Description**: 사용자가 자신의 계정을 탈퇴할 수 있는 기능입니다
   - 계정 탈퇴 후 해당 사용자의 정보는 비활성화됩니다.
 
@@ -198,10 +199,11 @@ Cookie: {refreshToken}
 - **URL**: `/api/camps`
 - **Method**: `POST, PUT`
 - **Content-Type**: `multipart/form-data`
+- **Authorization**: Token 필요
 - **Description**: 새로운 캠핑지를 등록, 수정합니다
   - 이미지 파일 업로드와 함께 캠핑지 정보를 form-data로 전송합니다.
 
-#### Request
+#### Request Parameter
 
 | 필드 이름        | 필드 타입              | 설명                     |
 | ---------------- | --------------------- |------------------------|
@@ -248,6 +250,7 @@ Cookie: {refreshToken}
 ### 6. 캠핑지 삭제
 - **URL**: `/api/camps`
 - **Method**: `DELETE`
+- **Authorization**: Token 필요
 - **Description**: 등록된 캠핑지를 삭제합니다.
 
 #### Path Parameter
@@ -267,7 +270,7 @@ Cookie: {refreshToken}
 - **Content-Type**: `application/json`
 - **Description**: 모든 캠핑지를 조회하거나, 특정 카테고리, 주소 또는 이름으로 검색합니다.
 
-#### 캠핑지 조회 및 검색 파라미터
+#### Request Parameter
 
 | 파라미터 이름     | 필수 여부 | 타입     | 설명                                                   |
 | ----------------- | --------- | -------- | ------------------------------------------------------ |
@@ -312,7 +315,7 @@ Cookie: {refreshToken}
 
 ### 8. 캠핑지 상세 조회
 - **URL**: `/api/camps`
-- **Method**: `get`
+- **Method**: `GET`
 - **Content-Type**: `application/json`
 - **Description**: 특정 ID에 해당하는 캠핑지 정보를 조회합니다.
   - 만약 해당 캠핑지에 예약된 날짜가 존재한다면 해당 날짜들을 반환합니다.
@@ -370,11 +373,13 @@ Cookie: {refreshToken}
 - **URL**: `/api/camps/bookings`
 - **Method**: `POST`
 - **Content-Type**: `application/json`
+- **Authorization**: Token 필요
 - **Description**: 
   - 특정 캠핑장에 대한 예약을 등록합니다. 예약 시 **checkIn**과 **checkOut** 날짜 사이의 모든 날짜가 저장되어, 각 날짜에 대한 예약 정보가 기록됩니다.
   - **checkIn**과 **checkOut** 필드로 입력된 날짜 사이의 **모든 날짜**가 각각 저장됩니다.
   - 예를 들어, **2024-09-07**에 체크인하고 **2024-09-09**에 체크아웃하는 경우, **2024-09-07**, **2024-09-08**, **2024-09-09**의 날짜가 모두 예약으로 기록됩니다.
-  - 이 로직은 사용자가 예약한 기간 동안 해당 캠핑장을 다른 사용자가 중복 예약할 수 없도록 처리하는 데 사용됩니다.
+  - 사용자가 예약한 기간 동안 해당 캠핑장을 다른 사용자가 중복 예약할 수 없습니다.
+  - 에약 등록 성공 시, 사용자의 보유 금액에서 결제 비용을 차감합니다.
   - 예약 당일이 되면 **Spring Scheduler**를 사용해 해당 예약 상태를 DICEDE로 변경합니다.
   
 #### Path Parameter
@@ -401,10 +406,12 @@ Cookie: {refreshToken}
 ```
 
 ### 10. 예약 취소
-- **URL**: `/api/camps/bookings/{bookId}`
+- **URL**: `/api/camps/bookings`
 - **Method**: `PUT`
+- **Authorization**: Token 필요
 - **Description**: 특정 예약을 취소합니다.
   - 예약 취소 시, 해당 예약의 상태가 **CANCEL**로 변경됩니다.
+  - 예약 취소 시, 예약 등록할 때 지불했던 금액이 환불됩니다.
 
 #### Path Parameter
 
@@ -422,6 +429,7 @@ Cookie: {refreshToken}
 - **URL**: `/api/camps/bookings`
 - **Method**: `GET`
 - **Content-Type**: `application/json`
+- **Authorization**: Token 필요
 - **Description**: 현재 인증 된 사용자에 대한 예약 목록을 조회합니다.
   - **SecurityContextHolder**에 저장된 사용자 정보를 통해 요청한 사용자의 예약만을 조회합니다.
 #### Response
@@ -446,6 +454,7 @@ Cookie: {refreshToken}
 - **URL**: `/api/user/chargeCash`
 - **Method**: `PUT`
 - **Content-Type**: `application/json`
+- **Authorization**: Token 필요
 - **Description**: 사용자의 캐시를 충전합니다.
 
 #### Path Parameter
@@ -471,6 +480,7 @@ Cookie: {refreshToken}
 - **URL**: `/api/userprofile/cashTransaction`
 - **Method**: `GET`
 - **Content-Type**: `application/json`
+- **Authorization**: Token 필요
 - **Description**: 사용자의 캐시 사용 내역을 조회합니다.
 
 #### Path Parameter
@@ -498,6 +508,7 @@ Cookie: {refreshToken}
 - **URL**: `/api/userprofile`
 - **Method**: `GET`
 - **Content-Type**: `application/json`
+- **Authorization**: Token 필요
 - **Description**: 사용자의 정보를 조회합니다.
 
 #### Path Parameter
@@ -508,7 +519,7 @@ Cookie: {refreshToken}
 
 
 #### Response
-```
+```json
 [
     {
         "id": 40,
@@ -530,9 +541,10 @@ Cookie: {refreshToken}
 - **URL**: `/api/userprofile`
 - **Method**: `PUT`
 - **Content-Type**: `application/json`
+- **Authorization**: Token 필요
 - **Description**: 전달받은 파라미터의 값으로 사용자의 기본정보를 수정합니다.
 
-#### 프로필 수정 파라미터
+#### Request Parameter
 
 | 파라미터 이름 | 필수 여부 | 타입       | 설명        |
 |---------|-------|----------|-----------|
@@ -549,6 +561,7 @@ Cookie: {refreshToken}
 - **URL**: `/api/userprofile/password`
 - **Method**: `PUT`
 - **Content-Type**: `application/json`
+- **Authorization**: Token 필요
 - **Description**: 사용자의 비밀번호를 수정합니다.
   - oldPassword가 기존의 비밀번호와 동일한지 **확인** 후 수정합니다.
 
@@ -569,6 +582,7 @@ Cookie: {refreshToken}
 - **URL**: `/api/userprofile/images`
 - **Method**: `POST`
 - **Content-Type**: multipart/form-data
+- **Authorization**: Token 필요
 - **Description**: 프로필의 이미지를 등록 및 수정합니다.
     - 이미지 파일을 form-data로 전송합니다.
 
@@ -587,6 +601,7 @@ Cookie: {refreshToken}
 ### 18. 찜 등록 및 삭제
 - **URL**: `/api/userprofile/wishlist/add`
 - **Method**: `POST`
+- **Authorization**: Token 필요
 - **Description**: 특정 캠핑지를 찜 등록 및 삭제합니다.
   - **동일한 API**로 등록과 삭제를 한번에 처리합니다.
 
@@ -610,10 +625,11 @@ Cookie: {refreshToken}
 - **URL**: `/api/userprofile/wishlist`
 - **Method**: `GET`
 - **Content-Type**: `application/json`
+- **Authorization**: Token 필요
 - **Description**: 사용자의 찜 등록 내역을 조회합니다.
 
 #### Response
-```
+```json
 [
     {
         "id": 40,
@@ -638,6 +654,7 @@ Cookie: {refreshToken}
 - **URL**: `/api/admin/notice`
 - **Method**: `POST`
 - **Content-Type**: multipart/form-data
+- **Authorization**: Token 필요
 - **Description**: 공지사항을 등록합니다.
     - 등록 정보들을 form-data로 전송합니다.
     - **권한**을 확인하여 admin 계정일 때만 정상적으로 등록됩니다.
@@ -659,6 +676,7 @@ Cookie: {refreshToken}
 - **URL**: `/api/admin/notice`
 - **Method**: `PUT`
 - **Content-Type**: multipart/form-data
+- **Authorization**: Token 필요
 - **Description**: 공지사항을 수정합니다.
     - 수정 정보들을 form-data로 전송합니다.
     - **권한**을 확인하여 admin 계정일 때만 정상적으로 수정됩니다.
@@ -687,7 +705,9 @@ Cookie: {refreshToken}
 - **Method**: `GET`
 - **Content-Type**: `application/json`
 - **Description**: 전체 공지사항을 조회합니다.
-  - **Redis**를 사용해 **Cache**를 적용했습니다.
+  - 페이징 처리와 함께 캐싱처리로 속도 향상과 서버 부하를 줄임
+  - 캐시 일관성 문제를 해결하기 위해 **Redis**를 활용한 캐시 저장소를 공유
+  - 배포시 Redis 환경 문제 해결을 위해 **Docker**를 활용해 Redis를 Docker 컨테이너에서 실행하도록 전환
 
 #### Response
 ```json
@@ -733,6 +753,7 @@ Cookie: {refreshToken}
 ### 24. 공지사항 삭제
 - **URL**: `/api/admin/notice`
 - **Method**: `DELETE`
+- **Authorization**: Token 필요
 - **Description**: 해당 공지사항을 삭제합니다.
   - **권한**을 확인하여 admin 계정일 때만 정상적으로 삭제됩니다.
 
@@ -753,6 +774,7 @@ Cookie: {refreshToken}
 - **URL**: `/api/admin/stats`
 - **Method**: `GET`
 - **Content-Type**: `application/json`
+- **Authorization**: Token 필요
 - **Description**: 사이트의 통계를 조회합니다.
   - **권한**을 확인하여 admin 계정일 때만 정상적으로 조회됩니다.
   - **Spring scheduler**를 사용해 매일 자정 매출액을 수정합니다.
@@ -780,6 +802,7 @@ Cookie: {refreshToken}
 - **URL**: `/api/admin/user/{userId}/blacklist`
 - **Method**: `PUT`
 - **Description**: 해당하는 사용자를 블랙리스트 처리합니다.
+- **Authorization**: Token 필요
   - **권한**을 확인하여 admin 계정일 때만 정상적으로 등록됩니다.
   - 해당 사용자의 상태를 **BLACKLIST**로 변경시켜 로그인 할 수 없게 합니다.
 
@@ -799,6 +822,7 @@ Cookie: {refreshToken}
 - **URL**: `/api/admin/user/all`
 - **Method**: `GET`
 - **Content-Type**: `application/json`
+- **Authorization**: Token 필요
 - **Description**: 등록된 사용자의 전체 목록을 조회합니다.
   - **권한**을 확인하여 admin 계정일 때만 정상적으로 조회됩니다.
 
@@ -878,6 +902,7 @@ Cookie: {refreshToken}
 - **URL**: `/api/reviews/user`
 - **Method**: `GET`
 - **Content-Type**: `application/json`
+- **Authorization**: Token 필요
 - **Description**: 특정 유저가 등록한 모든 리뷰를 조회합니다.
 
 #### Path Parameter
@@ -914,6 +939,7 @@ Cookie: {refreshToken}
 - **URL**: `/api/reviews`
 - **Method**: `POST`
 - **Content-Type**: `multipart/form-data`
+- **Authorization**: Token 필요
 - **Description**: 리뷰를 작성합니다.
     - 이미지 파일 업로드와 함께 리뷰정보를 form-data로 전송합니다.
     - 예약 상태가 **DECIDE**인 경우에만 리뷰를 작성할 수 있습니다.
@@ -937,6 +963,7 @@ Cookie: {refreshToken}
 - **URL**: `/api/reviews`
 - **Method**: `PUT`
 - **Content-Type**: `multipart/form-data`
+- **Authorization**: Token 필요
 - **Description**: 등록된 리뷰를 수정합니다.
   -  이미지 파일 업로드와 함께 리뷰정보를 form-data로 전송합니다.
 
@@ -963,6 +990,7 @@ Cookie: {refreshToken}
 ### 33. 리뷰 삭제
 - **URL**: `/api/reviews/{reviewId}?userId={userId}`
 - **Method**: `DELETE`
+- **Authorization**: Token 필요
 - **Description**: 특정 리뷰를 삭제합니다.
 
 #### Path Parameter
@@ -1012,6 +1040,7 @@ Cookie: {refreshToken}
 - **URL**: `/api/reviews/{reviewId}/replies`
 - **Method**: `POST`
 - **Content-Type**: `application/json`
+- **Authorization**: Token 필요
 - **Description**: 특정 리뷰에 대댓글을 작성합니다.
 
 #### Path Parameter
@@ -1042,6 +1071,7 @@ Cookie: {refreshToken}
 - **URL**: `/api/reviews/{reviewId}/replies/{replyId}`
 - **Method**: `PUT`
 - **Content-Type**: `application/json`
+- **Authorization**: Token 필요
 - **Description**: 등록된 대댓글을 수정합니다.
 
 #### Path Parameter
@@ -1073,6 +1103,7 @@ Cookie: {refreshToken}
 ### 37. 대댓글 삭제
 - **URL**: `/api/reviews/{reviewId}/replies/{replyId}`
 - **Method**: `DELETE`
+- **Authorization**: Token 필요
 - **Description**: 리뷰에 등록된 대댓글을 삭제합니다.
 
 #### Path Parameter
