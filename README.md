@@ -2,8 +2,7 @@
 
 ![로고](./src/main/resources/assets/logo.png)
 
-- **프론트엔드 배포 URL**: [Boot-Camping](https://boot-camping.netlify.app/)
-- **백엔드 배포 URL**: 43~
+- **배포 URL**: [Boot-Camping](https://boot-camping.netlify.app/)
 - **Notion**: [Boot-Camping Notion](https://www.notion.so/Boot-Camping-76a831c1a1074df39405bc11316130f5)
 - **SWAGGER**: [Swagger API 문서](http://43.203.54.145:8080/swagger-ui/index.html)
 
@@ -103,6 +102,11 @@ project-root/
 ├── build.gradle
 └── settings.gradle
 ```
+---
+
+## ERD
+![ERD](./src/main/resources/assets/ERD.png)
+
 ---
 
 ## API 기능
