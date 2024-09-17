@@ -1,4 +1,4 @@
-package com.github.project3.advice;
+package com.github.project3.controller.advice;
 
 
 import com.github.project3.service.exceptions.*;

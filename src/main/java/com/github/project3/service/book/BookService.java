@@ -11,14 +11,16 @@ import com.github.project3.entity.user.enums.TransactionType;
 import com.github.project3.repository.book.BookRepository;
 import com.github.project3.repository.bookDate.BookDateRepository;
 import com.github.project3.repository.camp.CampRepository;
-import com.github.project3.repository.cash.CashRepository;
-import com.github.project3.repository.user.UserRepository;
 import com.github.project3.service.cash.CashService;
 import com.github.project3.service.exceptions.NotAcceptException;
 import com.github.project3.service.exceptions.NotFoundException;
 import com.github.project3.service.user.UserService;
+import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +29,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -36,164 +37,189 @@ public class BookService {
 
     private final UserService userService;
     private final CashService cashService;
-    private final UserRepository userRepository;
     private final BookRepository bookRepository;
     private final BookDateRepository bookDateRepository;
-    private final CashRepository cashRepository;
     private final CampRepository campRepository;
+
+    private static final int MAX_RETRY_ATTEMPTS = 3; // 최대 재시도 횟수
+    private static final long RETRY_DELAY = 1000L; // 재시도 간격 (1초)
+    private static final int DISCOUNT_AMOUNT = 10000; // 예약 시 할인 금액
+    private static final int DISCOUNT_DAYS = 2; // 할인 적용 일수
+    private static final int REFUND_PERCENTAGE = 50; // 3일 이내 취소 시 환불 비율
+    private static final int REFUND_DAYS = 3; // 환불 계산 기준 일수
+    private static final List<Status> BOOKING_STATUSES = Arrays.asList(Status.BOOKING, Status.DECIDE); // 예약 중인 상태 목록
 
     /**
      * 캠핑장 예약을 등록합니다.
      *
      * @param campId                예약하려는 캠핑장의 ID
-     * @param userId                예약을 요청하는 사용자의 ID
      * @param bookRegisterRequest   예약 등록 요청 정보를 담고 있는 객체
      * @throws NotFoundException    해당 ID의 사용자 또는 캠핑장이 존재하지 않을 경우 발생
      * @throws NotAcceptException   요청된 날짜에 이미 예약이 존재할 경우 발생
      */
     @Transactional
-    public void registerBook(Integer campId, Integer userId, BookRegisterRequest bookRegisterRequest) {
-        UserEntity user = userRepository.findById(userId).orElseThrow(()-> new NotFoundException("해당 ID의 사용자가 존재하지 않습니다."));
+    @Retryable(
+            value = OptimisticLockException.class, // 재시도할 예외
+            maxAttempts = MAX_RETRY_ATTEMPTS, // 최대 재시도 횟수
+            backoff = @Backoff(delay = RETRY_DELAY) // 재시도 간격(1초)
+    )
+    public void registerBook(Integer campId, BookRegisterRequest bookRegisterRequest) {
 
-        CampEntity camp = campRepository.findById(campId).orElseThrow(()-> new NotFoundException("해당하는 캠핑지가 존재하지 않습니다."));
+        UserEntity user = getAuthenticatedUser();
+        log.info("인증된 유저의 ID : {}", user.getId());
+
+        CampEntity camp = getCampEntityById(campId);
 
         LocalDateTime requestCheckIn = bookRegisterRequest.getCheckIn();
         LocalDateTime requestCheckOut = bookRegisterRequest.getCheckOut();
 
-        List<Status> statuses = Arrays.asList(Status.BOOKING, Status.DECIDE);
+        validateBookingDates(camp, requestCheckIn, requestCheckOut);
 
-        // 예약 날짜 중복 확인
-        boolean isDateConflict = bookRepository.existsByCampAndStartDateLessThanEqualAndEndDateGreaterThanEqualAndStatusIn(
-                camp,
-                requestCheckIn,
-                requestCheckOut,
-                statuses
-        );
+        int totalPrice = calculateTotalPriceWithDiscount(bookRegisterRequest.getTotalPrice(), requestCheckIn);
 
-        if (isDateConflict) {
-            throw new NotAcceptException("해당 날짜에 이미 예약이 존재합니다. 다른 날짜를 선택해주세요.");
-        }
+        processTransaction(user, totalPrice, TransactionType.PAYMENT);
 
-        // 예약 날짜와 요청 시간의 차이 계산
-        LocalDateTime now = LocalDateTime.now();
-        long daysUntilCheckIn = ChronoUnit.DAYS.between(now, requestCheckIn);
+        BookEntity savedBook = saveBooking(user, camp, totalPrice, bookRegisterRequest);
 
-        // 예약 날짜에 임박하면(2일 이내) 예약금 10,000원 할인
-        int totalPrice = bookRegisterRequest.getTotalPrice();
-        if (daysUntilCheckIn <= 2) {
-            totalPrice -= 10000;
-        }
+        saveBookDates(savedBook, requestCheckIn, requestCheckOut);
+    }
 
-        // user 의 cash 변동사항 저장
-        cashService.processTransaction(user, totalPrice, TransactionType.PAYMENT);
-
-        // 예약 정보 등록
-        BookEntity book = BookEntity.of(
-                user,
-                camp,
-                bookRegisterRequest.getTotalPrice(),
-                bookRegisterRequest.getCheckIn(),
-                bookRegisterRequest.getCheckOut(),
-                bookRegisterRequest.getBookRequest(),
-                bookRegisterRequest.getBookNum(),
-                Status.BOOKING
-        );
-
-        BookEntity savedBook = bookRepository.save(book);
-
-        // 예약 날짜 등록
-        List<BookDateEntity> bookDates = new ArrayList<>();
-
-        // 반복문으로 체크인날짜, 체크아웃날짜, 중간에 있는 날짜들도 DB에 저장
-        while (!requestCheckIn.isAfter(requestCheckOut)) {
-            BookDateEntity bookDate = new BookDateEntity();
-            bookDate.setBook(savedBook);  // savedBook ID 사용
-            bookDate.setDate(requestCheckIn);
-            bookDates.add(bookDate);
-
-            requestCheckIn = requestCheckIn.plusDays(1);
-        }
-        bookDateRepository.saveAll(bookDates);
+    // Retry 요청(3번) 실행 후 정상적으로 등록이 안되면 실행되는 메서드
+    @Recover
+    public void recover(OptimisticLockException e, Integer campId, BookRegisterRequest bookRegisterRequest) {
+        log.error("예약 등록 중 지속적으로 등록 실패 한 campId: {}", campId, e);
+        throw new NotAcceptException("다른 사용자가 동일한 캠핑장을 예약하고 있습니다. 다시 시도해 주세요.");
     }
 
     /**
      * 캠핑장 예약을 취소합니다.
      *
      * @param bookId  취소하려는 예약의 ID
-     * @param userId  예약 취소를 요청하는 사용자의 ID
      * @return 환불 금액
      * @throws NotFoundException    해당 예약 또는 사용자가 존재하지 않을 경우 발생
      * @throws NotAcceptException   예약이 이미 취소된 상태이거나 기타 조건에 따라 발생
      */
     @Transactional
-    public Integer cancelBook(Integer bookId, Integer userId) {
+    public Integer cancelBook(Integer bookId) {
 
-        BookEntity book = bookRepository.findById(bookId).orElseThrow(() -> new NotFoundException("해당하는 예약이 존재하지 않습니다."));
+        BookEntity book = getBookEntityById(bookId);
 
-        if (book.getStatus() == Status.CANCEL) {
-            throw new NotAcceptException("해당 예약은 이미 취소된 상태입니다.");
-        }
+        validateCancel(book);
 
-        // 예약 상태를 취소로 변경한 후 저장
         book.setStatus(Status.CANCEL);
         bookRepository.save(book);
 
-        UserEntity user = userRepository.findById(userId).orElseThrow(()-> new NotFoundException("해당 ID의 사용자가 존재하지 않습니다."));
-
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime startDate = book.getStartDate();
-        LocalDateTime threeDaysBeforeStartDate = startDate.minusDays(3);
-
-        // 환불 금액 계산
-        int refundAmount;
-        if (now.isAfter(threeDaysBeforeStartDate) && now.isBefore(startDate)) {
-            // 현재 시간이 start_date 3일 전 ~ start_date 사이면 절반만 환불
-            refundAmount = book.getTotalPrice() / 2;
-        } else {
-            refundAmount = book.getTotalPrice();
-        }
-
-        // user 의 cash 변동사항 저장
-        return cashService.processTransaction(user, refundAmount, TransactionType.REFUND);
-
+        UserEntity user = getAuthenticatedUser();
+        return processTransaction(user, book.getTotalPrice(), TransactionType.REFUND);
     }
 
     /**
      * 사용자의 예약 내역을 조회합니다.
      *
-     * @param userId  예약 내역을 조회하려는 사용자의 ID
      * @return 예약 내역 리스트
      * @throws NotFoundException    해당 사용자가 존재하지 않거나 예약이 없을 경우 발생
      */
-    public List<BookInquiryResponse> inquiryBook(Integer userId) {
-        UserEntity user = userRepository.findById(userId).orElseThrow(()-> new NotFoundException("해당 ID의 사용자가 존재하지 않습니다."));
+    public List<BookInquiryResponse> getBooks() {
+        UserEntity user = getAuthenticatedUser();
 
-        List<BookEntity> books = bookRepository.findByUserId(userId);
+        List<BookInquiryResponse> books = bookRepository.findBookInquiriesByUserId(user.getId());
 
         if (books.isEmpty()) {
             throw new NotFoundException("해당하는 예약이 존재하지 않습니다.");
         }
 
-        // 각 BookEntity 를 BookInquiryResponse 로 변환하여 리스트로 반환
-        return books.stream()
-                .map(book -> {
-                    // camp 의 여러 image 중 첫 번째 이미지를 선택
-                    String firstImage = !book.getCamp().getImages().isEmpty()
-                            ? book.getCamp().getImages().get(0).getImageUrl()
-                            : null;
+        return books;
+    }
 
-                    return BookInquiryResponse.of(
-                            book.getId(),
-                            book.getCamp().getName(),
-                            firstImage,
-                            book.getStartDate(),
-                            book.getEndDate(),
-                            book.getNum(),
-                            book.getTotalPrice(),
-                            book.getRequest(),
-                            book.getStatus()
-                    );
-                })
-                .collect(Collectors.toList());
+    // 사용자 조회 메서드
+    private UserEntity getAuthenticatedUser() {
+        return userService.findAuthenticatedUser();
+    }
+
+    // 캠프 조회 메서드
+    private CampEntity getCampEntityById(Integer campId) {
+        return campRepository.findById(campId)
+                .orElseThrow(() -> new NotFoundException("해당하는 캠핑지가 존재하지 않습니다."));
+    }
+
+    // 예약 날짜 중복 확인 메서드
+    private void validateBookingDates(CampEntity camp, LocalDateTime checkIn, LocalDateTime checkOut) {
+        if (isDateConflict(camp, checkIn, checkOut, BOOKING_STATUSES)) {
+            throw new NotAcceptException("해당 날짜에 이미 예약이 존재합니다. 다른 날짜를 선택해주세요.");
+        }
+    }
+
+    // 예약 날짜 중복 확인 메서드
+    private boolean isDateConflict(CampEntity camp, LocalDateTime checkIn, LocalDateTime checkOut, List<Status> statuses) {
+        return bookRepository.existsByCampAndDateRangeOverlap(camp, checkIn, checkOut, statuses);
+    }
+
+    // 예약 등록 시 할인 금액 계산 메서드
+    private int calculateTotalPriceWithDiscount(Integer totalPrice, LocalDateTime requestCheckIn) {
+        if (ChronoUnit.DAYS.between(LocalDateTime.now(), requestCheckIn) <= DISCOUNT_DAYS) {
+            totalPrice -= DISCOUNT_AMOUNT;
+        }
+        return totalPrice;
+    }
+
+   // 예약 정보 저장 메서드
+    private BookEntity saveBooking(UserEntity user, CampEntity camp, int totalPrice, BookRegisterRequest request) {
+        BookEntity book = BookEntity.of(
+                user,
+                camp,
+                totalPrice,
+                request.getCheckIn(),
+                request.getCheckOut(),
+                request.getBookRequest(),
+                request.getBookNum(),
+                Status.BOOKING
+        );
+        return bookRepository.save(book);
+    }
+
+    // 예약 조회 메서드
+    private BookEntity getBookEntityById(Integer bookId) {
+        return bookRepository.findById(bookId)
+                .orElseThrow(() -> new NotFoundException("해당하는 예약이 존재하지 않습니다."));
+    }
+
+    // 예약 취소 검증 메서드
+    private void validateCancel(BookEntity book) {
+        if (book.getStatus() == Status.CANCEL) {
+            throw new NotAcceptException("해당 예약은 이미 취소된 상태입니다.");
+        }
+    }
+
+    private Integer processTransaction(UserEntity user, int amount, TransactionType transactionType) {
+        return cashService.processTransaction(user, amount, transactionType);
+    }
+
+    // 예약 취소 시 환불 금액 계산 메서드
+    private int calculateRefundAmount(BookEntity book) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startDate = book.getStartDate();
+        LocalDateTime threeDaysBeforeStartDate = startDate.minusDays(REFUND_DAYS);
+
+        if (now.isAfter(threeDaysBeforeStartDate) && now.isBefore(startDate)) {
+            return book.getTotalPrice() * REFUND_PERCENTAGE / 100; // 3일 이내 취소 시 50% 환불
+        } else {
+            return book.getTotalPrice();
+        }
+    }
+
+    // 예약 날짜 저장 메서드
+    private void saveBookDates(BookEntity savedBook, LocalDateTime requestCheckIn, LocalDateTime requestCheckOut) {
+
+        List<BookDateEntity> bookDates = new ArrayList<>();
+
+        // 반복문으로 체크인날짜, 체크아웃날짜, 중간에 있는 날짜들도 DB에 저장
+        while (!requestCheckIn.isAfter(requestCheckOut)) {
+            BookDateEntity bookDate = new BookDateEntity();
+            bookDate.setBook(savedBook);
+            bookDate.setDate(requestCheckIn);
+            bookDates.add(bookDate);
+            requestCheckIn = requestCheckIn.plusDays(1);
+        }
+        bookDateRepository.saveAll(bookDates);
     }
 }

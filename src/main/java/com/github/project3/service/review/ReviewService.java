@@ -3,20 +3,22 @@ package com.github.project3.service.review;
 import com.github.project3.dto.review.ReviewRequest;
 import com.github.project3.dto.review.ReviewResponse;
 import com.github.project3.dto.review.ReviewSummaryResponse;
+import com.github.project3.entity.book.BookEntity;
+import com.github.project3.entity.book.enums.Status;
 import com.github.project3.entity.camp.CampEntity;
 import com.github.project3.entity.review.ReviewEntity;
 import com.github.project3.entity.review.ReviewImageEntity;
 import com.github.project3.entity.review.ReviewTagEntity;
 import com.github.project3.entity.review.enums.Tag;
-import com.github.project3.entity.user.CashEntity;
 import com.github.project3.entity.user.UserEntity;
 import com.github.project3.entity.user.enums.TransactionType;
-import com.github.project3.jwt.JwtTokenProvider;
+import com.github.project3.repository.book.BookRepository;
 import com.github.project3.repository.camp.CampRepository;
-import com.github.project3.repository.cash.CashRepository;
 import com.github.project3.repository.review.ReviewRepository;
 import com.github.project3.repository.user.UserRepository;
 import com.github.project3.service.S3Service;
+import com.github.project3.service.cash.CashService;
+import com.github.project3.service.exceptions.NotAcceptException;
 import com.github.project3.service.exceptions.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -34,9 +36,9 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
     private final CampRepository campRepository;
-    private final CashRepository cashRepository;
     private final S3Service s3Service;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final CashService cashService;
+    private final BookRepository bookRepository;
 
     /**
      * 새로운 리뷰를 생성합니다.
@@ -45,10 +47,14 @@ public class ReviewService {
      * @param campId        리뷰가 작성된 캠핑장의 ID
      * @param reviewRequest 리뷰 작성 요청 정보를 담고 있는 DTO 객체
      * @param reviewImages  리뷰와 함께 업로드된 이미지 파일 리스트
-     * @return 생성된 리뷰의 정보를 담고 있는 ReviewResponse 객체
      */
     @Transactional
-    public ReviewResponse createReview(Integer userId, Integer campId, ReviewRequest reviewRequest, List<MultipartFile> reviewImages) {
+    public void createReview(Integer userId, Integer campId, ReviewRequest reviewRequest, List<MultipartFile> reviewImages) {
+        // 구매 확정 여부 확인 (BookRepository 직접 사용)
+        List<BookEntity> confirmedBookings = bookRepository.findByUserIdAndCampIdAndStatus(userId, campId, Status.DECIDE);
+        if (confirmedBookings.isEmpty()) {
+            throw new NotAcceptException("구매 확정이 된 경우에만 리뷰를 작성할 수 있습니다.");
+        }
         // 사용자와 캠핑장 정보 가져오기
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("유저 정보가 없습니다."));
@@ -98,33 +104,11 @@ public class ReviewService {
         // 리뷰엔티티를 데이터베이스에 저장
         reviewRepository.save(review);
 
-        // 리뷰 작성 후 500원 적립
-        int rewardAmount = 500;
-        int currentBalance = user.getCash().stream()
-                .max((c1,c2) -> c1.getTransactionDate().compareTo(c2.getTransactionDate()))
-                .map(CashEntity::getBalanceAfterTransaction)
-                .orElse(0);
-        int newBalance = currentBalance + rewardAmount;
-
-        // 적립 거래 내역 생성 및 저장
-        CashEntity cashTransaction = CashEntity.of(user, rewardAmount, TransactionType.REWARD, newBalance);
-        cashRepository.save(cashTransaction);
+        // 리뷰 작성 시 500원 적립
+        cashService.processTransaction(user, 500, TransactionType.REWARD);
 
         // 해당 캠핑장 리뷰 개수 계산
         long reviewCount = reviewRepository.countByCampId(camp.getId());
-
-        // 응답 DTO 생성
-        return ReviewResponse.of(
-                review.getId(),
-                user.getLoginId(),
-                camp.getName(),
-                review.getGrade(),
-                review.getContent(),
-                review.getCreatedAt(),
-                review.getTags().stream().map(ReviewTagEntity::getTag).collect(Collectors.toList()),
-                review.getImages().stream().map(ReviewImageEntity::getImageUrl).collect(Collectors.toList()),
-                reviewCount
-        );
     }
 
     /**
@@ -132,18 +116,18 @@ public class ReviewService {
      *
      * @return 모든 리뷰의 요약 정보를 담고 있는 ReviewSummaryResponse 리스트
      */
-    @Transactional(readOnly = true)
-    public List<ReviewSummaryResponse> getAllReviews(){
-        return reviewRepository.findAll().stream()
+    @Transactional(readOnly = true) public List<ReviewSummaryResponse> getAllReviews() {
+        List<ReviewEntity> reviews = reviewRepository.findAllReviewsWithImages();
+        return reviews.stream()
                 .map(review -> ReviewSummaryResponse.of(
                         review.getId(),
                         review.getUser().getLoginId(),
                         review.getCamp().getName(),
                         review.getContent(),
-                        review.getImages().isEmpty() ? null : review.getImages().get(0).getImageUrl(),
-                        review.getCreatedAt()
-                ))
-                .collect(Collectors.toList());
+                        review.getImages().isEmpty() ? null : review.getImages().get(0).getImageUrl(), // 첫 번째 이미지를 선택하여 매핑
+                        review.getCreatedAt() ))
+                .collect(Collectors.toList()
+                );
     }
 
     /**
@@ -154,21 +138,34 @@ public class ReviewService {
      */
     @Transactional(readOnly = true)
     public List<ReviewResponse> getReviewsByCampId(Integer campId) {
-        List<ReviewEntity> reviews = reviewRepository.findByCampId(campId);
-        long reviewCount = reviewRepository.countByCampId(campId);
-        return reviews.stream()
-                .map(review -> ReviewResponse.of(
-                        review.getId(),
-                        review.getUser().getLoginId(),
-                        review.getCamp().getName(),
-                        review.getGrade(),
-                        review.getContent(),
-                        review.getCreatedAt(),
-                        review.getTags().stream().map(tag -> tag.getTag()).collect(Collectors.toList()),
-                        review.getImages().stream().map(image -> image.getImageUrl()).collect(Collectors.toList()),
-                        reviewCount
-                ))
-                .collect(Collectors.toList());
+        List<ReviewEntity> reviews = reviewRepository.findReviewsByCampId(campId);
+        long reviewCount = reviews.size();
+
+        return reviews.stream().map(review -> {
+            // 태그 리스트 생성
+            List<Tag> tags = review.getTags().stream()
+                    .map(ReviewTagEntity::getTag)
+                    .collect(Collectors.toList());
+
+            // 이미지 URL 리스트 생성
+            List<String> imageUrls = review.getImages().stream()
+                    .map(ReviewImageEntity::getImageUrl)
+                    .collect(Collectors.toList());
+
+            // ReviewResponse 생성
+            return new ReviewResponse(
+                    review.getId(),
+                    review.getCamp().getId(),
+                    review.getUser().getLoginId(),
+                    review.getCamp().getName(),
+                    review.getGrade(),
+                    review.getContent(),
+                    review.getCreatedAt(),
+                    tags,
+                    imageUrls,
+                    reviewCount
+            );
+        }).collect(Collectors.toList());
     }
 
     /**
@@ -178,17 +175,35 @@ public class ReviewService {
      * @return 해당 사용자가 작성한 리뷰의 요약 정보를 담고 있는 ReviewSummaryResponse 리스트
      */
     @Transactional(readOnly = true)
-    public List<ReviewSummaryResponse> getReviewsByUserId(Integer userId){
-        return reviewRepository.findByUserId(userId).stream()
-                .map(review -> ReviewSummaryResponse.of(
-                        review.getId(),
-                        review.getUser().getLoginId(),
-                        review.getCamp().getName(),
-                        review.getContent(),
-                        review.getImages().isEmpty() ? null : review.getImages().get(0).getImageUrl(),
-                        review.getCreatedAt()
-                ))
-                .collect(Collectors.toList());
+    public List<ReviewResponse> getReviewsByUserId(Integer userId) {
+        List<ReviewEntity> reviews = reviewRepository.findReviewsByUserId(userId);
+        long reviewCount = reviews.size();  // 유저가 작성한 총 리뷰 개수
+
+        return reviews.stream().map(review -> {
+            // 태그 리스트 생성
+            List<Tag> tags = review.getTags().stream()
+                    .map(ReviewTagEntity::getTag)
+                    .collect(Collectors.toList());
+
+            // 이미지 URL 리스트 생성
+            List<String> imageUrls = review.getImages().stream()
+                    .map(ReviewImageEntity::getImageUrl)
+                    .collect(Collectors.toList());
+
+            // ReviewResponse 생성
+            return new ReviewResponse(
+                    review.getId(),
+                    review.getCamp().getId(),
+                    review.getUser().getLoginId(),
+                    review.getCamp().getName(),
+                    review.getGrade(),
+                    review.getContent(),
+                    review.getCreatedAt(),
+                    tags,
+                    imageUrls,
+                    reviewCount
+            );
+        }).collect(Collectors.toList());
     }
 
     /**
@@ -199,10 +214,9 @@ public class ReviewService {
      * @param access          수정 권한을 확인하기 위한 액세스 키
      * @param reviewRequest   수정할 리뷰의 내용을 담고 있는 DTO 객체
      * @param newReviewImages 수정할 리뷰에 새롭게 추가할 이미지 파일 리스트
-     * @return 수정된 리뷰의 정보를 담고 있는 ReviewResponse 객체
      */
     @Transactional
-    public ReviewResponse updateReview(Integer userId, Integer reviewId, String access, ReviewRequest reviewRequest, List<MultipartFile> newReviewImages){
+    public void updateReview(Integer userId, Integer reviewId, String access, ReviewRequest reviewRequest, List<MultipartFile> newReviewImages){
         // 리뷰 엔티티 가져오기
         ReviewEntity existingReview = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new NotFoundException("리뷰를 찾을 수 없습니다."));
@@ -261,19 +275,6 @@ public class ReviewService {
 
         // 해당 캠핑장 리뷰 개수 계산
         long reviewCount = reviewRepository.countByCampId(updatedReview.getCamp().getId());
-
-        // 응답 DTO 생성
-        return ReviewResponse.of(
-                updatedReview.getId(),
-                updatedReview.getUser().getLoginId(),
-                updatedReview.getCamp().getName(),
-                updatedReview.getGrade(),
-                updatedReview.getContent(),
-                updatedReview.getCreatedAt(),
-                updatedReview.getTags().stream().map(ReviewTagEntity::getTag).collect(Collectors.toList()),
-                updatedReview.getImages().stream().map(ReviewImageEntity::getImageUrl).collect(Collectors.toList()),
-                reviewCount
-        );
     }
 
     /**
@@ -288,11 +289,6 @@ public class ReviewService {
         // 리뷰 엔티티 가져오기
         ReviewEntity review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new NotFoundException("리뷰를 찾을 수 없습니다."));
-
-//        // 리뷰에 연결된 이미지 삭제 (S3 관련 구현해야함)
-//        for (ReviewImageEntity image : review.getImages()) {
-//            s3Service.deleteReviewImage(image.getImageUrl());
-//        }
 
         // 리뷰 엔티티 삭제
         reviewRepository.delete(review);

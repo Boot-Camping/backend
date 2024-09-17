@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Client Test</title>
+    <script>
+        let socket;
+        let userId = 31; // 예시 사용자 ID, 실제로는 서버에서 할당된 사용자 ID를 사용해야 합니다.
+        let chatRoomId = 10;
+
+        function connect() {
+            // WebSocket 서버와 연결을 설정합니다.
+            socket = new WebSocket(`ws://localhost:8080/chat?userId=${userId}&chatId=${chatRoomId}`);
+
+            socket.onopen = function(event) {
+                console.log("WebSocket 연결이 열렸습니다.");
+                document.getElementById("status").innerText = "WebSocket 연결이 열렸습니다.";
+            };
+
+            socket.onmessage = function(event) {
+                console.log("서버로부터 메시지 수신:", event.data);
+                document.getElementById("messages").innerHTML += `<p>${event.data}</p>`;
+            };
+
+            socket.onclose = function(event) {
+                console.log("WebSocket 연결이 닫혔습니다.");
+                document.getElementById("status").innerText = "WebSocket 연결이 닫혔습니다.";
+            };
+
+            socket.onerror = function(error) {
+                console.error("WebSocket 오류 발생:", error);
+                document.getElementById("status").innerText = "WebSocket 오류 발생.";
+            };
+        }
+
+        function sendMessage() {
+            const message = document.getElementById("messageInput").value;
+            // const chatRoomId = 2; // 테스트용 채팅방 ID, 실제 상황에 맞게 변경하세요.
+
+            const payload = JSON.stringify({
+                chatRoomId: chatRoomId,
+                content: message
+            });
+
+            console.log("서버로 메시지 전송:", payload);
+            socket.send(payload);
+        }
+
+        function disconnect() {
+            if (socket) {
+                socket.close();
+            }
+        }
+    </script>
+</head>
+<body>
+<h1>WebSocket Client Test</h1>
+<p id="status">WebSocket 연결 상태: 연결되지 않음</p>
+
+<button onclick="connect()">Connect</button>
+<button onclick="disconnect()">Disconnect</button>
+<br><br>
+
+<input type="text" id="messageInput" placeholder="Enter your message">
+<button onclick="sendMessage()">Send Message</button>
+
+<h2>Messages</h2>
+<div id="messages"></div>
+</body>
+</html>

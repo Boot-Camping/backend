@@ -1,13 +1,12 @@
 package com.github.project3.service.mypage;
 
-import com.github.project3.dto.camp.CampResponse;
 import com.github.project3.dto.mypage.*;
 import com.github.project3.entity.camp.CampEntity;
-import com.github.project3.entity.notice.NoticeEntity;
 import com.github.project3.entity.user.CashEntity;
 import com.github.project3.entity.user.UserEntity;
 import com.github.project3.entity.user.UserImageEntity;
 import com.github.project3.entity.wishlist.WishlistEntity;
+import com.github.project3.entity.wishlist.enums.Status;
 import com.github.project3.repository.camp.CampRepository;
 import com.github.project3.repository.cash.CashRepository;
 import com.github.project3.repository.mypage.MypageImageRepository;
@@ -17,11 +16,9 @@ import com.github.project3.repository.mypage.WishlistRepository;
 import com.github.project3.repository.user.UserRepository;
 import com.github.project3.service.S3Service;
 import com.github.project3.service.exceptions.InvalidValueException;
-import com.github.project3.service.exceptions.NotAcceptException;
 import com.github.project3.service.exceptions.NotFoundException;
+import com.github.project3.service.user.UserService;
 import lombok.RequiredArgsConstructor;
-import org.aspectj.weaver.ast.Not;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,15 +45,17 @@ public class MypageService {
     private final WishlistRepository wishlistRepository;
     private final S3Service s3Service;
     private final CashRepository cashRepository;
+    private final UserService userService;
 
     // 유저 정보조회
-    public List<MypageResponse> getUserMyPage(Integer id){
-        Optional<UserEntity> user = mypageRepository.findById(id);
+    public List<MypageResponse> getUserMyPage(Integer userId){
+        Optional<UserEntity> user = userRepository.findById(userId);
         return user.stream().map(this::convertToUserProfileResponse).collect(Collectors.toList());
     }
     private MypageResponse convertToUserProfileResponse(UserEntity userEntity){
         return new MypageResponse(
                 userEntity.getId(),
+                userEntity.getLoginId(),
                 userEntity.getName(),
                 userEntity.getPassword(),
                 userEntity.getEmail(),
@@ -69,8 +68,8 @@ public class MypageService {
 
     // 유저 정보 수정
     @Transactional
-    public MypageUpdateResponse getUpdateUser(Integer id, String tel, String addr){
-        UserEntity user = mypageRepository.findById(id).orElseThrow(() -> new NotFoundException("등록된 사용자를 찾을 수 없습니다."));
+    public MypageUpdateResponse getUpdateUser(String tel, String addr){
+        UserEntity user = userService.findAuthenticatedUser();
 
         if (tel != null){
             user.setTel(tel);
@@ -86,9 +85,8 @@ public class MypageService {
 
     // 유저 이미지 수정
     @Transactional
-    public MypageUpdateImageResponse getUpdateImage(Integer id, MultipartFile images){
-        UserEntity user = mypageRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("등록된 사용자를 찾을 수 없습니다."));
+    public MypageUpdateImageResponse getUpdateImage(MultipartFile images){
+        UserEntity user = userService.findAuthenticatedUser();
 
         UserImageEntity userImage = mypageImageRepository.findByUserId(user)
                 // 값을 갖고있지 않은경우
@@ -113,9 +111,9 @@ public class MypageService {
     }
 
     // 유저 비밀번호 수정
-    public MypageUpdatePasswordResponse getUpdatePasswordUser(Integer id, MypageUpdatePasswordRequest PasswordRequest) {
-        UserEntity user = mypageRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("등록된 사용자를 찾을 수 없습니다."));
+    @Transactional
+    public MypageUpdatePasswordResponse getUpdatePasswordUser(MypageUpdatePasswordRequest PasswordRequest) {
+        UserEntity user = userService.findAuthenticatedUser();
 
         // 비밀번호 패턴 검증 추가
         String passwordPattern = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d@#$%^&*!+=]{8,20}$";
@@ -139,55 +137,68 @@ public class MypageService {
 
         return MypageUpdatePasswordResponse.from(user);
     }
-
     // 찜 등록
-    public String registerWishlist(Integer campId, Integer userId){
-        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("등록된 사용자를 찾을 수 없습니다."));
+    @Transactional
+    public String registerWishlist(Integer campId){
+        UserEntity user = userService.findAuthenticatedUser();
 
         CampEntity camp = campRepository.findById(campId).orElseThrow(() -> new NotFoundException("등록된 캠프를 찾을 수 없습니다."));
 
         WishlistEntity alreadyWishlist = wishlistRepository.findByCampAndUser(camp, user);
         if (alreadyWishlist != null) {
-            wishlistRepository.delete(alreadyWishlist);
-            return "찜 삭제 완료";
+            if (alreadyWishlist.getStatus() == Status.DELETE){
+                alreadyWishlist.setStatus(Status.ACTIVE);
+                wishlistRepository.save(alreadyWishlist);
+                return "찜 등록 완료";
+            } else {
+                alreadyWishlist.setStatus(Status.DELETE);
+                wishlistRepository.save(alreadyWishlist);
+                return "찜 삭제 완료";
+            }
         } else {
-            WishlistEntity wishlist = new WishlistEntity();
-            wishlist.setCamp(camp);
-            wishlist.setUser(user);
+        WishlistEntity wishlist = new WishlistEntity();
+        wishlist.setCamp(camp);
+        wishlist.setUser(user);
+        wishlist.setStatus(Status.ACTIVE);
 
-            wishlistRepository.save(wishlist);
-            return "찜 등록 완료";
+        wishlistRepository.save(wishlist);
+
+        return "찜 등록 완료";
         }
     }
     // 찜 조회
-    public List<MypageCampResponse> getWishList(Integer userId){
-        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("등록된 사용자를 찾을 수 없습니다."));
+    @Transactional(readOnly = true)
+    public List<MypageCampResponse> getWishList(){
+        UserEntity user = userService.findAuthenticatedUser();
 
-        List<WishlistEntity> wishlist = wishlistRepository.findByUser(user);
+        List<WishlistEntity> wishlistUser = wishlistRepository.findByUserAndStatus(user, Status.ACTIVE);
 
-        if (wishlist.isEmpty()){
+        if (wishlistUser.isEmpty()){
             throw new NotFoundException("등록된 찜 목록이 존재하지 않습니다.");
         }
+            return wishlistUser.stream()
+                    .map(MypageCampResponse::from).collect(Collectors.toList());
 
-        return wishlist.stream()
-                .map(wishlistEntity -> MypageCampResponse.from(wishlistEntity.getCamp()))
-                .collect(Collectors.toList());
     }
     // 찜 삭제
+    @Transactional
     public void removeWishList(Integer wishId){
+        UserEntity user = userService.findAuthenticatedUser();
         WishlistEntity wishlist = wishlistRepository.findById(wishId)
                 .orElseThrow(() -> new NotFoundException("등록된 찜 내역이 존재하지 않습니다."));
 
-        wishlistRepository.delete(wishlist);
+        if (!wishlist.getUser().equals(user)) {
+            throw new NotFoundException("삭제 권한이 없는 사용자 입니다.");
+        } else if (wishlist.getStatus() == Status.DELETE){
+            throw new NotFoundException("이미 삭제된 찜입니다.");
+        } else {
+                wishlist.setUser(user);
+                wishlist.setStatus(Status.DELETE);
+                wishlistRepository.save(wishlist);
+            }
     }
-
+    // cash 사용내역 조회
     public List<CashTransactionResponse> getUserCashTransactions(Integer userId) {
-        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("등록된 사용자를 찾을 수 없습니다."));
-
-        List<CashEntity> cashTransactions  = cashRepository.findByUserId(userId);
-
-        return cashTransactions.stream()
-                .map(CashTransactionResponse::from)
-                .collect(Collectors.toList());
+        return cashRepository.findCashTransactionsWithCampNameByUserId(userId);
     }
 }

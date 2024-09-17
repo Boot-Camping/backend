@@ -6,6 +6,7 @@ import com.github.project3.dto.user.request.LoginRequest;
 import com.github.project3.dto.user.request.SignupRequest;
 import com.github.project3.dto.user.response.LoginResponse;
 import com.github.project3.dto.user.response.SignupResponse;
+import com.github.project3.entity.user.CustomUserDetails;
 import com.github.project3.entity.user.RefreshEntity;
 import com.github.project3.entity.user.UserEntity;
 import com.github.project3.entity.user.enums.Status;
@@ -24,11 +25,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -136,8 +139,10 @@ public class UserService {
         addRefreshEntity(foundedUser.getLoginId(), refreshToken, 86400000L);
 
         // HTTP 응답에 토큰 설정
-        response.setHeader("access", bearerToken);
-        response.addCookie(createCookie("refresh", refreshToken));
+        response.setHeader(HttpHeaders.AUTHORIZATION, bearerToken);
+
+        Cookie refreshCookie = createCookie("refresh", refreshToken);
+        addCookieWithSameSite(response, refreshCookie, "None"); // SameSite=None
         response.setStatus(HttpStatus.OK.value());
 
 
@@ -149,8 +154,23 @@ public class UserService {
         Cookie cookie = new Cookie(key, value);
         cookie.setMaxAge(24*60*60);
         cookie.setHttpOnly(true);
+        cookie.setSecure(false); // HTTPS에서만 전송 (로컬 개발 시 false)
+        cookie.setPath("/");
+        cookie.setDomain("boot-camping.netlify.app"); // 도메인 명시 (로컬 개발 시 'localhost' 사용)
 
         return cookie;
+    }
+
+    // SameSite 설정
+    private void addCookieWithSameSite(HttpServletResponse response, Cookie cookie, String sameSite) {
+        String cookieHeader = String.format("%s=%s; Max-Age=%d; Domain=%s; Path=%s; HttpOnly; SameSite=%s",
+                cookie.getName(), cookie.getValue(), cookie.getMaxAge(), cookie.getDomain(), cookie.getPath(), sameSite);
+
+        if ("None".equalsIgnoreCase(sameSite)) {
+            cookieHeader += "; Secure"; // HTTPS 환경에서만 쿠키가 전송되도록 설정
+        }
+
+        response.addHeader("Set-Cookie", cookieHeader);
     }
 
     private void addRefreshEntity(String loginId, String refresh, Long expiredMs) {
@@ -207,6 +227,17 @@ public class UserService {
         }
         foundedUser.setStatus(Status.DELETE);
         userRepository.save(foundedUser);
+    }
+
+    // 인증이 완료되어 SecurityContextHolder 저장된 user 의 id로 검색
+    public UserEntity findAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof UserDetails) {
+            Integer userId = ((CustomUserDetails) authentication.getPrincipal()).getId();
+            return userRepository.findById(userId)
+                    .orElseThrow(() -> new NotFoundException("해당하는 ID의 유저는 존재하지 않습니다."));
+        }
+        throw new NotFoundException("인증된 유저를 찾을 수 없습니다.");
     }
 
 

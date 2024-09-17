@@ -4,15 +4,18 @@ package com.github.project3.jwt;
 import com.github.project3.service.exceptions.JwtTokenException;
 import io.jsonwebtoken.*;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.util.Base64;
 import java.util.Date;
 
@@ -57,6 +60,8 @@ public class JwtTokenProvider {
             throw new JwtTokenException("토큰이 비어 있거나 잘못되었습니다.", e);
         }
     }
+
+
     public Authentication getAuthentication(String accessToken) {
         Claims claims = parseClaims(accessToken);
 

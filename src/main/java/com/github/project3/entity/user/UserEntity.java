@@ -1,5 +1,6 @@
 package com.github.project3.entity.user;
 
+import com.github.project3.entity.admin.AdminEntity;
 import com.github.project3.entity.review.ReviewEntity;
 import com.github.project3.entity.user.enums.Role;
 import com.github.project3.entity.user.enums.Status;
@@ -60,6 +61,9 @@ public class UserEntity {
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<CashEntity> cash;
+
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    private AdminEntity admin;
 
     @PrePersist
     protected void onCreate() {

@@ -1,17 +1,21 @@
 package com.github.project3.dto.review;
 
+import com.github.project3.entity.review.ReviewEntity;
+import com.github.project3.entity.review.ReviewImageEntity;
+import com.github.project3.entity.review.ReviewTagEntity;
 import com.github.project3.entity.review.enums.Tag;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Builder
 @Getter
 public class ReviewResponse {
     private Integer id;
+    private Integer campId;
     private String loginId;
     private String campName;
     private Integer grade;
@@ -21,18 +25,40 @@ public class ReviewResponse {
     private List<String> reviewImages;
     private long reviewCount;
 
-    // 정적 팩토리 메서드로 객체 생성
-    public static ReviewResponse of(Integer id, String loginId, String campName, Integer grade, String reviewContent, LocalDateTime createdAt, List<Tag> reviewTags, List<String> reviewImages, long reviewCount) {
-        return ReviewResponse.builder()
-                .id(id)
-                .loginId(loginId)
-                .campName(campName)
-                .grade(grade)
-                .reviewContent(reviewContent)
-                .createdAt(createdAt)
-                .reviewTags(reviewTags)
-                .reviewImages(reviewImages)
-                .reviewCount(reviewCount)
-                .build();
+    public ReviewResponse(Integer id, Integer campId, String loginId, String campName, Integer grade, String reviewContent,
+                          LocalDateTime createdAt, List<Tag> reviewTags, List<String> reviewImages, long reviewCount) {
+        this.id = id;
+        this.campId = campId;
+        this.loginId = loginId;
+        this.campName = campName;
+        this.grade = grade;
+        this.reviewContent = reviewContent;
+        this.createdAt = createdAt;
+        this.reviewTags = reviewTags;
+        this.reviewImages = reviewImages;
+        this.reviewCount = reviewCount;
+    }
+
+    public static ReviewResponse from(ReviewEntity reviewEntity, String loginId, String campName, long reviewCount) {
+        List<Tag> tags = reviewEntity.getTags().stream()
+                .map(ReviewTagEntity::getTag)
+                .collect(Collectors.toList());
+
+        List<String> imageUrls = reviewEntity.getImages().stream()
+                .map(ReviewImageEntity::getImageUrl)
+                .collect(Collectors.toList());
+
+        return new ReviewResponse(
+                reviewEntity.getId(),
+                reviewEntity.getCamp().getId(),
+                loginId,
+                campName,
+                reviewEntity.getGrade(),
+                reviewEntity.getContent(),
+                reviewEntity.getCreatedAt(),
+                tags,
+                imageUrls,
+                reviewCount
+        );
     }
 }

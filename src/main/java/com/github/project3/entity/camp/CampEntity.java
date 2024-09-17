@@ -1,10 +1,12 @@
 package com.github.project3.entity.camp;
 
 
+import com.github.project3.entity.book.BookEntity;
+import com.github.project3.entity.review.ReviewEntity;
 import com.github.project3.entity.wishlist.WishlistEntity;
 import jakarta.persistence.*;
 import lombok.*;
-
+import org.hibernate.annotations.BatchSize;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,15 +54,26 @@ public class CampEntity {
     private CampDescriptionEntity description;
 
     @Builder.Default
-    @OneToMany(mappedBy = "camp", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 10)
+    @OneToMany(mappedBy = "camp", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<CampImageEntity> images = new ArrayList<>();
 
     @Builder.Default
-    @OneToMany(mappedBy = "camp", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 10)
+    @OneToMany(mappedBy = "camp", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<CampCategoryEntity> campCategories = new ArrayList<>();
 
-    @OneToMany(mappedBy = "camp", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 10)
+    @OneToMany(mappedBy = "camp", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<WishlistEntity> wishlist;
+
+    @OneToMany(mappedBy = "camp", fetch = FetchType.LAZY)
+    @BatchSize(size = 10)
+    private List<ReviewEntity> reviews;
+
+    @OneToMany(mappedBy = "camp", fetch = FetchType.LAZY)
+    @BatchSize(size = 10)
+    private List<BookEntity> bookDates;
 
     @PrePersist
     protected void onCreate() {

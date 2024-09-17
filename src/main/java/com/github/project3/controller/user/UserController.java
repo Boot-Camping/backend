@@ -8,6 +8,7 @@ import com.github.project3.dto.user.response.LoginResponse;
 import com.github.project3.dto.user.response.SignupResponse;
 import com.github.project3.service.cash.CashService;
 import com.github.project3.service.user.UserService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -26,18 +27,21 @@ public class UserController {
     private final UserService userService;
     private final CashService cashService;
 
+    @Operation(summary = "회원 가입", description = "새로운 사용자를 등록합니다.")
     @PostMapping("/signup")
     public ResponseEntity<SignupResponse> signup(@Valid @RequestBody SignupRequest signupRequest) {
         SignupResponse response = userService.signup(signupRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @Operation(summary = "로그인", description = "사용자가 로그인합니다.")
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response) {
         LoginResponse loginResponse = userService.login(loginRequest, response);
         return ResponseEntity.ok(loginResponse);
     }
 
+    @Operation(summary = "캐시 충전", description = "사용자의 캐시를 충전합니다.")
     @PutMapping("/chargeCash/{userId}")
     public ResponseEntity<String> cashCharge(@RequestBody CashRequest cashRequest,
                                                    @PathVariable Integer userId){
@@ -45,6 +49,7 @@ public class UserController {
         return ResponseEntity.ok(cash + " 원이 충전되었습니다.");
     }
 
+    @Operation(summary = "로그아웃", description = "사용자가 로그아웃하고 refresh 토큰을 삭제합니다.")
     @PostMapping(value = "/logout")
     public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = null;
@@ -70,6 +75,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body("로그아웃이 완료되었습니다.");
     }
 
+    @Operation(summary = "회원 탈퇴", description = "사용자가 계정을 삭제합니다.")
     @DeleteMapping("/delete")
     public ResponseEntity<String> deleteUser(@RequestBody LoginRequest loginRequest) {
 
